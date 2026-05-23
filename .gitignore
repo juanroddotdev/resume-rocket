@@ -1,0 +1,45 @@
+# Nuxt / Nitro build outputs
+.nuxt
+.output
+.nitro
+.data
+.cache
+dist
+
+# Node
+node_modules
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & secrets (never commit real keys)
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor swap files
+*.swp
+*~
+
+# Supabase CLI local state
+.branches
+.temp
+supabase/.branches
+supabase/.temp
+.supabase/
+
+# Generated at setup — run: node scripts/generate-template.mjs
+server/assets/template.docx
+
+# Optional deploy / IDE (uncomment if you use them)
+# .vercel
+# .netlify
+# .idea
+# .vscode

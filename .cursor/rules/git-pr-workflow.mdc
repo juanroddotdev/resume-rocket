@@ -1,0 +1,32 @@
+---
+description: Git branch and PR workflow — never push directly to main
+alwaysApply: true
+---
+
+# Git & PR workflow
+
+When shipping code for this repo, **do not commit or push directly to `main`**. Use a feature branch and pull request every time.
+
+## Workflow
+
+1. Create a branch: `git checkout -b feat/short-description`
+2. Make changes and verify (build/lint as appropriate)
+3. Before commit, check: `git status`, `git diff`, `git log --oneline -5`
+4. Stage only relevant files — **never** `.env`, secrets, or `server/assets/template.docx`
+5. Commit with a message focused on **why**
+6. Push: `git push -u origin HEAD`
+7. Open PR: `gh pr create` with Summary + Test plan
+8. Merge: `gh pr merge --squash --delete-branch`
+9. Sync local: `git checkout main && git pull`
+
+## When the user asks to "commit", "push", or "ship"
+
+Default to the full workflow above unless they explicitly say commit-only or push-to-main.
+
+Return the **PR URL** when done.
+
+## Never
+
+- Force-push to `main`
+- Commit `.env` or credential files
+- Skip PR for multi-file or feature work on `main`

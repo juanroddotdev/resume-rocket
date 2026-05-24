@@ -1,0 +1,52 @@
+---
+description: Link PRs to GitHub epic/issues and close or check off when work ships
+alwaysApply: true
+---
+
+# GitHub issue tracking (hardening sprint)
+
+Active sprint epic: **#16** — [Two-week hardening sprint](https://github.com/juanroddotdev/resume-rocket/issues/16)
+
+Child issues:
+
+| Issue | Scope |
+|-------|--------|
+| #10 | Phase A VMS template mapping |
+| #11 | JSONB normalization |
+| #12 | Parse outcome visibility |
+| #13 | `/api/parse` rate limiting |
+| #14 | Automated regression tests |
+| #15 | Release checklist |
+
+Source checklists: `docs/PROJECT-REVIEW.md` §7–§8.
+
+## When committing or opening a PR
+
+1. **Identify** which issue(s) the branch addresses (one concern per PR when possible).
+2. **PR title/body** must reference them:
+   - `Closes #10` when the issue is fully done in that PR
+   - `Part of #16` + `Addresses #11` when partial or stacked
+3. **Test plan** should mirror the issue's test plan checkboxes from §8.
+
+## Before push / `gh pr create`
+
+- [ ] PR links at least one of #10–#15 (or #16 if meta/docs only)
+- [ ] If work completes an issue, PR body includes `Closes #N`
+- [ ] Epic #16 milestone checklist updated if multiple children done in one merge
+
+## After merge (or when user asks to ship)
+
+If the merged work **fully satisfies** an issue's tasks and test plan:
+
+```bash
+gh issue close N --comment "Completed in PR #___."
+```
+
+If only partial, leave open and comment with PR link + remaining checkboxes.
+
+For docs-only PRs that don't close a child issue, reference `Part of #16` only.
+
+## Do not
+
+- Close issues without merged code or docs that match the issue scope
+- Bundle unrelated issues in one PR (see `pr-size.mdc`)

@@ -19,11 +19,27 @@ When shipping code for this repo, **do not commit or push directly to `main`**. 
 8. Merge: `gh pr merge --squash --delete-branch`
 9. Sync local: `git checkout main && git pull`
 
-## When the user asks to "commit", "push", or "ship"
+## When the user says **ship PR**
 
-Default to the full workflow above unless they explicitly say commit-only or push-to-main.
+Run the **full pipeline** in order — do not merge until the branch is committed and pushed:
 
-Return the **PR URL** when done.
+1. `git status` / `git diff` — stage only relevant files (never `.env`, secrets, `template.docx`)
+2. **Commit** if there are uncommitted changes (message focused on **why**)
+3. **Push** branch: `git push -u origin HEAD` (or push existing tracking branch)
+4. **Open PR** if none exists: `gh pr create` with Summary + Test plan; link `Closes #N` when applicable
+5. **Merge**: `gh pr merge <number> --squash --delete-branch` (current branch’s PR, or number user gave)
+6. **Sync local**: `git checkout main && git pull`
+
+Return the **PR URL** (and merged commit on `main` if useful).
+
+If there is nothing to commit but the branch is unpushed, skip commit and continue from push.
+If the PR is already merged, skip to step 6.
+Do not merge from `main` without a PR.
+
+## When the user asks to "commit", "push", or "ship" (without "PR")
+
+Default to the workflow above unless they explicitly say commit-only or push-to-main.
+"Ship" alone means the same as **ship PR** when feature work is in progress.
 
 ## Never
 

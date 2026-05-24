@@ -15,12 +15,14 @@ const {
   currentStep,
   saveStatus,
   certKeys,
+  resetWizard,
   ensureDraft,
   scheduleAutosave,
   applyParseResult,
   finalizeAndDownload,
   restoreLocal,
   persistLocal,
+  clearLocal,
 } = useCandidateForm()
 
 const loading = ref(true)
@@ -28,20 +30,43 @@ const submitting = ref(false)
 const prefillMessage = ref<string | null>(null)
 const submitError = ref<string | null>(null)
 
-onMounted(async () => {
-  restoreLocal()
-  const ok = await validate(token.value)
-  loading.value = false
-  if (!ok) return
+async function bootstrapInvite(routeToken: string) {
+  resetWizard()
+  const ok = await validate(routeToken)
+  if (!ok) return false
+
+  restoreLocal(routeToken)
+
   if (inviteCandidateId.value) {
+    if (candidateId.value && candidateId.value !== inviteCandidateId.value) {
+      clearLocal(routeToken)
+      resetWizard()
+    }
     candidateId.value = inviteCandidateId.value
-  } else {
-    await ensureDraft()
-    inviteCandidateId.value = candidateId.value
+  } else if (candidateId.value) {
+    // Stale draft from another invite in the same browser session.
+    clearLocal(routeToken)
+    resetWizard()
   }
+
   if (prefilledEmail.value && !form.value.email) {
     form.value.email = prefilledEmail.value
   }
+
+  return true
+}
+
+onMounted(async () => {
+  loading.value = true
+  await bootstrapInvite(token.value)
+  loading.value = false
+})
+
+watch(token, async (newToken, oldToken) => {
+  if (!newToken || newToken === oldToken) return
+  loading.value = true
+  await bootstrapInvite(newToken)
+  loading.value = false
 })
 
 watch(
@@ -63,18 +88,20 @@ async function onParsed(data: Record<string, unknown>) {
   const fieldsFound = applyParseResult(data as Parameters<typeof applyParseResult>[0])
   prefillMessage.value =
     fieldsFound > 0
-      ? `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
+      ? data.document_scan
+        ? `We scanned ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
+        : `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
       : null
 
   currentStep.value = 1
-  persistLocal()
+  persistLocal(token.value)
 }
 
 async function onManual() {
   prefillMessage.value = null
   await ensureDraft()
   currentStep.value = 1
-  persistLocal()
+  persistLocal(token.value)
 }
 
 function canAdvanceStep1() {
@@ -86,8 +113,9 @@ async function goSuccess() {
   submitError.value = null
   try {
     await finalizeAndDownload()
-  } catch {
-    submitError.value = 'Could not prepare your download. Check your connection and try again.'
+  } catch (e) {
+    submitError.value =
+      e instanceof Error ? e.message : 'Could not prepare your download. Check your connection and try again.'
   } finally {
     submitting.value = false
   }

@@ -26,7 +26,9 @@ async function handleFile(file: File) {
   if (props.candidateId) formData.append('candidateId', props.candidateId)
 
   try {
-    parseStage.value = 'Extracting fields…'
+    const isPdf =
+      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    parseStage.value = isPdf ? 'Reading and scanning document…' : 'Extracting fields…'
     const result = await $fetch<Record<string, unknown>>('/api/parse', {
       method: 'POST',
       headers: intakeHeaders(),

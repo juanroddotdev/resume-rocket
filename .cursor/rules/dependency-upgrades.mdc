@@ -5,11 +5,12 @@ alwaysApply: true
 
 # Dependency upgrades
 
-After bumping `nuxt`, `@nuxtjs/supabase`, `@google/generative-ai`, or `supabase` CLI:
+After bumping `nuxt`, `@nuxtjs/supabase`, `@google/genai`, or `supabase` CLI:
 
 1. Re-read module docs for **env var** and **breaking** changes.
 2. Run `npm run build` and `nuxt prepare`.
 3. Verify admin login and intake invite cookie still work.
-4. Confirm Gemini model names still valid (`gemini-3.5-flash` fallback list in `geminiParse.ts`).
+4. Confirm Gemini model names still valid (`GEMINI_MODELS` in `server/utils/geminiShared.ts`).
+5. Smoke-test parse: text PDF + image/Canva PDF (`scripts/test-pdf-vision.mjs`).
 
 Pin major upgrades in dedicated PRs; do not mix with feature work.

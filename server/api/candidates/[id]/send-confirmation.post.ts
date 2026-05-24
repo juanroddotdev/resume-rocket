@@ -55,7 +55,6 @@ export default defineEventHandler(async (event) => {
     return {
       sent: false,
       error: 'Failed to send email',
-      access_token: accessToken,
     }
   }
 

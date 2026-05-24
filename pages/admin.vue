@@ -12,6 +12,7 @@ const search = ref('')
 const showAll = ref(false)
 const loadingCandidates = ref(false)
 const candidatesError = ref<string | null>(null)
+const downloadError = ref<string | null>(null)
 
 async function signIn() {
   authError.value = null
@@ -49,21 +50,27 @@ watch(user, (u) => {
 }, { immediate: true })
 
 async function downloadDocx(id: string) {
-  const { data: { session } } = await supabase.auth.getSession()
-  const blob = await $fetch<Blob>('/api/generate-docx', {
-    method: 'POST',
-    headers: session?.access_token
-      ? { Authorization: `Bearer ${session.access_token}` }
-      : {},
-    body: { id },
-    responseType: 'blob',
-  })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `candidate-${id}.docx`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadError.value = null
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const blob = await $fetch<Blob>('/api/generate-docx', {
+      method: 'POST',
+      headers: session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {},
+      body: { id },
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `candidate-${id}.docx`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e: unknown) {
+    const err = e as { data?: { statusMessage?: string }; message?: string }
+    downloadError.value = err.data?.statusMessage || err.message || 'Could not download DOCX. Try again.'
+  }
 }
 </script>
 
@@ -102,6 +109,13 @@ async function downloadDocx(id: string) {
           <input v-model="showAll" type="checkbox">
           Show drafts
         </label>
+      </div>
+
+      <div
+        v-if="downloadError"
+        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+      >
+        {{ downloadError }}
       </div>
 
       <div

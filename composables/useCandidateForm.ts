@@ -244,13 +244,23 @@ export function useCandidateForm() {
       throw new Error(formatFetchError(e, 'Download succeeded but submission could not be finalized.'))
     }
 
-    await $fetch(`/api/candidates/${candidateId.value}/send-confirmation`, {
-      method: 'POST',
-      headers: intakeHeaders(),
-    }).catch(() => null)
+    let confirmationEmailSent = false
+    try {
+      const emailResult = await $fetch<{ sent?: boolean; skipped?: boolean }>(
+        `/api/candidates/${candidateId.value}/send-confirmation`,
+        {
+          method: 'POST',
+          headers: intakeHeaders(),
+        },
+      )
+      confirmationEmailSent = emailResult.sent === true
+    } catch {
+      confirmationEmailSent = false
+    }
 
     currentStep.value = 'success'
     clearLocal()
+    return { confirmationEmailSent }
   }
 
   return {

@@ -7,7 +7,7 @@ alwaysApply: true
 
 | Service | If missing / fails |
 |---------|-------------------|
-| `GEMINI_API_KEY` | Heuristic parse only; no hard crash; partial prefill |
+| `GEMINI_API_KEY` | Text PDF: heuristic parse only; no hard crash. Image PDF: manual continue (heuristics need text). |
 | `RESEND_API_KEY` | Skip confirmation email; log server-side; intake still completes |
 | Parse failure | Stay on upload step; manual continue |
 | Supabase misconfig | Clear 500 / module warn at startup |

@@ -85,11 +85,14 @@ export default defineEventHandler(async (event) => {
       throw new Error('No text extracted from document')
     }
 
-    try {
-      parsed = await parseResumeWithGemini(rawText)
-    } catch (e) {
-      geminiFailed = true
-      parseError = e instanceof Error ? e.message : 'AI parse failed'
+    const config = useRuntimeConfig()
+    if (isGeminiConfigured(config.geminiApiKey)) {
+      try {
+        parsed = await parseResumeWithGemini(rawText)
+      } catch (e) {
+        geminiFailed = true
+        parseError = e instanceof Error ? e.message : 'AI parse failed'
+      }
     }
 
     const heuristic = parseResumeHeuristically(rawText)

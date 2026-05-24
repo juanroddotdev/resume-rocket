@@ -151,26 +151,41 @@ export function useCandidateForm() {
   }
 
   async function finalizeAndDownload() {
-    await patchCandidate({ ...form.value, status: 'submitted' })
+    saveStatus.value = 'saving'
+    try {
+      await $fetch(`/api/candidates/${candidateId.value}`, {
+        method: 'PATCH',
+        headers: intakeHeaders(),
+        body: { ...form.value, status: 'submitted' },
+      })
+      saveStatus.value = 'saved'
+    } catch {
+      saveStatus.value = 'error'
+      throw new Error('Submit failed')
+    }
 
     await $fetch(`/api/candidates/${candidateId.value}/send-confirmation`, {
       method: 'POST',
       headers: intakeHeaders(),
     }).catch(() => null)
 
-    const blob = await $fetch<Blob>('/api/generate-docx', {
-      method: 'POST',
-      headers: intakeHeaders(),
-      body: { id: candidateId.value },
-      responseType: 'blob',
-    })
+    try {
+      const blob = await $fetch<Blob>('/api/generate-docx', {
+        method: 'POST',
+        headers: intakeHeaders(),
+        body: { id: candidateId.value },
+        responseType: 'blob',
+      })
 
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `resume-${form.value.last_name || 'candidate'}.docx`
-    a.click()
-    URL.revokeObjectURL(url)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume-${form.value.last_name || 'candidate'}.docx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      throw new Error('Download failed')
+    }
 
     currentStep.value = 'success'
     clearLocal()

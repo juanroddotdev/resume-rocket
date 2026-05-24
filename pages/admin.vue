@@ -11,6 +11,7 @@ const candidates = ref<CandidateRow[]>([])
 const search = ref('')
 const showAll = ref(false)
 const loadingCandidates = ref(false)
+const candidatesError = ref<string | null>(null)
 
 async function signIn() {
   authError.value = null
@@ -28,12 +29,19 @@ async function signOut() {
 async function loadCandidates() {
   if (!user.value) return
   loadingCandidates.value = true
+  candidatesError.value = null
   const { data, error } = await supabase
     .from('candidates')
-    .select('*')
+    .select(
+      'id, status, first_name, last_name, email, phone, license_number, license_state, specialties, credentials, employers, emr_system, updated_at, created_at',
+    )
     .order('updated_at', { ascending: false })
   loadingCandidates.value = false
-  if (!error && data) candidates.value = data as CandidateRow[]
+  if (error) {
+    candidatesError.value = 'Could not load candidates. Try again.'
+    return
+  }
+  if (data) candidates.value = data as CandidateRow[]
 }
 
 watch(user, (u) => {
@@ -96,7 +104,17 @@ async function downloadDocx(id: string) {
         </label>
       </div>
 
+      <div
+        v-if="candidatesError"
+        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+      >
+        {{ candidatesError }}
+        <button type="button" class="ml-2 font-medium underline" @click="loadCandidates">
+          Retry
+        </button>
+      </div>
       <CandidatesTable
+        v-else
         :candidates="candidates"
         :search="search"
         :show-all="showAll"

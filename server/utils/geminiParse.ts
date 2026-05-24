@@ -1,13 +1,21 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 import type { ParsedResume } from '~/types/parse'
 
+const GEMINI_PLACEHOLDER_KEYS = new Set([
+  'your-gemini-api-key',
+  'changeme',
+])
+
+export function isGeminiConfigured(apiKey: string | undefined): boolean {
+  const trimmed = apiKey?.trim()
+  if (!trimmed) return false
+  return !GEMINI_PLACEHOLDER_KEYS.has(trimmed.toLowerCase())
+}
+
 export async function parseResumeWithGemini(rawText: string): Promise<ParsedResume> {
   const config = useRuntimeConfig()
-  if (!config.geminiApiKey) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'GEMINI_API_KEY is not configured',
-    })
+  if (!isGeminiConfigured(config.geminiApiKey)) {
+    throw new Error('Gemini is not configured')
   }
 
   const genAI = new GoogleGenerativeAI(config.geminiApiKey)

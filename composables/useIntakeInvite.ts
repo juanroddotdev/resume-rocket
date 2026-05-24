@@ -9,23 +9,29 @@ export function useIntakeInvite() {
     token.value = routeToken
     inviteError.value = null
 
-    const result = await $fetch<{
-      valid: boolean
-      reason?: string
-      candidate_id?: string
-      candidate_email?: string
-    }>('/api/invites/validate', { query: { token: routeToken } })
+    try {
+      const result = await $fetch<{
+        valid: boolean
+        reason?: string
+        candidate_id?: string
+        candidate_email?: string
+      }>('/api/invites/validate', { query: { token: routeToken } })
 
-    if (!result.valid) {
+      if (!result.valid) {
+        inviteValid.value = false
+        inviteError.value = result.reason || 'invalid'
+        return false
+      }
+
+      inviteValid.value = true
+      candidateId.value = result.candidate_id || null
+      prefilledEmail.value = result.candidate_email || null
+      return true
+    } catch {
       inviteValid.value = false
-      inviteError.value = result.reason || 'invalid'
+      inviteError.value = 'unavailable'
       return false
     }
-
-    inviteValid.value = true
-    candidateId.value = result.candidate_id || null
-    prefilledEmail.value = result.candidate_email || null
-    return true
   }
 
   function intakeHeaders(): Record<string, string> {

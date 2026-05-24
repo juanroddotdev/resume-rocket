@@ -53,6 +53,7 @@ function addHospital(h: HospitalRow) {
     hospitalId: h.id,
     beds: h.beds ?? undefined,
     traumaLevel: h.trauma_level ?? undefined,
+    teachingStatus: h.teaching_status ?? undefined,
   }
   if (!props.employers.some(e => e.hospitalId === h.id || e.name === h.name)) {
     emit('update:employers', [...props.employers, entry])

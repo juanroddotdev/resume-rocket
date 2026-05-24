@@ -13,6 +13,7 @@ interface DocxEmployer {
   beds?: number | null
   trauma_level?: string | null
   traumaLevel?: string | null
+  teachingStatus?: boolean | null
 }
 
 export interface DocxCandidate {
@@ -73,13 +74,31 @@ function facilityTypesTraumaLevels(employers: DocxEmployer[]): string {
   return [...new Set(levels)].join(', ')
 }
 
-function mapEmployerToExperience(employer: DocxEmployer, emrSystem: string) {
+function primaryEmployerLocation(employers: DocxEmployer[]) {
+  const first = employers[0]
+  return {
+    city: first?.city?.trim() || '',
+    state: first?.state?.trim().toUpperCase() || '',
+  }
+}
+
+function teachingFacilityLabel(employer: DocxEmployer): string {
+  if (employer.teachingStatus === true) return 'Yes'
+  if (employer.teachingStatus === false) return 'No'
+  return ''
+}
+
+function mapEmployerToExperience(
+  employer: DocxEmployer,
+  emrSystem: string,
+  primarySpecialty: string,
+) {
   const trauma = traumaLevel(employer)
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const dates = [employer.startDate, employer.endDate].filter(Boolean)
 
   return {
-    experience_unit_specialty: employer.role || '',
+    experience_unit_specialty: employer.role || primarySpecialty,
     experience_facility_type: trauma ? `Level ${trauma} Trauma Center` : '',
     experience_hospital_name: employer.name,
     experience_facility_location: location,
@@ -90,7 +109,7 @@ function mapEmployerToExperience(employer: DocxEmployer, emrSystem: string) {
     experience_unit_bed_count: '',
     experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',
     experience_trauma_level: trauma,
-    experience_is_teaching_facility: '',
+    experience_is_teaching_facility: teachingFacilityLabel(employer),
     experience_emr_system: emrSystem,
     experience_patient_scope: '',
     experience_floated_units_list: [] as string[],
@@ -107,18 +126,20 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
   const activeCerts = activeCertKeys(credentials)
+  const primarySpecialty = specialties[0] || ''
+  const { city: employerCity, state: employerState } = primaryEmployerLocation(employers)
 
   return {
     candidate_first_name: candidate.first_name || '',
     candidate_last_name: candidate.last_name || '',
     candidate_phone: candidate.phone || '',
     candidate_email: candidate.email || '',
-    candidate_city: '',
-    candidate_state: candidate.license_state?.toUpperCase() || '',
+    candidate_city: employerCity,
+    candidate_state: candidate.license_state?.toUpperCase() || employerState,
     active_licenses_list: activeLicensesList(candidate.license_state, candidate.license_number),
 
     total_years_nursing_experience: '',
-    primary_specialty_unit: specialties[0] || '',
+    primary_specialty_unit: primarySpecialty,
     facility_types_trauma_levels: facilityTypesTraumaLevels(employers),
     core_clinical_competencies: specialties.join(', '),
     clinical_specialties_list: specialties,
@@ -142,7 +163,9 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
       education_graduation_year: string
     }>,
 
-    professional_experiences: employers.map(e => mapEmployerToExperience(e, emrSystem)),
+    professional_experiences: employers.map(e =>
+      mapEmployerToExperience(e, emrSystem, primarySpecialty),
+    ),
   }
 }
 

@@ -16,4 +16,4 @@ When adding a VMS field, update **all** that apply:
 
 Unmapped template tags render blank — document known gaps in PR description.
 
-Reference merged tags in `docxBuilder.ts`; do not use old `{first_name}` / `{#employers}` names.
+Reference merged tags in `docxBuilder.ts` and `docs/VMS-TEMPLATE-REGISTRY.md`; do not use old `{first_name}` / `{#employers}` names.

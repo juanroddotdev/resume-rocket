@@ -81,7 +81,7 @@ async function downloadDocx(id: string) {
         <button type="button" class="text-sm text-slate-600" @click="signOut">Sign out</button>
       </div>
 
-      <CreateInvitePanel />
+      <CreateInvitePanel @created="loadCandidates" />
 
       <div class="flex flex-wrap items-center gap-4">
         <input

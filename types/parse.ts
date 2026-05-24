@@ -6,6 +6,7 @@ export interface ParsedResume {
   licenseNumber?: string
   licenseState?: string
   specialties?: string[]
+  detectedCredentials?: string[]
   employers?: Array<{
     name: string
     role?: string

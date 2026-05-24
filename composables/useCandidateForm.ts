@@ -102,6 +102,7 @@ export function useCandidateForm() {
   }
 
   function applyParseResult(data: {
+    candidateId?: string
     first_name?: string
     last_name?: string
     email?: string
@@ -110,18 +111,43 @@ export function useCandidateForm() {
     license_state?: string
     specialties?: string[]
     suggested_employers?: EmployerEntry[]
-  }) {
+    detected_credentials?: string[]
+    fields_found?: number
+    partial_parse?: boolean
+  }): number {
+    if (data.candidateId) candidateId.value = data.candidateId
+
     if (data.first_name) form.value.first_name = data.first_name
     if (data.last_name) form.value.last_name = data.last_name
     if (data.email) form.value.email = data.email
     if (data.phone) form.value.phone = data.phone
     if (data.license_number) form.value.license_number = data.license_number
     if (data.license_state) form.value.license_state = data.license_state
-    if (data.specialties) form.value.specialties = data.specialties
+    if (data.specialties?.length) form.value.specialties = data.specialties
     if (data.suggested_employers?.length) {
       form.value.employers = [...data.suggested_employers]
     }
+    if (data.detected_credentials?.length) {
+      for (const cert of data.detected_credentials) {
+        form.value.credentials[cert] = true
+      }
+    }
+
     scheduleAutosave({})
+
+    return data.fields_found ?? countFilledFromForm()
+  }
+
+  function countFilledFromForm(): number {
+    let count = 0
+    if (form.value.first_name) count++
+    if (form.value.last_name) count++
+    if (form.value.email) count++
+    if (form.value.phone) count++
+    if (form.value.license_number) count++
+    if (form.value.license_state) count++
+    if (form.value.employers.length) count++
+    return count
   }
 
   async function finalizeAndDownload() {

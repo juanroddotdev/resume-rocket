@@ -1,0 +1,14 @@
+---
+description: Nuxt server API route conventions
+globs: server/api/**/*.ts,server/utils/schemas.ts
+alwaysApply: false
+---
+
+# Server API conventions
+
+- Validate request bodies with Zod (`server/utils/schemas.ts`).
+- Use `useSupabaseAdmin()` for DB/storage writes on intake and admin APIs.
+- Use `createError({ statusCode, statusMessage })` with human-readable messages (415/413 for bad uploads).
+- Return consistent JSON shapes; document new fields in types under `types/`.
+
+Prefer extending existing utils (`requireInvite`, `storageUpload`, `docxBuilder`) over duplicating logic in route handlers.

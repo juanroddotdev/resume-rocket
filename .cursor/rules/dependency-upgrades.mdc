@@ -1,0 +1,15 @@
+---
+description: Upgrading Nuxt, Supabase module, and integrations
+alwaysApply: true
+---
+
+# Dependency upgrades
+
+After bumping `nuxt`, `@nuxtjs/supabase`, `@google/generative-ai`, or `supabase` CLI:
+
+1. Re-read module docs for **env var** and **breaking** changes.
+2. Run `npm run build` and `nuxt prepare`.
+3. Verify admin login and intake invite cookie still work.
+4. Confirm Gemini model names still valid (`gemini-2.0-flash` fallback list in `geminiParse.ts`).
+
+Pin major upgrades in dedicated PRs; do not mix with feature work.

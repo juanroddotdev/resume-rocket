@@ -1,0 +1,14 @@
+---
+description: docxtemplater and Word template editing
+globs: server/utils/docxBuilder.ts,server/assets/**,scripts/generate-template.mjs
+alwaysApply: false
+---
+
+# Docxtemplater safety
+
+- Tags must be **exact** match to keys in `mapCandidateToTemplateData()`.
+- In Word, retype tags if merge fails — split runs break `{tag}` across XML nodes.
+- Loops: `{#professional_experiences}...{/professional_experiences}`; lists `{#clinical_specialties_list}{.}{/clinical_specialties_list}`.
+- Regenerate placeholder: `node scripts/generate-template.mjs` (overwrites local template).
+
+Test by downloading DOCX after intake or from admin row action.

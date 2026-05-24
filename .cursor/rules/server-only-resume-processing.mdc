@@ -1,0 +1,13 @@
+---
+description: PDF/DOCX and AI parsing stay on the server
+globs: server/**,components/intake/FileDropZone.vue
+alwaysApply: false
+---
+
+# Server-only resume processing
+
+- PDF/DOCX parsing (`extractText`, `pdf-parse`, `mammoth`) runs in `server/` only.
+- Gemini calls only in `server/utils/geminiParse.ts` via `runtimeConfig.geminiApiKey`.
+- Client uploads via `multipart` to `POST /api/parse`; receives structured fields, not full extracted text by default.
+
+Do not add client-side Gemini keys or send full resume text to third parties from the browser.

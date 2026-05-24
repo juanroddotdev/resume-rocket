@@ -1,0 +1,15 @@
+---
+description: Optional services and fallback behavior
+alwaysApply: true
+---
+
+# Graceful degradation
+
+| Service | If missing / fails |
+|---------|-------------------|
+| `GEMINI_API_KEY` | Heuristic parse only; no hard crash; partial prefill |
+| `RESEND_API_KEY` | Skip confirmation email; log server-side; intake still completes |
+| Parse failure | Stay on upload step; manual continue |
+| Supabase misconfig | Clear 500 / module warn at startup |
+
+Do not block core intake → DOCX path on optional integrations. Surface user-friendly messages, not stack traces.

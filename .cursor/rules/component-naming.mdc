@@ -1,0 +1,15 @@
+---
+description: Nuxt component auto-import with pathPrefix false
+globs: nuxt.config.ts,components/**,pages/**
+alwaysApply: false
+---
+
+# Component naming
+
+`nuxt.config.ts` sets `components: [{ path: '~/components', pathPrefix: false }]`.
+
+- Use **filename** as the component tag: `CreateInvitePanel`, `FileDropZone`, not `AdminCreateInvitePanel`.
+- Avoid duplicate filenames in different subfolders (would collide).
+- After adding components, run `nuxt prepare` if types look wrong.
+
+When a component does not render, verify the tag matches `.nuxt/components.d.ts`.

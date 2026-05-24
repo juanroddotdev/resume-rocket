@@ -1,0 +1,18 @@
+---
+description: Phased delivery for template and intake expansion
+alwaysApply: true
+---
+
+# Phase labeling
+
+When expanding VMS template or intake fields, label work explicitly:
+
+| Phase | Goal |
+|-------|------|
+| **A** | Map existing collected data to template tags (`docxBuilder` only) |
+| **B** | Add intake UI + DB + PATCH for high-value missing fields |
+| **C** | Enrich via Gemini parse + resume text for snapshot/experience blocks |
+
+Do not add template tags without a data source plan. Prefer shipping A before B, B before C.
+
+State which phase a PR covers in title or description.

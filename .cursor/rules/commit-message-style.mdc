@@ -1,0 +1,12 @@
+---
+description: Git commit message conventions
+alwaysApply: true
+---
+
+# Commit messages
+
+- Imperative mood, 1–2 sentences, focus on **why**.
+- Good: `Fix intake prefill when Gemini is unavailable.`
+- Avoid: `updated files`, `WIP`, `fix bug`
+
+Match recent repo style (`Add …`, `Fix …`). Squash merge PR title can match the commit message.

@@ -34,7 +34,7 @@ async function handleFile(file: File) {
     })
 
     if (result.parse_failed) {
-      error.value = String(result.parse_error || 'Could not parse resume')
+      error.value = String(result.parse_error || 'Could not read enough information from your resume')
       emit('parseFailed')
     } else {
       emit('parsed', result)

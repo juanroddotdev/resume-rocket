@@ -25,6 +25,7 @@ const {
 
 const loading = ref(true)
 const submitting = ref(false)
+const prefillMessage = ref<string | null>(null)
 
 onMounted(async () => {
   restoreLocal()
@@ -53,13 +54,23 @@ watch(
 )
 
 async function onParsed(data: Record<string, unknown>) {
+  if (!candidateId.value && data.candidateId) {
+    candidateId.value = String(data.candidateId)
+  }
   if (!candidateId.value) await ensureDraft()
-  applyParseResult(data as Parameters<typeof applyParseResult>[0])
+
+  const fieldsFound = applyParseResult(data as Parameters<typeof applyParseResult>[0])
+  prefillMessage.value =
+    fieldsFound > 0
+      ? `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
+      : null
+
   currentStep.value = 1
   persistLocal()
 }
 
 async function onManual() {
+  prefillMessage.value = null
   await ensureDraft()
   currentStep.value = 1
   persistLocal()
@@ -106,7 +117,6 @@ async function goSuccess() {
           class="mt-4"
           :candidate-id="candidateId"
           @parsed="onParsed"
-          @parse-failed="onManual"
           @manual="onManual"
         />
       </section>
@@ -114,6 +124,12 @@ async function goSuccess() {
       <!-- Step 1 -->
       <section v-else-if="currentStep === 1" class="space-y-4">
         <h1 class="text-xl font-bold">Your details</h1>
+        <p
+          v-if="prefillMessage"
+          class="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900"
+        >
+          {{ prefillMessage }}
+        </p>
         <button type="button" class="text-sm text-brand-700" @click="currentStep = 0">
           Replace resume
         </button>

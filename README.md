@@ -6,7 +6,7 @@ Mobile-first healthcare resume enrichment MVP: invite-gated intake, Gemini parsi
 
 - **Nuxt 3** + Vue 3 + Tailwind CSS
 - **Supabase** (Postgres, Auth, Storage)
-- **Gemini 1.5 Flash** (structured resume parse)
+- **Gemini** (structured resume parse; optional — heuristic fallback works without a key)
 - **Docxtemplater** (contract template fill)
 - **Resend** (submission confirmation email)
 
@@ -47,9 +47,25 @@ See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan.
 
 Create a recruiter user in Supabase Auth (email/password). RLS allows `authenticated` users to read `candidates` and `hospitals`.
 
+## Development workflow
+
+Use short-lived branches and PRs instead of committing directly to `main`:
+
+```bash
+git checkout -b feat/your-change
+# make changes, then:
+git add .
+git commit -m "Describe why, not just what"
+git push -u origin HEAD
+gh pr create --title "..." --body "..."
+gh pr merge --squash --delete-branch
+git checkout main && git pull
+```
+
+Never commit `.env` or `server/assets/template.docx`.
+
 ## Template
 
-Replace `server/assets/template.docx` with your contract template. Tags: `{first_name}`, `{last_name}`, `{email}`, `{phone}`, `{emr_system}`, `{license_number}`, `{#employers}...{/employers}`, `{#certifications}{.}{/certifications}`.
+Replace `server/assets/template.docx` with your VMS contract template. The app maps intake data to tags like `{candidate_first_name}`, `{emr_software_proficiencies}`, `{#professional_experiences}...{/professional_experiences}` — see `server/utils/docxBuilder.ts`.
 
 Regenerate placeholder: `node scripts/generate-template.mjs`
-# resume-rocket

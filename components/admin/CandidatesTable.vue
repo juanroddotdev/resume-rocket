@@ -67,7 +67,10 @@ function primaryFacility(c: CandidateRow) {
           </td>
         </tr>
         <tr v-if="!filtered.length">
-          <td colspan="6" class="px-4 py-8 text-center text-slate-500">No candidates found</td>
+          <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+            <span v-if="!candidates.length">No candidates yet. Create an intake link above, then open it to start the wizard.</span>
+            <span v-else>No candidates match your search.</span>
+          </td>
         </tr>
       </tbody>
     </table>

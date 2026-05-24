@@ -3,11 +3,18 @@ const supabase = useSupabaseClient()
 const email = ref('')
 const loading = ref(false)
 const lastUrl = ref('')
+const expiresAt = ref('')
+const copied = ref(false)
 const error = ref<string | null>(null)
+
+const emit = defineEmits<{
+  created: []
+}>()
 
 async function createInvite() {
   loading.value = true
   error.value = null
+  copied.value = false
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.access_token) {
@@ -23,10 +30,17 @@ async function createInvite() {
       },
     })
     lastUrl.value = res.url
-    await navigator.clipboard.writeText(res.url)
+    expiresAt.value = res.expires_at
+    try {
+      await navigator.clipboard.writeText(res.url)
+      copied.value = true
+    } catch {
+      copied.value = false
+    }
+    emit('created')
   } catch (e: unknown) {
-    const err = e as { data?: { statusMessage?: string } }
-    error.value = err.data?.statusMessage || 'Failed to create invite'
+    const err = e as { data?: { statusMessage?: string }; message?: string }
+    error.value = err.data?.statusMessage || err.message || 'Failed to create invite'
   } finally {
     loading.value = false
   }
@@ -43,16 +57,32 @@ async function createInvite() {
       placeholder="Candidate email (optional)"
       class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
     >
-    <button
-      type="button"
-      class="mt-3 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      :disabled="loading"
-      @click="createInvite"
-    >
-      {{ loading ? 'Creating…' : 'Copy intake link' }}
-    </button>
-    <p v-if="lastUrl" class="mt-2 break-all text-xs text-brand-700">
-      Copied: {{ lastUrl }}
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button
+        type="button"
+        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        :disabled="loading"
+        @click="createInvite"
+      >
+        {{ loading ? 'Creating…' : 'Create intake link' }}
+      </button>
+      <a
+        v-if="lastUrl"
+        :href="lastUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700"
+      >
+        Open link
+      </a>
+    </div>
+    <p v-if="lastUrl" class="mt-3 break-all rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+      {{ lastUrl }}
+    </p>
+    <p v-if="lastUrl && copied" class="mt-1 text-xs text-green-700">Link copied to clipboard.</p>
+    <p v-else-if="lastUrl" class="mt-1 text-xs text-slate-500">Copy the link above and send it to your candidate.</p>
+    <p v-if="expiresAt" class="mt-1 text-xs text-slate-500">
+      Expires {{ new Date(expiresAt).toLocaleString() }}
     </p>
     <p v-if="error" class="mt-2 text-sm text-red-600">{{ error }}</p>
   </div>

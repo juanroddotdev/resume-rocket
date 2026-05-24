@@ -74,29 +74,46 @@ export default defineEventHandler(async (event) => {
     mime,
   )
 
-  let parseFailed = false
   let parseError: string | null = null
+  let geminiFailed = false
   let parsed: Awaited<ReturnType<typeof parseResumeWithGemini>> | null = null
+  let rawText = ''
 
   try {
-    const rawText = await extractTextFromBuffer(buffer, mime, filePart.filename)
+    rawText = await extractTextFromBuffer(buffer, mime, filePart.filename)
     if (!rawText) {
       throw new Error('No text extracted from document')
     }
-    parsed = await parseResumeWithGemini(rawText)
+
+    try {
+      parsed = await parseResumeWithGemini(rawText)
+    } catch (e) {
+      geminiFailed = true
+      parseError = e instanceof Error ? e.message : 'AI parse failed'
+    }
+
+    const heuristic = parseResumeHeuristically(rawText)
+    parsed = mergeParsedResume(parsed, heuristic)
   } catch (e) {
-    parseFailed = true
     parseError = e instanceof Error ? e.message : 'Parse failed'
   }
+
+  const hasFields = parsed ? hasParsedFields(parsed) : false
+  const parseFailed = !hasFields
+
+  const credentials = parsed?.detectedCredentials?.reduce<Record<string, boolean>>((acc, cert) => {
+    acc[cert] = true
+    return acc
+  }, {}) ?? null
 
   const updatePayload: Record<string, unknown> = {
     resume_storage_path: storagePath,
     resume_original_filename: filePart.filename,
-    parse_error: parseError,
+    parse_error: parseFailed ? parseError : geminiFailed ? parseError : null,
     parsed_resume: parsed ? { raw: parsed.rawText } : null,
   }
 
-  if (parsed && !parseFailed) {
+  if (parsed && hasFields) {
     Object.assign(updatePayload, {
       first_name: parsed.firstName,
       last_name: parsed.lastName,
@@ -106,6 +123,7 @@ export default defineEventHandler(async (event) => {
       license_state: parsed.licenseState,
       specialties: parsed.specialties,
       employers: parsed.employers,
+      ...(credentials ? { credentials } : {}),
     })
   }
 
@@ -114,17 +132,17 @@ export default defineEventHandler(async (event) => {
     .update(updatePayload)
     .eq('id', resolvedCandidateId)
 
+  const apiFields = parsedResumeToApiFields(parsed)
+  const fieldsFound =
+    countParsedFields(apiFields) + countDetectedCredentials(parsed?.detectedCredentials)
+
   return {
     candidateId: resolvedCandidateId,
     parse_failed: parseFailed,
-    parse_error: parseError,
-    first_name: parsed?.firstName,
-    last_name: parsed?.lastName,
-    email: parsed?.email,
-    phone: parsed?.phone,
-    license_number: parsed?.licenseNumber,
-    license_state: parsed?.licenseState,
-    specialties: parsed?.specialties,
-    suggested_employers: parsed?.employers || [],
+    parse_error: parseFailed ? parseError : null,
+    partial_parse: geminiFailed && hasFields,
+    fields_found: fieldsFound,
+    detected_credentials: parsed?.detectedCredentials || [],
+    ...apiFields,
   }
 })

@@ -36,6 +36,10 @@ export default defineEventHandler(async (event) => {
   const employers = (candidate.employers as Array<Record<string, unknown>> | null)?.map(e => ({
     name: String(e.name || ''),
     role: e.role ? String(e.role) : undefined,
+    startDate: e.startDate ? String(e.startDate) : undefined,
+    endDate: e.endDate ? String(e.endDate) : undefined,
+    city: e.city ? String(e.city) : undefined,
+    state: e.state ? String(e.state) : undefined,
     beds: e.beds as number | undefined,
     trauma_level: (e.trauma_level || e.traumaLevel) as string | undefined,
   }))
@@ -46,7 +50,9 @@ export default defineEventHandler(async (event) => {
     email: candidate.email,
     phone: candidate.phone,
     license_number: candidate.license_number,
+    license_state: candidate.license_state,
     emr_system: candidate.emr_system,
+    specialties: candidate.specialties as string[] | null,
     employers,
     credentials: candidate.credentials as Record<string, boolean> | null,
   })

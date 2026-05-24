@@ -1,0 +1,64 @@
+---
+description: Multimodal PDF resume parsing — Gemini vision for image/Canva PDFs
+globs: server/api/parse.post.ts,server/utils/extractText.ts,server/utils/gemini*.ts,server/utils/parse*.ts,scripts/test-pdf-vision.mjs
+alwaysApply: false
+---
+
+# Multimodal resume parsing
+
+## Image PDF assumptions
+
+Assume incoming PDFs may be **flat or image-based** (Canva, colored templates, exported graphics). Do **not** rely solely on string-based PDF text extractors (`pdf-parse`, etc.). Vision fallback is **PDF-only** today; DOCX still uses `mammoth` text extraction.
+
+## Required pipeline
+
+1. **Try text extraction first** (`extractTextFromBuffer` / `pdf-parse` for PDF, `mammoth` for DOCX).
+2. **If PDF text is below `MIN_EXTRACTED_TEXT_CHARS` (40)** in `geminiShared.ts`, fall back to **Gemini document vision** via `parseResumeWithGeminiDocument` — do not fail with “no text extracted” when `GEMINI_API_KEY` is configured.
+3. Merge with `parseResumeHeuristics` and persist; return `document_scan: true` when vision was used.
+
+## Gemini SDK (this repo)
+
+Use **`@google/genai`** (`GoogleGenAI`) via `createGeminiClient()` in `geminiShared.ts` — server-only, never client. Do **not** add `@google/generative-ai` (legacy).
+
+Pass raw PDF bytes as base64 in `inlineData`:
+
+```typescript
+const ai = createGeminiClient()
+await ai.models.generateContent({
+  model: 'gemini-3.5-flash',
+  contents: [
+    { inlineData: { mimeType: 'application/pdf', data: buffer.toString('base64') } },
+    prompt,
+  ],
+  config: {
+    responseMimeType: 'application/json',
+    responseJsonSchema: resumeJsonSchema({ includeRawText: true }),
+  },
+})
+```
+
+## Structured output
+
+- `responseMimeType: 'application/json'`
+- `responseJsonSchema` from `resumeJsonSchema()` in `geminiShared.ts` (uses `Type` from `@google/genai`)
+- Vision path includes `raw_resume_text` for heuristics merge
+
+## Models & degradation
+
+- Model fallback: `gemini-3.5-flash` → `gemini-2.5-flash` (`GEMINI_MODELS`).
+- Image PDF without Gemini key → user-friendly error + **Continue manually** (heuristics cannot help).
+- Text PDF without Gemini → heuristics still run.
+- Do not log full resume text or contact fields (see `phi-handling.mdc`).
+
+## Dev verification
+
+```bash
+node --env-file=.env scripts/test-pdf-vision.mjs path/to/resume.pdf
+```
+
+## Reference files
+
+- Shared: `server/utils/geminiShared.ts`
+- Text path: `server/utils/geminiParse.ts`
+- Vision path: `server/utils/geminiDocumentParse.ts`
+- Orchestration: `server/api/parse.post.ts`

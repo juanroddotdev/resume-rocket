@@ -76,17 +76,31 @@ export default defineEventHandler(async (event) => {
 
   let parseError: string | null = null
   let geminiFailed = false
+  let documentVision = false
   let parsed: Awaited<ReturnType<typeof parseResumeWithGemini>> | null = null
   let rawText = ''
 
   try {
     rawText = await extractTextFromBuffer(buffer, mime, filePart.filename)
-    if (!rawText) {
+    const config = useRuntimeConfig()
+    const geminiReady = isGeminiConfigured(config.geminiApiKey)
+
+    if (needsDocumentVision(rawText, mime, filePart.filename)) {
+      if (!geminiReady) {
+        throw new Error(
+          'This resume looks image-based. Add GEMINI_API_KEY for visual scanning, or continue manually.',
+        )
+      }
+      documentVision = true
+      parsed = await parseResumeWithGeminiDocument(buffer, mime)
+      rawText = parsed.rawText || rawText
+    }
+
+    if (!rawText.trim() && !parsed) {
       throw new Error('No text extracted from document')
     }
 
-    const config = useRuntimeConfig()
-    if (isGeminiConfigured(config.geminiApiKey)) {
+    if (geminiReady && !documentVision) {
       try {
         parsed = await parseResumeWithGemini(rawText)
       } catch (e) {
@@ -144,6 +158,7 @@ export default defineEventHandler(async (event) => {
     parse_failed: parseFailed,
     parse_error: parseFailed ? parseError : null,
     partial_parse: geminiFailed && hasFields,
+    document_scan: documentVision,
     fields_found: fieldsFound,
     detected_credentials: parsed?.detectedCredentials || [],
     ...apiFields,

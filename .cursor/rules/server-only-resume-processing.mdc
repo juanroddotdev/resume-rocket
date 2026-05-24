@@ -7,7 +7,8 @@ alwaysApply: false
 # Server-only resume processing
 
 - PDF/DOCX parsing (`extractText`, `pdf-parse`, `mammoth`) runs in `server/` only.
-- Gemini calls only in `server/utils/geminiParse.ts` via `runtimeConfig.geminiApiKey`.
+- Image/Canva PDFs: Gemini vision via `inlineData` base64 — see `multimodal-resume-parsing.mdc`.
+- Gemini calls only in `server/utils/gemini*.ts` via `createGeminiClient()` / `runtimeConfig.geminiApiKey` (`@google/genai`).
 - Client uploads via `multipart` to `POST /api/parse`; receives structured fields, not full extracted text by default.
 
 Do not add client-side Gemini keys or send full resume text to third parties from the browser.

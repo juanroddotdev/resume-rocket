@@ -66,6 +66,7 @@ Never commit `.env` or `server/assets/template.docx`.
 
 ## Template
 
-Replace `server/assets/template.docx` with your VMS contract template. The app maps intake data to tags like `{candidate_first_name}`, `{emr_software_proficiencies}`, `{#professional_experiences}...{/professional_experiences}` — see `server/utils/docxBuilder.ts`.
+Replace `server/assets/template.docx` with your VMS contract template. Tag names must match `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts` — see [`docs/VMS-TEMPLATE-REGISTRY.md`](docs/VMS-TEMPLATE-REGISTRY.md).
 
-Regenerate placeholder: `node scripts/generate-template.mjs`
+Regenerate dev placeholder: `node scripts/generate-template.mjs`  
+Smoke-test mapping: `node scripts/test-docx-mapping.mjs`

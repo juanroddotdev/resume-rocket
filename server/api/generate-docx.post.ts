@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
     state: e.state ? String(e.state) : undefined,
     beds: e.beds as number | undefined,
     trauma_level: (e.trauma_level || e.traumaLevel) as string | undefined,
+    teachingStatus: e.teachingStatus ?? e.teaching_status ?? undefined,
   }))
 
   const buffer = await buildResumeDocx({

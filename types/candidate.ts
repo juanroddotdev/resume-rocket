@@ -40,6 +40,7 @@ export interface EmployerEntry {
   beds?: number
   traumaLevel?: string
   trauma_level?: string
+  teachingStatus?: boolean
 }
 
 export interface CandidateDraftInput {

@@ -26,6 +26,7 @@ const {
 const loading = ref(true)
 const submitting = ref(false)
 const prefillMessage = ref<string | null>(null)
+const submitError = ref<string | null>(null)
 
 onMounted(async () => {
   restoreLocal()
@@ -82,8 +83,11 @@ function canAdvanceStep1() {
 
 async function goSuccess() {
   submitting.value = true
+  submitError.value = null
   try {
     await finalizeAndDownload()
+  } catch {
+    submitError.value = 'Could not prepare your download. Check your connection and try again.'
   } finally {
     submitting.value = false
   }
@@ -99,6 +103,7 @@ async function goSuccess() {
       <p class="mt-2 text-slate-600">
         <template v-if="inviteError === 'expired'">This link has expired.</template>
         <template v-else-if="inviteError === 'completed'">This application was already submitted.</template>
+        <template v-else-if="inviteError === 'unavailable'">We could not verify this link. Check your connection and try again.</template>
         <template v-else>Ask your recruiter for a new intake link.</template>
       </p>
     </div>
@@ -178,6 +183,12 @@ async function goSuccess() {
           @update:license-number="form.license_number = $event"
           @update:license-state="form.license_state = $event"
         />
+        <p
+          v-if="submitError"
+          class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+        >
+          {{ submitError }}
+        </p>
         <div class="flex gap-2">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 2">Back</button>
           <button

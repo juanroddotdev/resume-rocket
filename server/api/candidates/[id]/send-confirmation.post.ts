@@ -40,12 +40,16 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    await sendConfirmationEmail({
+    const emailResult = await sendConfirmationEmail({
       to: candidate.email,
       firstName: candidate.first_name,
       accessToken,
       submittedAt: candidate.updated_at,
     })
+
+    if (emailResult.skipped) {
+      return { sent: false, skipped: true as const }
+    }
   } catch (e) {
     console.error('[send-confirmation]', e)
     return {

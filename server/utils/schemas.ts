@@ -25,7 +25,6 @@ export const candidatePatchSchema = z.object({
   preferred_hospital_id: z.string().uuid().optional().nullable(),
   emr_system: z.string().optional(),
   status: z.enum(['draft', 'submitted', 'confirmed', 'archived']).optional(),
-  parsed_resume: z.record(z.unknown()).optional(),
 })
 
 export const inviteCreateSchema = z.object({

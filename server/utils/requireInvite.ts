@@ -18,7 +18,10 @@ export function setInviteCookie(event: H3Event, token: string) {
   })
 }
 
-export async function validateInviteToken(token: string) {
+export async function validateInviteToken(
+  token: string,
+  options?: { allowSubmitted?: boolean },
+) {
   const supabase = useSupabaseAdmin()
   const { data: invite, error } = await supabase
     .from('intake_invites')
@@ -33,7 +36,7 @@ export async function validateInviteToken(token: string) {
     return { valid: false as const, reason: 'expired' as const }
   }
 
-  if (invite.candidate_id) {
+  if (!options?.allowSubmitted && invite.candidate_id) {
     const { data: candidate } = await supabase
       .from('candidates')
       .select('status')
@@ -56,7 +59,7 @@ export async function requireInviteForCandidate(
     throw createError({ statusCode: 401, statusMessage: 'Invite token required' })
   }
 
-  const result = await validateInviteToken(token)
+  const result = await validateInviteToken(token, { allowSubmitted: true })
   if (!result.valid) {
     throw createError({ statusCode: 403, statusMessage: `Invite ${result.reason}` })
   }

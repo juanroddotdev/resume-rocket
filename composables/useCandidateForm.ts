@@ -1,14 +1,10 @@
 import type { EmployerEntry, CandidateDraftInput } from '~/types/candidate'
 
-const STORAGE_KEY = 'resume-rocket-draft'
+const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
 
-export function useCandidateForm() {
-  const candidateId = useState<string | null>('form-candidate-id', () => null)
-  const currentStep = useState<number | 'success'>('form-step', () => 0)
-  const saveStatus = useState<'idle' | 'saving' | 'saved' | 'error'>('save-status', () => 'idle')
-
-  const form = useState('candidate-form', () => ({
+function defaultForm() {
+  return {
     first_name: '',
     last_name: '',
     email: '',
@@ -19,39 +15,83 @@ export function useCandidateForm() {
     employers: [] as EmployerEntry[],
     credentials: {} as Record<string, boolean>,
     specialties: [] as string[],
-  }))
+  }
+}
 
-  const { intakeHeaders } = useIntakeInvite()
+function storageKey(token: string) {
+  return `resume-rocket-draft:${token}`
+}
+
+export function useCandidateForm() {
+  const candidateId = useState<string | null>('form-candidate-id', () => null)
+  const currentStep = useState<number | 'success'>('form-step', () => 0)
+  const saveStatus = useState<'idle' | 'saving' | 'saved' | 'error'>('save-status', () => 'idle')
+
+  const form = useState('candidate-form', defaultForm)
+
+  const { intakeHeaders, token: inviteToken } = useIntakeInvite()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
 
-  function persistLocal() {
+  function resetWizard() {
+    candidateId.value = null
+    currentStep.value = 0
+    saveStatus.value = 'idle'
+    form.value = defaultForm()
+  }
+
+  function persistLocal(explicitToken?: string) {
     if (!import.meta.client) return
+    const token = explicitToken || inviteToken.value
+    if (!token) return
     localStorage.setItem(
-      STORAGE_KEY,
+      storageKey(token),
       JSON.stringify({
         candidateId: candidateId.value,
         step: currentStep.value,
+        passedStep0: currentStep.value !== 0 && currentStep.value !== 'success',
         form: form.value,
       }),
     )
   }
 
-  function restoreLocal() {
-    if (!import.meta.client) return
-    const raw = localStorage.getItem(STORAGE_KEY)
+  function restoreLocal(token: string) {
+    if (!import.meta.client || !token) return
+
+    // Drop pre-token-scoping drafts that leaked steps across invite links.
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
+
+    const raw = localStorage.getItem(storageKey(token))
     if (!raw) return
     try {
-      const data = JSON.parse(raw)
+      const data = JSON.parse(raw) as {
+        candidateId?: string
+        step?: number | 'success'
+        passedStep0?: boolean
+        form?: ReturnType<typeof defaultForm>
+      }
+
       if (data.candidateId) candidateId.value = data.candidateId
-      if (data.step != null) currentStep.value = data.step
-      if (data.form) form.value = { ...form.value, ...data.form }
+      if (data.form) form.value = { ...defaultForm(), ...data.form }
+
+      const step = data.step
+      if (step == null || step === 'success') return
+
+      if (step > 0 && !data.passedStep0) {
+        currentStep.value = 0
+        return
+      }
+
+      currentStep.value = step
     } catch {
       /* ignore */
     }
   }
 
-  function clearLocal() {
-    if (import.meta.client) localStorage.removeItem(STORAGE_KEY)
+  function clearLocal(explicitToken?: string) {
+    if (!import.meta.client) return
+    const token = explicitToken || inviteToken.value
+    if (token) localStorage.removeItem(storageKey(token))
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
   }
 
   async function ensureDraft() {
@@ -150,24 +190,31 @@ export function useCandidateForm() {
     return count
   }
 
+  function formatFetchError(e: unknown, fallback: string): string {
+    const err = e as { data?: { statusMessage?: string }; message?: string }
+    return err.data?.statusMessage || err.message || fallback
+  }
+
   async function finalizeAndDownload() {
+    if (!candidateId.value) {
+      await ensureDraft()
+    }
+    if (!candidateId.value) {
+      throw new Error('Could not start your application. Go back and try again.')
+    }
+
     saveStatus.value = 'saving'
     try {
       await $fetch(`/api/candidates/${candidateId.value}`, {
         method: 'PATCH',
         headers: intakeHeaders(),
-        body: { ...form.value, status: 'submitted' },
+        body: { ...form.value },
       })
       saveStatus.value = 'saved'
-    } catch {
+    } catch (e) {
       saveStatus.value = 'error'
-      throw new Error('Submit failed')
+      throw new Error(formatFetchError(e, 'Could not save your answers.'))
     }
-
-    await $fetch(`/api/candidates/${candidateId.value}/send-confirmation`, {
-      method: 'POST',
-      headers: intakeHeaders(),
-    }).catch(() => null)
 
     try {
       const blob = await $fetch<Blob>('/api/generate-docx', {
@@ -183,9 +230,24 @@ export function useCandidateForm() {
       a.download = `resume-${form.value.last_name || 'candidate'}.docx`
       a.click()
       URL.revokeObjectURL(url)
-    } catch {
-      throw new Error('Download failed')
+    } catch (e) {
+      throw new Error(formatFetchError(e, 'Could not generate your resume file.'))
     }
+
+    try {
+      await $fetch(`/api/candidates/${candidateId.value}`, {
+        method: 'PATCH',
+        headers: intakeHeaders(),
+        body: { status: 'submitted' },
+      })
+    } catch (e) {
+      throw new Error(formatFetchError(e, 'Download succeeded but submission could not be finalized.'))
+    }
+
+    await $fetch(`/api/candidates/${candidateId.value}/send-confirmation`, {
+      method: 'POST',
+      headers: intakeHeaders(),
+    }).catch(() => null)
 
     currentStep.value = 'success'
     clearLocal()
@@ -197,6 +259,7 @@ export function useCandidateForm() {
     saveStatus,
     form,
     certKeys: CERT_KEYS,
+    resetWizard,
     ensureDraft,
     scheduleAutosave,
     applyParseResult,

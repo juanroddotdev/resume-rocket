@@ -2,6 +2,10 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   components: [{ path: '~/components', pathPrefix: false }],
   css: ['~/assets/css/main.css'],
+  experimental: {
+    // Avoid Vite "#app-manifest" resolve errors when switching build → dev
+    appManifest: false,
+  },
   runtimeConfig: {
     geminiApiKey: process.env.GEMINI_API_KEY || '',
     resendApiKey: process.env.RESEND_API_KEY || '',

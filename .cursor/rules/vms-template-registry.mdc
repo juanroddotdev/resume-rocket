@@ -1,0 +1,19 @@
+---
+description: VMS DOCX template tags and docxBuilder mapping
+globs: server/utils/docxBuilder.ts,server/assets/**,docs/**
+alwaysApply: false
+---
+
+# VMS template registry
+
+Template file: `server/assets/template.docx` (local, gitignored). Tags use docxtemplater syntax.
+
+When adding a VMS field, update **all** that apply:
+
+1. Word template tags (e.g. `{candidate_first_name}`, `{#professional_experiences}...`)
+2. `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts`
+3. Intake UI + `candidates` schema/migrations if the field is user-collected
+
+Unmapped template tags render blank — document known gaps in PR description.
+
+Reference merged tags in `docxBuilder.ts`; do not use old `{first_name}` / `{#employers}` names.

@@ -1,0 +1,17 @@
+---
+description: Supabase RLS and table access patterns
+globs: supabase/**/*.sql,server/**/*.ts
+alwaysApply: false
+---
+
+# Supabase RLS
+
+- Enable RLS on every table in `public`.
+- **Candidates / intake_invites**: writes via service role in Nuxt server routes only; no direct anon client writes.
+- **Hospitals**: `SELECT` for `anon` + `authenticated` (search during intake).
+- **Candidates**: `SELECT` for `authenticated` recruiters; service role for intake APIs.
+- **Storage `resumes`**: private bucket; uploads via service role in `POST /api/parse`.
+
+Postgres RLS: **UPDATE requires a SELECT policy** on the same rows.
+
+After schema changes, run advisors or verify policies in dashboard before shipping.

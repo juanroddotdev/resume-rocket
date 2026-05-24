@@ -1,0 +1,18 @@
+---
+description: Loading, error, and empty UI states
+alwaysApply: true
+---
+
+# Empty & error states
+
+Every user-facing flow needs:
+
+| State | Requirement |
+|-------|-------------|
+| Loading | Visible feedback (spinner or label) |
+| Error | Message + recovery action (retry, go back, contact recruiter) |
+| Empty | Explain why empty + what to do next |
+
+Examples: admin table (“Create an intake link above”), invalid invite (“Ask your recruiter”), parse failure (stay on upload + manual continue).
+
+Do not leave blank sections with no guidance.

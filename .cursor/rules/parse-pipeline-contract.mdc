@@ -1,0 +1,20 @@
+---
+description: Resume parse API behavior and wizard prefill
+globs: server/api/parse.post.ts,server/utils/parse*.ts,server/utils/geminiParse.ts,pages/intake/**,composables/useCandidateForm.ts
+alwaysApply: false
+---
+
+# Parse pipeline contract
+
+`POST /api/parse` must:
+
+1. Validate invite token and MIME (PDF/DOCX, max 10MB).
+2. Ensure draft `candidate` row exists; upload to `resumes` bucket.
+3. Extract text → try Gemini → merge `parseResumeHeuristics` fallback.
+4. Persist fields on candidate row; return `fields_found`, `parse_failed`, `partial_parse`.
+
+**Client UX:**
+- On success with fields → `applyParseResult` → advance to step 1 with prefill banner.
+- On total failure → stay on step 0; show error + **Continue manually** only (never auto-advance empty wizard).
+
+Skip Gemini when `GEMINI_API_KEY` is missing/placeholder; heuristics still run.

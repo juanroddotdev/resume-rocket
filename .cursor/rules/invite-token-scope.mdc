@@ -1,0 +1,16 @@
+---
+description: Invite token and admin auth on server routes
+globs: server/api/**,server/utils/requireInvite.ts,server/utils/requireAdmin.ts
+alwaysApply: false
+---
+
+# Invite & admin auth
+
+**Intake routes** (`/api/parse`, `/api/candidates`, PATCH, etc.):
+- Require valid invite via `getInviteTokenFromEvent` + `requireInviteForCandidate` when scoped to a row.
+- Token from `x-intake-token` header or httpOnly `intake_token` cookie (set on validate).
+
+**Admin routes** (`/api/invites` POST, admin docx without intake token):
+- Use `requireAdminSession` with `Authorization: Bearer <supabase_jwt>`.
+
+Do not add public intake endpoints without invite gating.

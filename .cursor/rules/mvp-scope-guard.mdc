@@ -1,0 +1,19 @@
+---
+description: MVP scope — defer non-essential features
+alwaysApply: true
+---
+
+# MVP scope guard
+
+Source of truth: `docs/MVP-PLAN.md`.
+
+**Defer unless explicitly requested:**
+
+- Candidate Supabase Auth / passwords
+- Public open intake at `/` (invite links only)
+- Virus scan, rate limits, camera capture, duplicate detection
+- Recruiter notes, candidate self-serve login
+
+**In scope:** invite-gated intake, parse + wizard, hospital search, DOCX export, admin hub, confirmation email (Resend).
+
+If a request expands scope, call it out and propose phased delivery (see phase-labeling rule).

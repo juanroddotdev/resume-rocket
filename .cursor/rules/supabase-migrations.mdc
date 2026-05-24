@@ -1,0 +1,17 @@
+---
+description: Database migration workflow
+globs: supabase/migrations/**
+alwaysApply: false
+---
+
+# Supabase migrations
+
+- Schema changes **only** via new files in `supabase/migrations/` (timestamp prefix, run in order).
+- Never edit migrations already applied to shared/prod databases.
+- Prefer nullable columns or defaults for additive changes.
+- Include RLS policies in the same migration as new tables.
+- For hospital search: keep `pg_trgm` index on `name` if adding hospital fields.
+
+Apply with `supabase db push` or SQL editor — do not duplicate the same DDL in dashboard **and** CLI.
+
+Seed data belongs in migrations or documented seed scripts, not manual prod edits only.

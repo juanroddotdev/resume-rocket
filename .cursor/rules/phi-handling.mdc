@@ -1,0 +1,15 @@
+---
+description: Sensitive resume and candidate data handling
+alwaysApply: true
+---
+
+# PHI / sensitive data
+
+Resume and intake data are sensitive (healthcare staffing context).
+
+- Do not log full resume text, emails, phones, or license numbers in server console in production flows.
+- Avoid returning raw `parsed_resume` blobs to the client unless required.
+- Keep privacy copy on upload step accurate (placement only; not sold).
+- Prefer server-side storage (Supabase `resumes` bucket) over client retention of file bytes.
+
+When adding analytics or error reporting, strip PII from payloads.

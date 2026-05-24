@@ -1,0 +1,18 @@
+---
+description: Environment variable naming and nuxt.config mapping
+globs: nuxt.config.ts,.env.example,server/utils/**
+alwaysApply: false
+---
+
+# Env var naming
+
+Canonical names (see `.env.example`):
+
+- `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NUXT_PUBLIC_SITE_URL`
+- `GEMINI_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+
+`nuxt.config.ts` `supabase` block must map legacy aliases (`SUPABASE_URL`, `SUPABASE_KEY`, etc.) for `@nuxtjs/supabase` and `requireAdmin.ts`.
+
+Adding a new var: update `.env.example`, `nuxt.config` runtimeConfig if needed, README — never commit `.env`.

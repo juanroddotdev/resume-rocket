@@ -1,0 +1,17 @@
+---
+description: Checks before opening a pull request
+alwaysApply: true
+---
+
+# Pre-ship checks
+
+Before `gh pr create`:
+
+1. `git diff` — no `.env`, secrets, or accidental `template.docx`
+2. `npm run build` — Nuxt compiles
+3. Smoke mentally or locally:
+   - Admin sign-in → create intake link
+   - Open `/intake/{token}` → upload → wizard → DOCX download
+4. PR body includes **Summary** + **Test plan** checkboxes
+
+If Supabase migrations included, note apply order and RLS impact in PR.

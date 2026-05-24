@@ -1,0 +1,15 @@
+---
+description: Mobile intake wizard UX standards
+globs: pages/intake/**,components/intake/**
+alwaysApply: false
+---
+
+# Mobile-first intake
+
+- Layout: `max-w-md mx-auto`, large tap targets, `min-h-dvh` where appropriate.
+- Wizard: debounced autosave (PATCH), localStorage backup, back navigation without wiping draft.
+- Step 0: format hint + privacy line; staged parse spinner labels.
+- Show save status chip (Saving… / Saved) on steps 1–3.
+- Required fields validated before Next; native inputs with clear placeholders.
+
+Match existing Tailwind patterns (`brand-600`, `field` class on intake page).

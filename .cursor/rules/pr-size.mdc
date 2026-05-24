@@ -1,0 +1,12 @@
+---
+description: Keep pull requests small and focused
+alwaysApply: true
+---
+
+# PR size
+
+- **One concern per PR**: e.g. “intake prefill fix” separate from “VMS docx mapping” separate from “cursor rules”.
+- If a change touches >15 files or multiple features, split into stacked or sequential PRs.
+- Follow `.cursor/rules/git-pr-workflow.mdc` for every merge to `main`.
+
+Large refactors need a short plan in the PR body before review.

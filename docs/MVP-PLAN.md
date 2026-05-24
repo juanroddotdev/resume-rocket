@@ -40,7 +40,7 @@ Your blueprint is **strong and implementable**. It clearly separates concerns (p
 | Admin auth | “Protected via Supabase” | Use `@nuxtjs/supabase` middleware on [`pages/admin.vue`](pages/admin.vue) + RLS: recruiters read all candidates; anon cannot. |
 | `template.docx` | Asset at `/server/assets/template.docx` | Ship a **minimal placeholder** `.docx` with tags matching docxtemplater keys; you replace with contract template later. |
 | Parse libraries | PDF/DOCX upload | Use `pdf-parse` (PDF) + `mammoth` (DOCX); reject other MIME types with 415. |
-| Gemini | Structured JSON | `@google/generative-ai` with `responseSchema` / JSON mode for `{ first_name, last_name, email, phone, suggested_employers[] }`. |
+| Gemini | Structured JSON + vision | `@google/genai` with `responseJsonSchema` / JSON mode for text PDFs; **document vision** fallback for image/Canva PDFs when `pdf-parse` extracts &lt; 40 chars. Models: `gemini-3.5-flash` → `gemini-2.5-flash` fallback. |
 
 | Candidate access | Public intake | **Confirmed hybrid:** admin invite link gates entry; confirmation email on complete. |
 | Email | Not specified | **Confirmed:** Resend (or SMTP) transactional email with receipt + resume link. |
@@ -95,7 +95,7 @@ flowchart LR
 2. Install and configure:
    - `@nuxtjs/tailwindcss`
    - `@nuxtjs/supabase` (SSR module, redirect options for admin)
-   - Runtime deps: `@google/generative-ai`, `pdf-parse`, `mammoth`, `pizzip`, `docxtemplater`, `zod` (validation)
+   - Runtime deps: `@google/genai`, `pdf-parse`, `mammoth`, `pizzip`, `docxtemplater`, `zod` (validation)
 3. Configure [`nuxt.config.ts`](nuxt.config.ts):
    - `runtimeConfig`: `geminiApiKey`, `supabaseServiceKey` (private)
    - `modules`: `['@nuxtjs/tailwindcss', '@nuxtjs/supabase']`
@@ -150,7 +150,9 @@ resume-rocket/
 │   ├── utils/
 │   │   ├── supabase.ts          # service-role client
 │   │   ├── extractText.ts
+│   │   ├── geminiShared.ts
 │   │   ├── geminiParse.ts
+│   │   ├── geminiDocumentParse.ts
 │   │   ├── storageUpload.ts
 │   │   ├── requireInvite.ts
 │   │   ├── sendEmail.ts
@@ -341,9 +343,10 @@ Admin grid shows **Status** (`draft` / `completed`) so recruiters see abandoned 
 1. Read multipart; validate MIME (PDF/DOCX) + max 10MB; human-readable 415/413 errors.
 2. Optional body `candidateId` — if re-upload, update existing draft; else create draft row first.
 3. [`server/utils/storageUpload.ts`](server/utils/storageUpload.ts): upload buffer to `resumes/{candidateId}/...`.
-4. Extract text → Gemini structured parse.
-5. On Gemini failure: still return `{ candidateId, parse_failed: true }` and persist `parse_error` on row; client offers manual entry.
-6. On success: `PATCH` draft with parsed fields + return `{ candidateId, ...ParseResult }`.
+4. Extract text → if PDF text is minimal, Gemini document vision → else Gemini text parse → merge heuristics fallback.
+5. On total parse failure: return `{ candidateId, parse_failed: true }` and persist `parse_error` on row; client offers manual entry.
+6. On partial success (`partial_parse`): heuristics filled some fields after Gemini failed; client shows review hint.
+7. On success: update draft with parsed fields + return `{ candidateId, fields_found, document_scan, ...ParseResult }`.
 
 ### `GET /api/hospitals/search` — [`server/api/hospitals/search.get.ts`](server/api/hospitals/search.get.ts)
 

@@ -14,11 +14,17 @@ const query = ref('')
 const results = ref<HospitalRow[]>([])
 const emr = defineModel<string>('emr', { default: '' })
 const searching = ref(false)
+const searchError = ref<string | null>(null)
+
+const showNoResults = computed(
+  () => query.value.trim().length >= 2 && !searching.value && !searchError.value && results.value.length === 0,
+)
 
 let debounce: ReturnType<typeof setTimeout> | null = null
 
 watch(query, (q) => {
   if (debounce) clearTimeout(debounce)
+  searchError.value = null
   if (q.length < 2) {
     results.value = []
     return
@@ -30,6 +36,9 @@ watch(query, (q) => {
         query: { query: q },
       })
       results.value = res.hospitals
+    } catch {
+      searchError.value = 'Could not search facilities. Check your connection and try again.'
+      results.value = []
     } finally {
       searching.value = false
     }
@@ -82,6 +91,10 @@ function removeEmployer(index: number) {
         </li>
       </ul>
       <p v-if="searching" class="mt-1 text-xs text-slate-500">Searching…</p>
+      <p v-else-if="showNoResults" class="mt-1 text-xs text-slate-500">
+        No facilities found — try a different name or add details manually later.
+      </p>
+      <p v-if="searchError" class="mt-1 text-xs text-red-600">{{ searchError }}</p>
     </div>
 
     <ul v-if="employers.length" class="space-y-2">

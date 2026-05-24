@@ -29,6 +29,7 @@ const loading = ref(true)
 const submitting = ref(false)
 const prefillMessage = ref<string | null>(null)
 const submitError = ref<string | null>(null)
+const confirmationEmailSent = ref(false)
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
@@ -86,11 +87,14 @@ async function onParsed(data: Record<string, unknown>) {
   if (!candidateId.value) await ensureDraft()
 
   const fieldsFound = applyParseResult(data as Parameters<typeof applyParseResult>[0])
+  const partialNote = data.partial_parse
+    ? ' Some fields were filled with basic detection — please review everything.'
+    : ''
   prefillMessage.value =
     fieldsFound > 0
       ? data.document_scan
-        ? `We scanned ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
-        : `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.`
+        ? `We scanned ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.${partialNote}`
+        : `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.${partialNote}`
       : null
 
   currentStep.value = 1
@@ -112,7 +116,8 @@ async function goSuccess() {
   submitting.value = true
   submitError.value = null
   try {
-    await finalizeAndDownload()
+    const result = await finalizeAndDownload()
+    confirmationEmailSent.value = result.confirmationEmailSent
   } catch (e) {
     submitError.value =
       e instanceof Error ? e.message : 'Could not prepare your download. Check your connection and try again.'
@@ -123,7 +128,7 @@ async function goSuccess() {
 </script>
 
 <template>
-  <div class="mx-auto min-h-[70vh] max-w-md pb-12">
+  <div class="mx-auto min-h-dvh max-w-md pb-12">
     <div v-if="loading" class="py-20 text-center text-slate-500">Loading…</div>
 
     <div v-else-if="!inviteValid" class="py-16 text-center">
@@ -140,7 +145,10 @@ async function goSuccess() {
       <div v-if="saveStatus !== 'idle'" class="mb-2 text-right text-xs text-slate-500">
         <span v-if="saveStatus === 'saving'">Saving…</span>
         <span v-else-if="saveStatus === 'saved'">Saved</span>
-        <span v-else-if="saveStatus === 'error'" class="text-red-600">Save failed</span>
+        <span v-else-if="saveStatus === 'error'" class="text-red-600">
+          Save failed —
+          <button type="button" class="underline" @click="scheduleAutosave({})">Retry</button>
+        </span>
       </div>
 
       <!-- Step 0 -->
@@ -234,8 +242,11 @@ async function goSuccess() {
       <section v-else-if="currentStep === 'success'" class="py-12 text-center">
         <div class="text-4xl text-brand-600">✓</div>
         <h1 class="mt-4 text-xl font-bold">Submitted</h1>
-        <p class="mt-2 text-slate-600">
+        <p v-if="confirmationEmailSent" class="mt-2 text-slate-600">
           Check your inbox at <strong>{{ form.email }}</strong> for a confirmation link.
+        </p>
+        <p v-else class="mt-2 text-slate-600">
+          Your VMS-ready resume was downloaded. Your recruiter has your submission.
         </p>
       </section>
     </template>

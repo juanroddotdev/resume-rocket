@@ -2,6 +2,7 @@ import type { ParsedResume } from '~/types/parse'
 import {
   createGeminiClient,
   GEMINI_MODELS,
+  GEMINI_VMS_FIELD_GUIDE,
   mapGeminiResumeJson,
   resumeJsonSchema,
   type GeminiResumeJson,
@@ -12,9 +13,9 @@ export async function parseResumeWithGemini(rawText: string): Promise<ParsedResu
   let lastError: unknown
 
   const prompt = `You are an expert ATS and VMS resume parser for healthcare nursing resumes.
-Extract structured fields from this resume text.
-Return JSON with first_name, last_name, email, phone, license_number, license_state, specialties (clinical units like ICU, ER, Med-Surg), and suggested_employers (hospitals/facilities with name, role, city, state when present).
-Use empty strings or omit fields you cannot find. Do not invent data.
+Extract structured fields from this resume text for a healthcare staffing VMS placement packet.
+
+${GEMINI_VMS_FIELD_GUIDE}
 
 Resume text:
 ${rawText.slice(0, 12000)}`

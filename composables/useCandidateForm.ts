@@ -1,4 +1,4 @@
-import type { EmployerEntry, CandidateDraftInput } from '~/types/candidate'
+import type { EmployerEntry, CandidateDraftInput, EducationEntry } from '~/types/candidate'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -15,6 +15,11 @@ function defaultForm() {
     employers: [] as EmployerEntry[],
     credentials: {} as Record<string, boolean>,
     specialties: [] as string[],
+    years_nursing_experience: '',
+    compact_license_status: '',
+    average_patient_ratios: '',
+    specialized_medical_equipment: '',
+    education: [] as EducationEntry[],
   }
 }
 
@@ -137,6 +142,11 @@ export function useCandidateForm() {
         employers: form.value.employers,
         credentials: form.value.credentials,
         specialties: form.value.specialties,
+        years_nursing_experience: form.value.years_nursing_experience || undefined,
+        compact_license_status: form.value.compact_license_status || undefined,
+        average_patient_ratios: form.value.average_patient_ratios || undefined,
+        specialized_medical_equipment: form.value.specialized_medical_equipment || undefined,
+        education: form.value.education.length ? form.value.education : undefined,
       })
     }, 800)
   }
@@ -150,6 +160,11 @@ export function useCandidateForm() {
     license_number?: string
     license_state?: string
     specialties?: string[]
+    years_nursing_experience?: string
+    compact_license_status?: string
+    average_patient_ratios?: string
+    specialized_medical_equipment?: string
+    education?: EducationEntry[]
     suggested_employers?: EmployerEntry[]
     detected_credentials?: string[]
     fields_found?: number
@@ -164,6 +179,19 @@ export function useCandidateForm() {
     if (data.license_number) form.value.license_number = data.license_number
     if (data.license_state) form.value.license_state = data.license_state
     if (data.specialties?.length) form.value.specialties = data.specialties
+    if (data.years_nursing_experience) {
+      form.value.years_nursing_experience = data.years_nursing_experience
+    }
+    if (data.compact_license_status) {
+      form.value.compact_license_status = data.compact_license_status
+    }
+    if (data.average_patient_ratios) {
+      form.value.average_patient_ratios = data.average_patient_ratios
+    }
+    if (data.specialized_medical_equipment) {
+      form.value.specialized_medical_equipment = data.specialized_medical_equipment
+    }
+    if (data.education?.length) form.value.education = [...data.education]
     if (data.suggested_employers?.length) {
       form.value.employers = [...data.suggested_employers]
     }

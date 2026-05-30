@@ -2,6 +2,7 @@ import type { ParsedResume } from '~/types/parse'
 import {
   createGeminiClient,
   GEMINI_MODELS,
+  GEMINI_VMS_FIELD_GUIDE,
   isGeminiConfigured,
   mapGeminiResumeJson,
   MIN_EXTRACTED_TEXT_CHARS,
@@ -32,9 +33,9 @@ export async function parseResumeWithGeminiDocument(
 This PDF may be image-based or use decorative layout (Canva, colored templates, etc.).
 Read the entire document visually and extract:
 1. raw_resume_text — plain text of all readable content (names, contact info, jobs, skills, licenses), in reading order.
-2. Structured fields: first_name, last_name, email, phone, license_number, license_state, specialties (clinical units like ICU, ER, Med-Surg), suggested_employers (hospitals/facilities with name, role, city, state when present).
+2. Structured VMS fields:
 
-Use empty strings or omit fields you cannot find. Do not invent data.`
+${GEMINI_VMS_FIELD_GUIDE}`
 
   let lastError: unknown
 

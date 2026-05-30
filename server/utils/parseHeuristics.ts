@@ -1,8 +1,11 @@
 import type { ParsedResume } from '~/types/parse'
 
-const CERT_PATTERN = /\b(BLS|ACLS|PALS|NIHSS|TNCC|CCRN)\b/gi
-const LICENSE_STATE_PATTERN = /\b(RN|License)[#:\s]*([A-Z]{2})\b/i
-const RN_LICENSE_PATTERN = /\b(?:RN|License\s*#?)\s*[:#]?\s*([A-Z0-9-]{4,})\b/i
+function preferPrimary<T>(primary: T | undefined, fallback: T | undefined): T | undefined {
+  if (primary === undefined || primary === null) return fallback
+  if (typeof primary === 'string' && !primary.trim()) return fallback
+  if (Array.isArray(primary) && primary.length === 0) return fallback
+  return primary
+}
 
 export function parseResumeHeuristically(rawText: string): ParsedResume {
   const text = rawText.replace(/\s+/g, ' ').trim()
@@ -12,13 +15,13 @@ export function parseResumeHeuristically(rawText: string): ParsedResume {
     /(?:\+?1[-.\s]?)?(?:\(\d{3}\)|\d{3})[-.\s]?\d{3}[-.\s]?\d{4}/,
   )?.[0]
 
-  const detectedCredentials = [...new Set([...text.matchAll(CERT_PATTERN)].map(m => m[1]!.toUpperCase()))]
+  const detectedCredentials = [...new Set([...text.matchAll(/\b(BLS|ACLS|PALS|NIHSS|TNCC|CCRN)\b/gi)].map(m => m[1]!.toUpperCase()))]
 
   const licenseState =
-    text.match(LICENSE_STATE_PATTERN)?.[2]?.toUpperCase()
+    text.match(/\b(RN|License)[#:\s]*([A-Z]{2})\b/i)?.[2]?.toUpperCase()
     || text.match(/\b([A-Z]{2})\s+RN\b/)?.[1]
 
-  const licenseNumber = text.match(RN_LICENSE_PATTERN)?.[1]
+  const licenseNumber = text.match(/\b(?:RN|License\s*#?)\s*[:#]?\s*([A-Z0-9-]{4,})\b/i)?.[1]
 
   return {
     email,
@@ -39,7 +42,13 @@ export function hasParsedFields(parsed: ParsedResume): boolean {
     || parsed.licenseNumber
     || parsed.licenseState
     || parsed.specialties?.length
+    || parsed.yearsNursingExperience
+    || parsed.compactLicenseStatus
+    || parsed.averagePatientRatios
+    || parsed.specializedMedicalEquipment
+    || parsed.education?.length
     || parsed.detectedCredentials?.length
+    || parsed.certificationDetails?.length
     || parsed.employers?.length,
   )
 }
@@ -48,18 +57,51 @@ export function mergeParsedResume(
   primary: ParsedResume | null,
   fallback: ParsedResume,
 ): ParsedResume {
+  const mergedCerts = [
+    ...(primary?.detectedCredentials || []),
+    ...(fallback.detectedCredentials || []),
+  ]
+  const uniqueCerts = mergedCerts.length ? [...new Set(mergedCerts)] : undefined
+
+  const certDetails = [
+    ...(primary?.certificationDetails || []),
+    ...(fallback.certificationDetails || []),
+  ]
+  const certDetailsByName = new Map<string, { name: string, expiry?: string }>()
+  for (const cert of certDetails) {
+    certDetailsByName.set(cert.name.toUpperCase(), cert)
+  }
+
   return {
-    firstName: primary?.firstName || fallback.firstName,
-    lastName: primary?.lastName || fallback.lastName,
-    email: primary?.email || fallback.email,
-    phone: primary?.phone || fallback.phone,
-    licenseNumber: primary?.licenseNumber || fallback.licenseNumber,
-    licenseState: primary?.licenseState || fallback.licenseState,
-    specialties: primary?.specialties?.length ? primary.specialties : fallback.specialties,
-    detectedCredentials: primary?.detectedCredentials?.length
-      ? primary.detectedCredentials
-      : fallback.detectedCredentials,
-    employers: primary?.employers?.length ? primary.employers : fallback.employers,
-    rawText: primary?.rawText || fallback.rawText,
+    firstName: preferPrimary(primary?.firstName, fallback.firstName),
+    lastName: preferPrimary(primary?.lastName, fallback.lastName),
+    email: preferPrimary(primary?.email, fallback.email),
+    phone: preferPrimary(primary?.phone, fallback.phone),
+    licenseNumber: preferPrimary(primary?.licenseNumber, fallback.licenseNumber),
+    licenseState: preferPrimary(primary?.licenseState, fallback.licenseState),
+    specialties: preferPrimary(primary?.specialties, fallback.specialties),
+    yearsNursingExperience: preferPrimary(
+      primary?.yearsNursingExperience,
+      fallback.yearsNursingExperience,
+    ),
+    compactLicenseStatus: preferPrimary(
+      primary?.compactLicenseStatus,
+      fallback.compactLicenseStatus,
+    ),
+    averagePatientRatios: preferPrimary(
+      primary?.averagePatientRatios,
+      fallback.averagePatientRatios,
+    ),
+    specializedMedicalEquipment: preferPrimary(
+      primary?.specializedMedicalEquipment,
+      fallback.specializedMedicalEquipment,
+    ),
+    education: preferPrimary(primary?.education, fallback.education),
+    detectedCredentials: uniqueCerts,
+    certificationDetails: certDetailsByName.size
+      ? [...certDetailsByName.values()]
+      : undefined,
+    employers: preferPrimary(primary?.employers, fallback.employers),
+    rawText: preferPrimary(primary?.rawText, fallback.rawText),
   }
 }

@@ -10,6 +10,11 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
       license_number: undefined,
       license_state: undefined,
       specialties: undefined,
+      years_nursing_experience: undefined,
+      compact_license_status: undefined,
+      average_patient_ratios: undefined,
+      specialized_medical_equipment: undefined,
+      education: undefined,
       suggested_employers: [] as ParsedResume['employers'],
     }
   }
@@ -22,6 +27,11 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
     license_number: parsed.licenseNumber,
     license_state: parsed.licenseState,
     specialties: parsed.specialties,
+    years_nursing_experience: parsed.yearsNursingExperience,
+    compact_license_status: parsed.compactLicenseStatus,
+    average_patient_ratios: parsed.averagePatientRatios,
+    specialized_medical_equipment: parsed.specializedMedicalEquipment,
+    education: parsed.education,
     suggested_employers: parsed.employers || [],
   }
 }
@@ -35,10 +45,33 @@ export function countParsedFields(fields: ReturnType<typeof parsedResumeToApiFie
   if (fields.license_number) count++
   if (fields.license_state) count++
   if (fields.specialties?.length) count++
+  if (fields.years_nursing_experience) count++
+  if (fields.compact_license_status) count++
+  if (fields.average_patient_ratios) count++
+  if (fields.specialized_medical_equipment) count++
+  if (fields.education?.length) count++
   if (fields.suggested_employers?.length) count++
   return count
 }
 
 export function countDetectedCredentials(credentials?: string[]): number {
   return credentials?.length ?? 0
+}
+
+/** Build credential ingress for normalizeCredentials from parse heuristics + Gemini details. */
+export function credentialsInputFromParsed(parsed: ParsedResume | null) {
+  if (!parsed) return null
+
+  const acc: Record<string, boolean | { active: boolean, expiry?: string }> = {}
+
+  for (const cert of parsed.detectedCredentials || []) {
+    acc[cert.toUpperCase()] = true
+  }
+
+  for (const cert of parsed.certificationDetails || []) {
+    const key = cert.name.toUpperCase()
+    acc[key] = cert.expiry ? { active: true, expiry: cert.expiry } : { active: true }
+  }
+
+  return Object.keys(acc).length ? acc : null
 }

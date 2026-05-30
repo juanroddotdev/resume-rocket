@@ -118,14 +118,10 @@ export default defineEventHandler(async (event) => {
   const hasFields = parsed ? hasParsedFields(parsed) : false
   const parseFailed = !hasFields
 
-  const credentials = parsed?.detectedCredentials?.reduce<Record<string, boolean>>((acc, cert) => {
-    acc[cert] = true
-    return acc
-  }, {}) ?? null
-
   const normalizedJsonb = normalizeCandidateJsonbFields({
     employers: parsed?.employers,
-    credentials,
+    credentials: credentialsInputFromParsed(parsed),
+    education: parsed?.education,
   })
 
   const updatePayload: Record<string, unknown> = {
@@ -144,7 +140,12 @@ export default defineEventHandler(async (event) => {
       license_number: parsed.licenseNumber,
       license_state: parsed.licenseState,
       specialties: parsed.specialties,
+      years_nursing_experience: parsed.yearsNursingExperience,
+      compact_license_status: parsed.compactLicenseStatus,
+      average_patient_ratios: parsed.averagePatientRatios,
+      specialized_medical_equipment: parsed.specializedMedicalEquipment,
       employers: normalizedJsonb.employers,
+      ...(normalizedJsonb.education?.length ? { education: normalizedJsonb.education } : {}),
       ...(normalizedJsonb.credentials && Object.keys(normalizedJsonb.credentials).length
         ? { credentials: normalizedJsonb.credentials }
         : {}),

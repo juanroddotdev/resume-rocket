@@ -68,7 +68,7 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 |--------------|----------------|----------------|-------------|----------|--------|
 | `{#active_licenses_list}{.}{/active_licenses_list}` | `license_state` + `license_number` | Yes | 3 — Credentials | Yes | Live |
 | `rn_license_state_and_expiry` | Same (formatted) | Yes | 3 — Credentials | Yes | Live |
-| `compact_license_status` | `candidates.compact_license_status` | Planned | 3+ — Summary | Yes | Placeholder |
+| `compact_license_status` | `candidates.compact_license_status` | Yes | 3+ — Summary | Yes | Placeholder |
 | `core_life_support_certifications` | `credentials` active keys | Partial | 3 — Credentials | Yes | Live |
 | `BLS_certification_expiration_date` | `credentials.BLS` (+ expiry planned) | Planned | 3 — Credentials | Yes | Placeholder (`Current`) |
 | `ACLS_certification_expiration_date` | `credentials.ACLS` | Planned | 3 — Credentials | Yes | Placeholder (`Current`) |
@@ -85,9 +85,9 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | `primary_specialty_unit` | `specialties[0]` | Yes | 2 — Employment *(UI planned)* | Yes | Parse-only |
 | `core_clinical_competencies` | `specialties[]` joined | Yes | 2 *(UI planned)* | Yes | Parse-only |
 | `{#clinical_specialties_list}{.}{/clinical_specialties_list}` | `specialties[]` | Yes | 2 *(UI planned)* | Yes | Parse-only |
-| `total_years_nursing_experience` | `candidates.years_nursing_experience` | Planned | 3+ — Summary | Yes | Placeholder |
-| `average_patient_ratios` | `candidates.average_patient_ratios` | Planned | 3+ / employer detail | Yes | Placeholder |
-| `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Planned | 3+ — Summary | Yes | Placeholder |
+| `total_years_nursing_experience` | `candidates.years_nursing_experience` | Yes | 3+ — Summary | Yes | Placeholder |
+| `average_patient_ratios` | `candidates.average_patient_ratios` | Yes | 3+ / employer detail | Yes | Placeholder |
+| `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Yes | 3+ — Summary | Yes | Placeholder |
 | `facility_types_trauma_levels` | Derived from `employers[].traumaLevel` | Partial | 2 — Employment | No | Derived |
 | `emr_software_proficiencies` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
 
@@ -97,9 +97,9 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
-| `education_degree` | `education[].degree` | Planned | 3+ — Education | Yes | Placeholder |
-| `education_school_name` | `education[].school` | Planned | 3+ — Education | Yes | Placeholder |
-| `education_graduation_year` | `education[].graduationYear` | Planned | 3+ — Education | Yes | Placeholder |
+| `education_degree` | `education[].degree` | Yes | 3+ — Education | Yes | Placeholder |
+| `education_school_name` | `education[].school` | Yes | 3+ — Education | Yes | Placeholder |
+| `education_graduation_year` | `education[].graduationYear` | Yes | 3+ — Education | Yes | Placeholder |
 
 ---
 
@@ -114,17 +114,17 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | `experience_facility_type` | Derived trauma label | — | — | No | Derived |
 | `experience_unit_specialty` | `employers[].role` → else `specialties[0]` | Partial | 2 *(UI planned)* | Yes | Parse-only |
 | `experience_role_details` | `employers[].role` | Partial | 2 *(UI planned)* | Yes | Parse-only |
-| `experience_employment_dates` | `employers[].startDate`, `endDate` | Partial | 2 *(UI planned)* | Yes | Parse-only |
-| `experience_employment_type` | `employers[].employmentType` | Planned | 2 — Employer card | Yes | Placeholder |
-| `experience_unit_bed_count` | `employers[].unitBedCount` | Planned | 2 — Employer detail | No | Placeholder |
+| `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 *(UI planned)* | Yes | Parse-only |
+| `experience_employment_type` | `employers[].employmentType` | Yes | 2 — Employer card | Yes | Placeholder |
+| `experience_unit_bed_count` | `employers[].unitBedCount` | Yes | 2 — Employer detail | No | Placeholder |
 | `experience_emr_system` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
 | `experience_is_teaching_facility` | `employers[].teachingStatus` | No (hospital DB) | 2 — Employment | No | Live |
-| `experience_patient_scope` | `employers[].patientScope` | Planned | 2 — Employer detail | Yes | Placeholder |
-| `experience_average_daily_patients` | `employers[].avgDailyPatients` | Planned | 2 — Employer detail | No | Placeholder |
-| `experience_patient_acuity_level` | `employers[].patientAcuity` | Planned | 2 — Employer detail | Yes | Placeholder |
-| `{#experience_floated_units_list}{.}{/experience_floated_units_list}` | `employers[].floatedUnits[]` | Planned | 2 — Employer detail | No | Placeholder |
-| `{#experience_equipment_procedures_list}{.}{/experience_equipment_procedures_list}` | `employers[].equipmentProcedures[]` | Planned | 2 — Employer detail | No | Placeholder |
-| `{#experience_highlights}{.}{/experience_highlights}` | `employers[].highlights[]` | Planned | 2 — Employer detail | Yes | Placeholder |
+| `experience_patient_scope` | `employers[].patientScope` | Yes | 2 — Employer detail | Yes | Placeholder |
+| `experience_average_daily_patients` | `employers[].avgDailyPatients` | Yes | 2 — Employer detail | No | Placeholder |
+| `experience_patient_acuity_level` | `employers[].patientAcuity` | Yes | 2 — Employer detail | Yes | Placeholder |
+| `{#experience_floated_units_list}{.}{/experience_floated_units_list}` | `employers[].floatedUnits[]` | Yes | 2 — Employer detail | No | Placeholder |
+| `{#experience_equipment_procedures_list}{.}{/experience_equipment_procedures_list}` | `employers[].equipmentProcedures[]` | Yes | 2 — Employer detail | No | Placeholder |
+| `{#experience_highlights}{.}{/experience_highlights}` | `employers[].highlights[]` | Yes | 2 — Employer detail | Yes | Placeholder |
 
 ---
 

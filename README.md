@@ -70,4 +70,5 @@ Replace `server/assets/template.docx` with your VMS contract template. Tag names
 
 Regenerate dev placeholder: `node scripts/generate-template.mjs`  
 Inventory contract tags: `node scripts/inventory-template-tags.mjs`  
+Normalize JSONB smoke test: `node scripts/test-normalize-candidate.mjs`  
 Smoke-test mapping: `node scripts/test-docx-mapping.mjs`

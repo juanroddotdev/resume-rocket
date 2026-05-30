@@ -123,6 +123,11 @@ export default defineEventHandler(async (event) => {
     return acc
   }, {}) ?? null
 
+  const normalizedJsonb = normalizeCandidateJsonbFields({
+    employers: parsed?.employers,
+    credentials,
+  })
+
   const updatePayload: Record<string, unknown> = {
     resume_storage_path: storagePath,
     resume_original_filename: filePart.filename,
@@ -139,8 +144,10 @@ export default defineEventHandler(async (event) => {
       license_number: parsed.licenseNumber,
       license_state: parsed.licenseState,
       specialties: parsed.specialties,
-      employers: parsed.employers,
-      ...(credentials ? { credentials } : {}),
+      employers: normalizedJsonb.employers,
+      ...(normalizedJsonb.credentials && Object.keys(normalizedJsonb.credentials).length
+        ? { credentials: normalizedJsonb.credentials }
+        : {}),
     })
   }
 

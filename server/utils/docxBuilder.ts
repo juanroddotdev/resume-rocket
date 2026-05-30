@@ -2,19 +2,13 @@ import Docxtemplater from 'docxtemplater'
 import PizZip from 'pizzip'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import type { CredentialsMap, EmployerEntry } from '../../types/candidate'
+import {
+  activeCredentialKeys,
+  credentialExpiryDisplay,
+} from './normalizeCandidate.ts'
 
-interface DocxEmployer {
-  name: string
-  role?: string
-  startDate?: string
-  endDate?: string
-  city?: string
-  state?: string
-  beds?: number | null
-  trauma_level?: string | null
-  traumaLevel?: string | null
-  teachingStatus?: boolean | null
-}
+interface DocxEmployer extends EmployerEntry {}
 
 export interface DocxCandidate {
   first_name?: string | null
@@ -26,25 +20,22 @@ export interface DocxCandidate {
   emr_system?: string | null
   specialties?: string[] | null
   employers?: DocxEmployer[] | null
-  credentials?: Record<string, boolean> | null
+  credentials?: CredentialsMap | null
 }
 
 function traumaLevel(employer: DocxEmployer): string {
-  return employer.trauma_level || employer.traumaLevel || ''
+  return employer.traumaLevel || ''
 }
 
-function activeCertKeys(credentials: Record<string, boolean> | null | undefined): string[] {
-  if (!credentials) return []
-  return Object.entries(credentials)
-    .filter(([, active]) => active)
-    .map(([key]) => key)
+function activeCertKeys(credentials: CredentialsMap | null | undefined): string[] {
+  return activeCredentialKeys(credentials)
 }
 
 function certStatus(
-  credentials: Record<string, boolean> | null | undefined,
+  credentials: CredentialsMap | null | undefined,
   key: string,
 ): string {
-  return credentials?.[key] ? 'Current' : ''
+  return credentialExpiryDisplay(credentials, key)
 }
 
 function formatLicenseStateAndExpiry(

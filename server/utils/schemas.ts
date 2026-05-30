@@ -5,6 +5,8 @@ import {
   normalizeEmployers,
 } from '~/server/utils/normalizeCandidate'
 
+const stringArrayInput = z.array(z.union([z.string(), z.number()])).optional()
+
 /** Permissive ingress — normalized to camelCase via normalizeEmployers. */
 export const employerInputSchema = z.object({
   name: z.string(),
@@ -22,6 +24,22 @@ export const employerInputSchema = z.object({
   trauma_level: z.string().optional(),
   teachingStatus: z.boolean().optional(),
   teaching_status: z.boolean().optional(),
+  employmentType: z.string().optional(),
+  employment_type: z.string().optional(),
+  unitBedCount: z.string().optional(),
+  unit_bed_count: z.string().optional(),
+  patientScope: z.string().optional(),
+  patient_scope: z.string().optional(),
+  floatedUnits: stringArrayInput,
+  floated_units: stringArrayInput,
+  equipmentProcedures: stringArrayInput,
+  equipment_procedures: stringArrayInput,
+  avgDailyPatients: z.string().optional(),
+  avg_daily_patients: z.string().optional(),
+  average_daily_patients: z.string().optional(),
+  patientAcuity: z.string().optional(),
+  patient_acuity: z.string().optional(),
+  highlights: stringArrayInput,
 })
 
 const credentialInputSchema = z.union([
@@ -31,6 +49,15 @@ const credentialInputSchema = z.union([
     expiry: z.string().optional(),
   }),
 ])
+
+const compactLicenseSchema = z
+  .string()
+  .optional()
+  .transform(s => {
+    if (s === undefined) return undefined
+    const trimmed = s.trim()
+    return trimmed || undefined
+  })
 
 export const candidatePatchSchema = z.object({
   first_name: z.string().optional(),
@@ -52,6 +79,10 @@ export const candidatePatchSchema = z.object({
     .array(z.record(z.unknown()))
     .optional()
     .transform(arr => (arr !== undefined ? normalizeEducation(arr) : undefined)),
+  years_nursing_experience: z.string().optional(),
+  compact_license_status: compactLicenseSchema,
+  average_patient_ratios: z.string().optional(),
+  specialized_medical_equipment: z.string().optional(),
   preferred_hospital_id: z.string().uuid().optional().nullable(),
   emr_system: z.string().optional(),
   status: z.enum(['draft', 'submitted', 'confirmed', 'archived']).optional(),

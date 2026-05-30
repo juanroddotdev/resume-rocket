@@ -19,6 +19,12 @@ function optionalBool(value: unknown): boolean | undefined {
   return undefined
 }
 
+function optionalStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const items = value.map(item => String(item).trim()).filter(Boolean)
+  return items.length ? items : undefined
+}
+
 /** Canonical employer shape (camelCase). Accepts legacy snake_case keys on input. */
 export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (!raw || typeof raw !== 'object') return null
@@ -36,6 +42,18 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   const beds = optionalNumber(e.beds)
   const traumaLevel = optionalString(e.traumaLevel ?? e.trauma_level)
   const teachingStatus = optionalBool(e.teachingStatus ?? e.teaching_status)
+  const employmentType = optionalString(e.employmentType ?? e.employment_type)
+  const unitBedCount = optionalString(e.unitBedCount ?? e.unit_bed_count)
+  const patientScope = optionalString(e.patientScope ?? e.patient_scope)
+  const floatedUnits = optionalStringArray(e.floatedUnits ?? e.floated_units)
+  const equipmentProcedures = optionalStringArray(
+    e.equipmentProcedures ?? e.equipment_procedures,
+  )
+  const avgDailyPatients = optionalString(
+    e.avgDailyPatients ?? e.avg_daily_patients ?? e.average_daily_patients,
+  )
+  const patientAcuity = optionalString(e.patientAcuity ?? e.patient_acuity)
+  const highlights = optionalStringArray(e.highlights)
 
   if (role) entry.role = role
   if (startDate) entry.startDate = startDate
@@ -46,6 +64,14 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (beds != null) entry.beds = beds
   if (traumaLevel) entry.traumaLevel = traumaLevel
   if (teachingStatus != null) entry.teachingStatus = teachingStatus
+  if (employmentType) entry.employmentType = employmentType
+  if (unitBedCount) entry.unitBedCount = unitBedCount
+  if (patientScope) entry.patientScope = patientScope
+  if (floatedUnits) entry.floatedUnits = floatedUnits
+  if (equipmentProcedures) entry.equipmentProcedures = equipmentProcedures
+  if (avgDailyPatients) entry.avgDailyPatients = avgDailyPatients
+  if (patientAcuity) entry.patientAcuity = patientAcuity
+  if (highlights) entry.highlights = highlights
 
   return entry
 }

@@ -18,7 +18,11 @@ export interface CandidateRow {
   credentials: CredentialsMap | null
   parsed_resume: Record<string, unknown> | null
   employers: EmployerEntry[] | null
-  education?: EducationEntry[] | null
+  education: EducationEntry[] | null
+  years_nursing_experience: string | null
+  compact_license_status: string | null
+  average_patient_ratios: string | null
+  specialized_medical_equipment: string | null
   preferred_hospital_id: string | null
   emr_system: string | null
   access_token: string | null
@@ -55,6 +59,22 @@ export interface EmployerEntry {
   beds?: number
   traumaLevel?: string
   teachingStatus?: boolean
+  /** VMS experience_employment_type */
+  employmentType?: string
+  /** VMS experience_unit_bed_count */
+  unitBedCount?: string
+  /** VMS experience_patient_scope */
+  patientScope?: string
+  /** VMS experience_floated_units_list */
+  floatedUnits?: string[]
+  /** VMS experience_equipment_procedures_list */
+  equipmentProcedures?: string[]
+  /** VMS experience_average_daily_patients */
+  avgDailyPatients?: string
+  /** VMS experience_patient_acuity_level */
+  patientAcuity?: string
+  /** VMS experience_highlights */
+  highlights?: string[]
 }
 
 export interface CandidateDraftInput {
@@ -69,5 +89,10 @@ export interface CandidateDraftInput {
   parsed_resume?: Record<string, unknown>
   employers?: EmployerEntry[]
   education?: EducationEntry[]
+  years_nursing_experience?: string
+  compact_license_status?: string
+  average_patient_ratios?: string
+  specialized_medical_equipment?: string
   preferred_hospital_id?: string
+  emr_system?: string
 }

@@ -69,4 +69,5 @@ Never commit `.env` or `server/assets/template.docx`.
 Replace `server/assets/template.docx` with your VMS contract template. Tag names must match `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts` — see [`docs/VMS-TEMPLATE-REGISTRY.md`](docs/VMS-TEMPLATE-REGISTRY.md).
 
 Regenerate dev placeholder: `node scripts/generate-template.mjs`  
+Inventory contract tags: `node scripts/inventory-template-tags.mjs`  
 Smoke-test mapping: `node scripts/test-docx-mapping.mjs`

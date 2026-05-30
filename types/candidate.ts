@@ -15,9 +15,10 @@ export interface CandidateRow {
   license_number: string | null
   license_state: string | null
   specialties: string[] | null
-  credentials: Record<string, boolean> | null
+  credentials: CredentialsMap | null
   parsed_resume: Record<string, unknown> | null
   employers: EmployerEntry[] | null
+  education?: EducationEntry[] | null
   preferred_hospital_id: string | null
   emr_system: string | null
   access_token: string | null
@@ -27,6 +28,20 @@ export interface CandidateRow {
   confirmation_sent_at?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface CredentialEntry {
+  active: boolean
+  expiry?: string
+}
+
+/** Canonical credentials JSONB (server-normalized). Client PATCH may send booleans. */
+export type CredentialsMap = Record<string, CredentialEntry>
+
+export interface EducationEntry {
+  degree?: string
+  school?: string
+  graduationYear?: string
 }
 
 export interface EmployerEntry {
@@ -39,7 +54,6 @@ export interface EmployerEntry {
   hospitalId?: string
   beds?: number
   traumaLevel?: string
-  trauma_level?: string
   teachingStatus?: boolean
 }
 
@@ -51,8 +65,9 @@ export interface CandidateDraftInput {
   license_number?: string
   license_state?: string
   specialties?: string[]
-  credentials?: Record<string, boolean>
+  credentials?: CredentialsMap | Record<string, boolean>
   parsed_resume?: Record<string, unknown>
   employers?: EmployerEntry[]
+  education?: EducationEntry[]
   preferred_hospital_id?: string
 }

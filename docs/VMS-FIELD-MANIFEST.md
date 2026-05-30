@@ -30,6 +30,20 @@ Summary registry: [`VMS-TEMPLATE-REGISTRY.md`](VMS-TEMPLATE-REGISTRY.md).
 
 ---
 
+## Canonical JSONB shapes (#11)
+
+Server normalizes on parse write, PATCH ingress, and DOCX read via `server/utils/normalizeCandidate.ts`:
+
+| Field | Canonical shape |
+|-------|-----------------|
+| `employers[]` | camelCase keys: `traumaLevel`, `teachingStatus`, `startDate`, `hospitalId`, … |
+| `credentials` | `{ "BLS": { "active": true, "expiry?": "YYYY-MM-DD" } }` (booleans coerced on ingress) |
+| `education[]` | `{ degree?, school?, graduationYear? }` *(planned column — normalizer ready)* |
+
+Verify: `node scripts/test-normalize-candidate.mjs`
+
+---
+
 ## Candidate identity
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |

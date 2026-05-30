@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (error || !data) {
       throw createError({ statusCode: 404, statusMessage: 'Candidate not found' })
     }
-    candidate = data
+    candidate = normalizeCandidateRow(data as Record<string, unknown>)
   } else if (body.access_token) {
     const { data, error } = await supabase
       .from('candidates')
@@ -28,34 +28,22 @@ export default defineEventHandler(async (event) => {
     if (error || !data) {
       throw createError({ statusCode: 404, statusMessage: 'Invalid access token' })
     }
-    candidate = data
+    candidate = normalizeCandidateRow(data as Record<string, unknown>)
   } else {
     throw createError({ statusCode: 400, statusMessage: 'id or access_token required' })
   }
 
-  const employers = (candidate.employers as Array<Record<string, unknown>> | null)?.map(e => ({
-    name: String(e.name || ''),
-    role: e.role ? String(e.role) : undefined,
-    startDate: e.startDate ? String(e.startDate) : undefined,
-    endDate: e.endDate ? String(e.endDate) : undefined,
-    city: e.city ? String(e.city) : undefined,
-    state: e.state ? String(e.state) : undefined,
-    beds: e.beds as number | undefined,
-    trauma_level: (e.trauma_level || e.traumaLevel) as string | undefined,
-    teachingStatus: e.teachingStatus ?? e.teaching_status ?? undefined,
-  }))
-
   const buffer = await buildResumeDocx({
-    first_name: candidate.first_name,
-    last_name: candidate.last_name,
-    email: candidate.email,
-    phone: candidate.phone,
-    license_number: candidate.license_number,
-    license_state: candidate.license_state,
-    emr_system: candidate.emr_system,
+    first_name: candidate.first_name as string | null,
+    last_name: candidate.last_name as string | null,
+    email: candidate.email as string | null,
+    phone: candidate.phone as string | null,
+    license_number: candidate.license_number as string | null,
+    license_state: candidate.license_state as string | null,
+    emr_system: candidate.emr_system as string | null,
     specialties: candidate.specialties as string[] | null,
-    employers,
-    credentials: candidate.credentials as Record<string, boolean> | null,
+    employers: candidate.employers,
+    credentials: candidate.credentials,
   })
 
   const filename = `resume-${candidate.last_name || 'candidate'}.docx`.replace(/\s+/g, '-')

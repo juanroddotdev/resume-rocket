@@ -40,5 +40,3 @@ ${rawText.slice(0, 12000)}`
 
   throw lastError instanceof Error ? lastError : new Error('Gemini parse failed')
 }
-
-export { isGeminiConfigured } from '~/server/utils/geminiShared'

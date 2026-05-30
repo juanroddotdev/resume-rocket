@@ -41,7 +41,7 @@ See [`.env.example`](.env.example). Never commit `.env`.
 
 ## Plan / scope
 
-See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan.
+See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan. For VMS template expansion (Phase B/C), see [`docs/VMS-FULL-COVERAGE-PLAN.md`](docs/VMS-FULL-COVERAGE-PLAN.md).
 
 ## Admin setup
 

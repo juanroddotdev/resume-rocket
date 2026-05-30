@@ -5,7 +5,9 @@ alwaysApply: true
 
 # Manual test script
 
-PR test plans should reference relevant items from `docs/MVP-PLAN.md`:
+PR test plans should reference relevant items from `docs/MVP-PLAN.md` and, for VMS work, `docs/VMS-FULL-COVERAGE-PLAN.md`.
+
+## Core MVP (every intake/DOCX PR)
 
 - [ ] Admin: sign in, create invite, copy/open link
 - [ ] Intake: valid token → upload PDF/DOCX → prefill or manual path
@@ -13,5 +15,14 @@ PR test plans should reference relevant items from `docs/MVP-PLAN.md`:
 - [ ] Admin: candidate appears (toggle “Show drafts” if still draft)
 - [ ] Optional: confirmation email if Resend configured
 - [ ] Invalid/expired token blocked
+
+## VMS expansion (when touching parse, wizard fields, or docxBuilder)
+
+- [ ] Parse prefill populates new field groups (`fields_found` reflects manifest groups)
+- [ ] Partial parse shows review hint; manual path still completes
+- [ ] Gap review blocks submit when required template tags are empty (once implemented)
+- [ ] DOCX download: contract template sections populated (test parse-heavy + manual-heavy profiles)
+- [ ] `node scripts/test-docx-mapping.mjs` passes
+- [ ] After template changes: `node scripts/inventory-template-tags.mjs` reports no unmapped tags
 
 Mark unchecked items when not in scope for the PR.

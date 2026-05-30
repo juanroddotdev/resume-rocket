@@ -62,12 +62,17 @@ function addHospital(h: HospitalRow) {
   results.value = []
 }
 
+function patchEmployer(index: number, employer: EmployerEntry) {
+  const next = [...props.employers]
+  next[index] = employer
+  emit('update:employers', next)
+}
+
 function removeEmployer(index: number) {
   const next = [...props.employers]
   next.splice(index, 1)
   emit('update:employers', next)
 }
-
 </script>
 
 <template>
@@ -98,16 +103,17 @@ function removeEmployer(index: number) {
       <p v-if="searchError" class="mt-1 text-xs text-red-600">{{ searchError }}</p>
     </div>
 
-    <ul v-if="employers.length" class="space-y-2">
-      <li
-        v-for="(e, i) in employers"
-        :key="i"
-        class="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2 text-sm"
-      >
-        <span>{{ e.name }}</span>
-        <button type="button" class="text-red-600" @click="removeEmployer(i)">Remove</button>
-      </li>
+    <ul v-if="employers.length" class="space-y-3">
+      <EmployerCard
+        v-for="(employer, index) in employers"
+        :key="`${employer.hospitalId || employer.name}-${index}`"
+        :employer="employer"
+        :index="index"
+        @update="patchEmployer(index, $event)"
+        @remove="removeEmployer(index)"
+      />
     </ul>
+    <p v-else class="text-xs text-slate-500">Search and add at least one facility where you have worked.</p>
 
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">EMR platform</label>

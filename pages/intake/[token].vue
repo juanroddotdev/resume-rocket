@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computeMissingTemplateFields } from '~/utils/vmsGapReview'
+
 const route = useRoute()
 const token = computed(() => String(route.params.token))
 
@@ -31,6 +33,8 @@ const prefillMessage = ref<string | null>(null)
 const submitError = ref<string | null>(null)
 const confirmationEmailSent = ref(false)
 
+const missingFields = computed(() => computeMissingTemplateFields(form.value))
+
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
   const ok = await validate(routeToken)
@@ -45,7 +49,6 @@ async function bootstrapInvite(routeToken: string) {
     }
     candidateId.value = inviteCandidateId.value
   } else if (candidateId.value) {
-    // Stale draft from another invite in the same browser session.
     clearLocal(routeToken)
     resetWizard()
   }
@@ -110,6 +113,11 @@ async function onManual() {
 
 function canAdvanceStep1() {
   return form.value.first_name && form.value.last_name && form.value.email && form.value.phone
+}
+
+function goToStep(step: number) {
+  currentStep.value = step
+  persistLocal(token.value)
 }
 
 async function goSuccess() {
@@ -194,6 +202,11 @@ async function goSuccess() {
       <!-- Step 2 -->
       <section v-else-if="currentStep === 2" class="space-y-4">
         <h1 class="text-xl font-bold">Employment</h1>
+        <SpecialtyChipInput
+          v-model="form.specialties"
+          label="Specialties / units"
+          placeholder="e.g. ICU, ER, Med-Surg"
+        />
         <HospitalAutocomplete
           v-model:emr="form.emr_system"
           :employers="form.employers"
@@ -209,7 +222,7 @@ async function goSuccess() {
 
       <!-- Step 3 -->
       <section v-else-if="currentStep === 3" class="space-y-4">
-        <h1 class="text-xl font-bold">Credentials</h1>
+        <h1 class="text-xl font-bold">Credentials & education</h1>
         <CredentialsChecklist
           :credentials="form.credentials"
           :license-number="form.license_number"
@@ -219,23 +232,37 @@ async function goSuccess() {
           @update:license-number="form.license_number = $event"
           @update:license-state="form.license_state = $event"
         />
+        <ClinicalSummaryFields
+          v-model:years-nursing-experience="form.years_nursing_experience"
+          v-model:compact-license-status="form.compact_license_status"
+          v-model:average-patient-ratios="form.average_patient_ratios"
+          v-model:specialized-medical-equipment="form.specialized_medical_equipment"
+        />
+        <EducationRepeater v-model="form.education" />
+        <div class="flex gap-2">
+          <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 2">Back</button>
+          <button type="button" class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white" @click="currentStep = 4">
+            Review
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 4 -->
+      <section v-else-if="currentStep === 4" class="space-y-4">
+        <IntakeReviewPanel
+          :missing="missingFields"
+          :submitting="submitting"
+          @back="currentStep = 3"
+          @go-to-step="goToStep"
+          @submit="goSuccess"
+        />
         <p
           v-if="submitError"
           class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
         >
           {{ submitError }}
+          <button type="button" class="ml-1 underline" @click="goSuccess">Retry</button>
         </p>
-        <div class="flex gap-2">
-          <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 2">Back</button>
-          <button
-            type="button"
-            class="flex-1 rounded-lg bg-brand-600 py-3 font-bold text-white disabled:opacity-50"
-            :disabled="submitting"
-            @click="goSuccess"
-          >
-            {{ submitting ? 'Preparing…' : 'Download VMS-Ready Resume' }}
-          </button>
-        </div>
       </section>
 
       <!-- Success -->

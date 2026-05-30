@@ -1,19 +1,41 @@
 <script setup lang="ts">
+import type { CredentialsMap } from '~/types/candidate'
+
 const props = defineProps<{
-  credentials: Record<string, boolean>
+  credentials: CredentialsMap
   licenseNumber: string
   licenseState: string
   certKeys: readonly string[]
 }>()
 
 const emit = defineEmits<{
-  'update:credentials': [value: Record<string, boolean>]
+  'update:credentials': [value: CredentialsMap]
   'update:licenseNumber': [value: string]
   'update:licenseState': [value: string]
 }>()
 
+function isActive(cert: string) {
+  return props.credentials[cert]?.active === true
+}
+
 function toggle(cert: string) {
-  const next = { ...props.credentials, [cert]: !props.credentials[cert] }
+  const next = { ...props.credentials }
+  if (isActive(cert)) {
+    delete next[cert]
+  } else {
+    next[cert] = { active: true }
+  }
+  emit('update:credentials', next)
+}
+
+function expiryFor(cert: string) {
+  return props.credentials[cert]?.expiry || ''
+}
+
+function setExpiry(cert: string, value: string) {
+  if (!isActive(cert)) return
+  const next = { ...props.credentials }
+  next[cert] = { active: true, expiry: value.trim() || undefined }
   emit('update:credentials', next)
 }
 </script>
@@ -28,13 +50,32 @@ function toggle(cert: string) {
           :key="cert"
           type="button"
           class="rounded-full px-4 py-2 text-sm font-medium transition"
-          :class="credentials[cert] ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700'"
+          :class="isActive(cert) ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700'"
           @click="toggle(cert)"
         >
           {{ cert }}
         </button>
       </div>
     </div>
+
+    <div v-if="certKeys.some(isActive)" class="space-y-2">
+      <p class="text-sm font-medium text-slate-700">Certification expiration (optional)</p>
+      <div
+        v-for="cert in certKeys.filter(isActive)"
+        :key="`exp-${cert}`"
+        class="grid grid-cols-[4rem_1fr] items-center gap-2"
+      >
+        <span class="text-sm text-slate-600">{{ cert }}</span>
+        <input
+          :value="expiryFor(cert)"
+          type="text"
+          placeholder="YYYY-MM or date"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-base"
+          @input="setExpiry(cert, ($event.target as HTMLInputElement).value)"
+        >
+      </div>
+    </div>
+
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">License number</label>
       <input

@@ -1,7 +1,29 @@
-import type { EmployerEntry, CandidateDraftInput, EducationEntry } from '~/types/candidate'
+import type {
+  EmployerEntry,
+  CandidateDraftInput,
+  EducationEntry,
+  CredentialsMap,
+  CredentialEntry,
+} from '~/types/candidate'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
+
+function normalizeStoredCredentials(raw: unknown): CredentialsMap {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const out: CredentialsMap = {}
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (value === true) {
+      out[key.toUpperCase()] = { active: true }
+    } else if (value && typeof value === 'object' && 'active' in (value as CredentialEntry)) {
+      const entry = value as CredentialEntry
+      out[key.toUpperCase()] = entry.active || entry.expiry
+        ? { active: entry.active ?? true, expiry: entry.expiry }
+        : { active: true }
+    }
+  }
+  return out
+}
 
 function defaultForm() {
   return {
@@ -13,7 +35,7 @@ function defaultForm() {
     license_state: '',
     emr_system: '',
     employers: [] as EmployerEntry[],
-    credentials: {} as Record<string, boolean>,
+    credentials: {} as CredentialsMap,
     specialties: [] as string[],
     years_nursing_experience: '',
     compact_license_status: '',
@@ -76,7 +98,13 @@ export function useCandidateForm() {
       }
 
       if (data.candidateId) candidateId.value = data.candidateId
-      if (data.form) form.value = { ...defaultForm(), ...data.form }
+      if (data.form) {
+        form.value = {
+          ...defaultForm(),
+          ...data.form,
+          credentials: normalizeStoredCredentials(data.form.credentials),
+        }
+      }
 
       const step = data.step
       if (step == null || step === 'success') return
@@ -197,7 +225,7 @@ export function useCandidateForm() {
     }
     if (data.detected_credentials?.length) {
       for (const cert of data.detected_credentials) {
-        form.value.credentials[cert] = true
+        form.value.credentials[cert.toUpperCase()] = { active: true }
       }
     }
 

@@ -1,0 +1,117 @@
+import type { CandidateDraftInput, EducationEntry, EmployerEntry } from '~/types/candidate'
+
+export interface MissingTemplateField {
+  id: string
+  label: string
+  step: number
+}
+
+type FormShape = CandidateDraftInput & {
+  first_name?: string
+  last_name?: string
+  email?: string
+  phone?: string
+  emr_system?: string
+  employers?: EmployerEntry[]
+  education?: EducationEntry[]
+}
+
+function hasText(value?: string | null) {
+  return Boolean(value?.trim())
+}
+
+function employerMissing(employer: EmployerEntry, index: number): MissingTemplateField[] {
+  const missing: MissingTemplateField[] = []
+  const prefix = `Employer ${index + 1}`
+  if (!hasText(employer.role)) {
+    missing.push({ id: `employer-${index}-role`, label: `${prefix}: role / unit`, step: 2 })
+  }
+  if (!hasText(employer.startDate)) {
+    missing.push({ id: `employer-${index}-start`, label: `${prefix}: start date`, step: 2 })
+  }
+  if (!hasText(employer.endDate)) {
+    missing.push({ id: `employer-${index}-end`, label: `${prefix}: end date`, step: 2 })
+  }
+  if (!hasText(employer.employmentType)) {
+    missing.push({ id: `employer-${index}-type`, label: `${prefix}: employment type`, step: 2 })
+  }
+  if (!hasText(employer.patientScope)) {
+    missing.push({ id: `employer-${index}-scope`, label: `${prefix}: patient scope`, step: 2 })
+  }
+  if (!hasText(employer.patientAcuity)) {
+    missing.push({ id: `employer-${index}-acuity`, label: `${prefix}: patient acuity`, step: 2 })
+  }
+  if (!employer.highlights?.length || !employer.highlights.some(h => h.trim())) {
+    missing.push({ id: `employer-${index}-highlights`, label: `${prefix}: at least one highlight`, step: 2 })
+  }
+  return missing
+}
+
+export function computeMissingTemplateFields(form: FormShape): MissingTemplateField[] {
+  const missing: MissingTemplateField[] = []
+
+  if (!hasText(form.first_name)) {
+    missing.push({ id: 'first_name', label: 'First name', step: 1 })
+  }
+  if (!hasText(form.last_name)) {
+    missing.push({ id: 'last_name', label: 'Last name', step: 1 })
+  }
+  if (!hasText(form.email)) {
+    missing.push({ id: 'email', label: 'Email', step: 1 })
+  }
+  if (!hasText(form.phone)) {
+    missing.push({ id: 'phone', label: 'Phone', step: 1 })
+  }
+
+  if (!form.specialties?.length || !hasText(form.specialties[0])) {
+    missing.push({ id: 'specialties', label: 'Primary specialty / unit', step: 2 })
+  }
+  if (!hasText(form.emr_system)) {
+    missing.push({ id: 'emr_system', label: 'EMR platform', step: 2 })
+  }
+  if (!form.employers?.length) {
+    missing.push({ id: 'employers', label: 'At least one employer / facility', step: 2 })
+  } else {
+    for (let i = 0; i < form.employers.length; i++) {
+      missing.push(...employerMissing(form.employers[i]!, i))
+    }
+  }
+
+  if (!hasText(form.license_number)) {
+    missing.push({ id: 'license_number', label: 'License number', step: 3 })
+  }
+  if (!hasText(form.license_state)) {
+    missing.push({ id: 'license_state', label: 'License state', step: 3 })
+  }
+  if (!hasText(form.years_nursing_experience)) {
+    missing.push({ id: 'years_nursing_experience', label: 'Years of nursing experience', step: 3 })
+  }
+  if (!hasText(form.compact_license_status)) {
+    missing.push({ id: 'compact_license_status', label: 'Compact license status', step: 3 })
+  }
+  if (!hasText(form.average_patient_ratios)) {
+    missing.push({ id: 'average_patient_ratios', label: 'Average patient ratios', step: 3 })
+  }
+  if (!hasText(form.specialized_medical_equipment)) {
+    missing.push({ id: 'specialized_medical_equipment', label: 'Specialized medical equipment', step: 3 })
+  }
+
+  const education = form.education || []
+  if (!education.length) {
+    missing.push({ id: 'education', label: 'At least one education entry', step: 3 })
+  } else {
+    education.forEach((entry, index) => {
+      if (!hasText(entry.degree)) {
+        missing.push({ id: `education-${index}-degree`, label: `Education ${index + 1}: degree`, step: 3 })
+      }
+      if (!hasText(entry.school)) {
+        missing.push({ id: `education-${index}-school`, label: `Education ${index + 1}: school`, step: 3 })
+      }
+      if (!hasText(entry.graduationYear)) {
+        missing.push({ id: `education-${index}-year`, label: `Education ${index + 1}: graduation year`, step: 3 })
+      }
+    })
+  }
+
+  return missing
+}

@@ -1,6 +1,6 @@
 ---
 description: Resume parse API behavior and wizard prefill
-globs: server/api/parse.post.ts,server/utils/parse*.ts,server/utils/gemini*.ts,server/utils/extractText.ts,pages/intake/**,composables/useCandidateForm.ts
+globs: server/api/parse.post.ts,server/utils/parse*.ts,server/utils/gemini*.ts,server/utils/extractText.ts,server/utils/normalizeCandidate.ts,pages/intake/**,composables/useCandidateForm.ts
 alwaysApply: false
 ---
 
@@ -11,12 +11,16 @@ alwaysApply: false
 1. Validate invite token and MIME (PDF/DOCX, max 10MB).
 2. Ensure draft `candidate` row exists; upload to `resumes` bucket.
 3. Extract text → if PDF text is minimal, **Gemini document vision** (`parseResumeWithGeminiDocument`) → else Gemini text parse → merge `parseResumeHeuristics` fallback.
-4. Persist fields on candidate row; return `fields_found`, `parse_failed`, `partial_parse`, `document_scan`.
+4. **Normalize** persisted JSONB via `normalizeCandidate` helpers (employers, credentials, education) before DB write.
+5. Persist manifest fields on candidate row; return `fields_found`, `parse_failed`, `partial_parse`, `document_scan`.
+
+Field groups in `fields_found` should align with `docs/VMS-FIELD-MANIFEST.md` once created. Expand `resumeJsonSchema()` in `geminiShared.ts` for Phase C — do not return raw `parsed_resume` to client.
 
 See `multimodal-resume-parsing.mdc` for Canva/image PDF requirements.
 
 **Client UX:**
 - On success with fields → `applyParseResult` → advance to step 1; show “We scanned…” when `document_scan` is true.
+- On partial parse → advance with review hint; wizard/gap review collects missing template tags.
 - On total failure → stay on step 0; show error + **Continue manually** only (never auto-advance empty wizard).
 
 Skip Gemini when `GEMINI_API_KEY` is missing/placeholder; heuristics still run for text-based PDFs. Image PDFs need Gemini or manual entry.

@@ -1,6 +1,6 @@
 ---
 description: VMS DOCX template tags and docxBuilder mapping
-globs: server/utils/docxBuilder.ts,server/assets/**,docs/**
+globs: server/utils/docxBuilder.ts,server/assets/**,docs/**,server/utils/geminiShared.ts,server/utils/normalizeCandidate.ts,types/parse.ts,composables/useCandidateForm.ts
 alwaysApply: false
 ---
 
@@ -8,12 +8,18 @@ alwaysApply: false
 
 Template file: `server/assets/template.docx` (local, gitignored). Tags use docxtemplater syntax.
 
+Execution plan: `docs/VMS-FULL-COVERAGE-PLAN.md`. Tag inventory: `docs/VMS-FIELD-MANIFEST.md` (authoritative once created). Mapped tags today: `docs/VMS-TEMPLATE-REGISTRY.md`.
+
 When adding a VMS field, update **all** that apply:
 
-1. Word template tags (e.g. `{candidate_first_name}`, `{#professional_experiences}...`)
-2. `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts`
-3. Intake UI + `candidates` schema/migrations if the field is user-collected
+1. Contract Word template tags (e.g. `{candidate_first_name}`, `{#professional_experiences}...`)
+2. `docs/VMS-FIELD-MANIFEST.md` — tag → DB path → parse → wizard step → required at submit
+3. `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts`
+4. `resumeJsonSchema()` + prompts in `server/utils/geminiShared.ts` (Phase C parse)
+5. `types/parse.ts` → `parse.post.ts` persistence → `applyParseResult()` in `useCandidateForm.ts`
+6. Intake UI + `candidates` schema/migration + `server/utils/schemas.ts` (Phase B)
+7. `server/utils/normalizeCandidate.ts` on read/write boundaries (after #11)
 
-Unmapped template tags render blank — document known gaps in PR description.
+Unmapped template tags render blank — document known gaps in PR description until wired.
 
-Reference merged tags in `docxBuilder.ts` and `docs/VMS-TEMPLATE-REGISTRY.md`; do not use old `{first_name}` / `{#employers}` names.
+Do not use old `{first_name}` / `{#employers}` names. After contract template edits, run `node scripts/inventory-template-tags.mjs` and reconcile with manifest.

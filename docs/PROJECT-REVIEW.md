@@ -4,6 +4,7 @@ This document is a practical review of the current codebase: where it is strong 
 
 Related references:
 - `docs/MVP-PLAN.md` (product scope and flow)
+- `docs/VMS-FULL-COVERAGE-PLAN.md` (next steps: full template coverage via parse + wizard)
 - `docs/PROJECT-REVIEW.md` (this file)
 - `.cursor/rules/mvp-scope-guard.mdc`
 - `.cursor/rules/parse-pipeline-contract.mdc`

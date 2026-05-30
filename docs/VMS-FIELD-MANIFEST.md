@@ -68,11 +68,11 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 |--------------|----------------|----------------|-------------|----------|--------|
 | `{#active_licenses_list}{.}{/active_licenses_list}` | `license_state` + `license_number` | Yes | 3 — Credentials | Yes | Live |
 | `rn_license_state_and_expiry` | Same (formatted) | Yes | 3 — Credentials | Yes | Live |
-| `compact_license_status` | `candidates.compact_license_status` | Yes | 3+ — Summary | Yes | Placeholder |
+| `compact_license_status` | `candidates.compact_license_status` | Yes | 3 — Summary | Yes | Live |
 | `core_life_support_certifications` | `credentials` active keys | Partial | 3 — Credentials | Yes | Live |
-| `BLS_certification_expiration_date` | `credentials.BLS` (+ expiry planned) | Planned | 3 — Credentials | Yes | Placeholder (`Current`) |
-| `ACLS_certification_expiration_date` | `credentials.ACLS` | Planned | 3 — Credentials | Yes | Placeholder (`Current`) |
-| `PALS_certification_expiration_date` | `credentials.PALS` | Planned | 3 — Credentials | No | Placeholder (`Current`) |
+| `BLS_certification_expiration_date` | `credentials.BLS.expiry` | Yes | 3 — Credentials | Yes | Live |
+| `ACLS_certification_expiration_date` | `credentials.ACLS.expiry` | Yes | 3 — Credentials | Yes | Live |
+| `PALS_certification_expiration_date` | `credentials.PALS.expiry` | Yes | 3 — Credentials | No | Live |
 
 NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no separate expiration tags in contract template.
 
@@ -82,12 +82,12 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
-| `primary_specialty_unit` | `specialties[0]` | Yes | 2 — Employment *(UI planned)* | Yes | Parse-only |
-| `core_clinical_competencies` | `specialties[]` joined | Yes | 2 *(UI planned)* | Yes | Parse-only |
-| `{#clinical_specialties_list}{.}{/clinical_specialties_list}` | `specialties[]` | Yes | 2 *(UI planned)* | Yes | Parse-only |
-| `total_years_nursing_experience` | `candidates.years_nursing_experience` | Yes | 3+ — Summary | Yes | Placeholder |
-| `average_patient_ratios` | `candidates.average_patient_ratios` | Yes | 3+ / employer detail | Yes | Placeholder |
-| `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Yes | 3+ — Summary | Yes | Placeholder |
+| `primary_specialty_unit` | `specialties[0]` | Yes | 2 — Employment | Yes | Live |
+| `core_clinical_competencies` | `specialties[]` joined | Yes | 2 | Yes | Live |
+| `{#clinical_specialties_list}{.}{/clinical_specialties_list}` | `specialties[]` | Yes | 2 | Yes | Live |
+| `total_years_nursing_experience` | `candidates.years_nursing_experience` | Yes | 3 — Summary | Yes | Live |
+| `average_patient_ratios` | `candidates.average_patient_ratios` | Yes | 3 — Summary | Yes | Live |
+| `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Yes | 3 — Summary | Yes | Live |
 | `facility_types_trauma_levels` | Derived from `employers[].traumaLevel` | Partial | 2 — Employment | No | Derived |
 | `emr_software_proficiencies` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
 
@@ -97,9 +97,9 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
-| `education_degree` | `education[].degree` | Yes | 3+ — Education | Yes | Placeholder |
-| `education_school_name` | `education[].school` | Yes | 3+ — Education | Yes | Placeholder |
-| `education_graduation_year` | `education[].graduationYear` | Yes | 3+ — Education | Yes | Placeholder |
+| `education_degree` | `education[].degree` | Yes | 3 — Education | Yes | Live |
+| `education_school_name` | `education[].school` | Yes | 3 — Education | Yes | Live |
+| `education_graduation_year` | `education[].graduationYear` | Yes | 3 — Education | Yes | Live |
 
 ---
 
@@ -112,19 +112,19 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | `experience_hospital_total_beds` | `employers[].beds` | No (hospital DB) | 2 — Employment | No | Live |
 | `experience_trauma_level` | `employers[].traumaLevel` | No (hospital DB) | 2 — Employment | No | Live |
 | `experience_facility_type` | Derived trauma label | — | — | No | Derived |
-| `experience_unit_specialty` | `employers[].role` → else `specialties[0]` | Partial | 2 *(UI planned)* | Yes | Parse-only |
-| `experience_role_details` | `employers[].role` | Partial | 2 *(UI planned)* | Yes | Parse-only |
-| `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 *(UI planned)* | Yes | Parse-only |
-| `experience_employment_type` | `employers[].employmentType` | Yes | 2 — Employer card | Yes | Placeholder |
-| `experience_unit_bed_count` | `employers[].unitBedCount` | Yes | 2 — Employer detail | No | Placeholder |
+| `experience_unit_specialty` | `employers[].role` → else `specialties[0]` | Partial | 2 | Yes | Live |
+| `experience_role_details` | `employers[].role` | Partial | 2 | Yes | Live |
+| `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 | Yes | Live |
+| `experience_employment_type` | `employers[].employmentType` | Yes | 2 — Employer card | Yes | Live |
+| `experience_unit_bed_count` | `employers[].unitBedCount` | Yes | 2 — Employer detail | No | Live |
 | `experience_emr_system` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
 | `experience_is_teaching_facility` | `employers[].teachingStatus` | No (hospital DB) | 2 — Employment | No | Live |
-| `experience_patient_scope` | `employers[].patientScope` | Yes | 2 — Employer detail | Yes | Placeholder |
-| `experience_average_daily_patients` | `employers[].avgDailyPatients` | Yes | 2 — Employer detail | No | Placeholder |
-| `experience_patient_acuity_level` | `employers[].patientAcuity` | Yes | 2 — Employer detail | Yes | Placeholder |
-| `{#experience_floated_units_list}{.}{/experience_floated_units_list}` | `employers[].floatedUnits[]` | Yes | 2 — Employer detail | No | Placeholder |
-| `{#experience_equipment_procedures_list}{.}{/experience_equipment_procedures_list}` | `employers[].equipmentProcedures[]` | Yes | 2 — Employer detail | No | Placeholder |
-| `{#experience_highlights}{.}{/experience_highlights}` | `employers[].highlights[]` | Yes | 2 — Employer detail | Yes | Placeholder |
+| `experience_patient_scope` | `employers[].patientScope` | Yes | 2 — Employer detail | Yes | Live |
+| `experience_average_daily_patients` | `employers[].avgDailyPatients` | Yes | 2 — Employer detail | No | Live |
+| `experience_patient_acuity_level` | `employers[].patientAcuity` | Yes | 2 — Employer detail | Yes | Live |
+| `{#experience_floated_units_list}{.}{/experience_floated_units_list}` | `employers[].floatedUnits[]` | Yes | 2 — Employer detail | No | Live |
+| `{#experience_equipment_procedures_list}{.}{/experience_equipment_procedures_list}` | `employers[].equipmentProcedures[]` | Yes | 2 — Employer detail | No | Live |
+| `{#experience_highlights}{.}{/experience_highlights}` | `employers[].highlights[]` | Yes | 2 — Employer detail | Yes | Live |
 
 ---
 
@@ -135,18 +135,19 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | All contract scalar tags in docxBuilder | Yes (37/37) |
 | All contract loop tags in docxBuilder | Yes (7/7) |
 | Tags in docxBuilder not in contract | None |
-| DOCX smoke test (`test-docx-mapping.mjs`) | Pass |
+| DOCX smoke test (`test-docx-mapping.mjs`) | Pass — full fixture asserts required fields populated |
 
-**Still blank in output today:** 13 scalar groups + education loop + 3 nested experience loops (see Placeholder rows above). Address in plan Steps 2–5 (Phase B/C + docxBuilder values).
+**Blank in output:** Only when the candidate left a field empty at submit (gap review blocks required gaps). Cert expiries render empty when no date was entered.
 
 ---
 
 ## Next implementation steps
 
-1. **Step 1** — JSONB normalization (`#11`)
-2. **Step 2** — DB columns + `education` JSONB + extended `employers` shape
-3. **Step 3** — Gemini schema for all “Planned” parse rows
-4. **Step 4** — Wizard UI + gap review for Required rows
-5. **Step 5** — Replace placeholders with real values in docxBuilder
+1. ~~**Step 1** — JSONB normalization (`#11`)~~
+2. ~~**Step 2** — DB columns + `education` JSONB + extended `employers` shape~~
+3. ~~**Step 3** — Gemini schema for all parse rows~~
+4. ~~**Step 4** — Wizard UI + gap review for Required rows~~
+5. ~~**Step 5** — Replace placeholders with real values in docxBuilder~~
+6. **Step 6** — Hardening sprint (#12–#15)
 
 See [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md).

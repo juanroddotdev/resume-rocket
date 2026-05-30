@@ -44,6 +44,11 @@ export default defineEventHandler(async (event) => {
     specialties: candidate.specialties as string[] | null,
     employers: candidate.employers,
     credentials: candidate.credentials,
+    education: candidate.education,
+    years_nursing_experience: candidate.years_nursing_experience as string | null,
+    compact_license_status: candidate.compact_license_status as string | null,
+    average_patient_ratios: candidate.average_patient_ratios as string | null,
+    specialized_medical_equipment: candidate.specialized_medical_equipment as string | null,
   })
 
   const filename = `resume-${candidate.last_name || 'candidate'}.docx`.replace(/\s+/g, '-')

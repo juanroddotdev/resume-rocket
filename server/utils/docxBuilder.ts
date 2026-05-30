@@ -2,11 +2,8 @@ import Docxtemplater from 'docxtemplater'
 import PizZip from 'pizzip'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { CredentialsMap, EmployerEntry } from '../../types/candidate'
-import {
-  activeCredentialKeys,
-  credentialExpiryDisplay,
-} from './normalizeCandidate.ts'
+import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
 
@@ -21,6 +18,11 @@ export interface DocxCandidate {
   specialties?: string[] | null
   employers?: DocxEmployer[] | null
   credentials?: CredentialsMap | null
+  education?: EducationEntry[] | null
+  years_nursing_experience?: string | null
+  compact_license_status?: string | null
+  average_patient_ratios?: string | null
+  specialized_medical_equipment?: string | null
 }
 
 function traumaLevel(employer: DocxEmployer): string {
@@ -31,11 +33,16 @@ function activeCertKeys(credentials: CredentialsMap | null | undefined): string[
   return activeCredentialKeys(credentials)
 }
 
-function certStatus(
+function certExpiry(
   credentials: CredentialsMap | null | undefined,
   key: string,
 ): string {
-  return credentialExpiryDisplay(credentials, key)
+  if (!credentials) return ''
+  const entry = credentials[key.toUpperCase()] ?? credentials[key]
+  if (entry && typeof entry === 'object' && entry.expiry) {
+    return entry.expiry
+  }
+  return ''
 }
 
 function formatLicenseStateAndExpiry(
@@ -79,6 +86,14 @@ function teachingFacilityLabel(employer: DocxEmployer): string {
   return ''
 }
 
+function mapEducation(education: EducationEntry[] | null | undefined) {
+  return (education || []).map(entry => ({
+    education_degree: entry.degree || '',
+    education_school_name: entry.school || '',
+    education_graduation_year: entry.graduationYear || '',
+  }))
+}
+
 function mapEmployerToExperience(
   employer: DocxEmployer,
   emrSystem: string,
@@ -95,19 +110,19 @@ function mapEmployerToExperience(
     experience_facility_location: location,
     experience_employment_dates:
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
-    experience_employment_type: '',
+    experience_employment_type: employer.employmentType || '',
     experience_role_details: employer.role || '',
-    experience_unit_bed_count: '',
+    experience_unit_bed_count: employer.unitBedCount || '',
     experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',
     experience_trauma_level: trauma,
     experience_is_teaching_facility: teachingFacilityLabel(employer),
     experience_emr_system: emrSystem,
-    experience_patient_scope: '',
-    experience_floated_units_list: [] as string[],
-    experience_equipment_procedures_list: [] as string[],
-    experience_average_daily_patients: '',
-    experience_patient_acuity_level: '',
-    experience_highlights: [] as string[],
+    experience_patient_scope: employer.patientScope || '',
+    experience_floated_units_list: employer.floatedUnits || [],
+    experience_equipment_procedures_list: employer.equipmentProcedures || [],
+    experience_average_daily_patients: employer.avgDailyPatients || '',
+    experience_patient_acuity_level: employer.patientAcuity || '',
+    experience_highlights: employer.highlights || [],
   }
 }
 
@@ -129,13 +144,13 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     candidate_state: candidate.license_state?.toUpperCase() || employerState,
     active_licenses_list: activeLicensesList(candidate.license_state, candidate.license_number),
 
-    total_years_nursing_experience: '',
+    total_years_nursing_experience: candidate.years_nursing_experience || '',
     primary_specialty_unit: primarySpecialty,
     facility_types_trauma_levels: facilityTypesTraumaLevels(employers),
     core_clinical_competencies: specialties.join(', '),
     clinical_specialties_list: specialties,
-    average_patient_ratios: '',
-    specialized_medical_equipment: '',
+    average_patient_ratios: candidate.average_patient_ratios || '',
+    specialized_medical_equipment: candidate.specialized_medical_equipment || '',
     emr_software_proficiencies: emrSystem,
     core_life_support_certifications: activeCerts.join(', '),
 
@@ -143,16 +158,12 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
       candidate.license_state,
       candidate.license_number,
     ),
-    compact_license_status: '',
-    BLS_certification_expiration_date: certStatus(credentials, 'BLS'),
-    ACLS_certification_expiration_date: certStatus(credentials, 'ACLS'),
-    PALS_certification_expiration_date: certStatus(credentials, 'PALS'),
+    compact_license_status: candidate.compact_license_status || '',
+    BLS_certification_expiration_date: certExpiry(credentials, 'BLS'),
+    ACLS_certification_expiration_date: certExpiry(credentials, 'ACLS'),
+    PALS_certification_expiration_date: certExpiry(credentials, 'PALS'),
 
-    education: [] as Array<{
-      education_degree: string
-      education_school_name: string
-      education_graduation_year: string
-    }>,
+    education: mapEducation(candidate.education),
 
     professional_experiences: employers.map(e =>
       mapEmployerToExperience(e, emrSystem, primarySpecialty),

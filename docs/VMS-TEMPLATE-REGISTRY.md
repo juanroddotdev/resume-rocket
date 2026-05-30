@@ -3,6 +3,8 @@
 Source template: `server/assets/template.docx` (local, gitignored).  
 Mapping code: `server/utils/docxBuilder.ts` → `mapCandidateToTemplateData()`.
 
+**Field manifest (contract inventory):** [`VMS-FIELD-MANIFEST.md`](VMS-FIELD-MANIFEST.md) — one row per tag with parse/wizard/required columns.
+
 Phase A maps **existing intake data only**. Tags listed under “Deferred” need Phase B (new intake fields) or Phase C (parse enrichment).
 
 ---
@@ -72,8 +74,11 @@ Certifications **NIHSS**, **TNCC**, **CCRN** appear in `core_life_support_certif
 ## Verify locally
 
 ```bash
+node scripts/inventory-template-tags.mjs
 node scripts/test-docx-mapping.mjs
 ```
+
+`inventory-template-tags.mjs` scans the contract template and diffs tags vs `mapCandidateToTemplateData()`. Exit 0 = all tags have builder keys.
 
 Writes `/tmp/resume-rocket-test.docx` and prints non-empty mapped fields. Open the DOCX to confirm layout.
 

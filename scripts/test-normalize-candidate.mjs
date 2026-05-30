@@ -85,12 +85,48 @@ const canonicalJson = stableStringify(canonicalDocx)
 
 if (legacyJson !== canonicalJson) {
   console.error('FAIL: legacy and canonical rows produced different DOCX data')
-  console.error('Legacy keys sample:', legacyDocx.candidate_state, legacyDocx.professional_experiences?.[0])
-  console.error('Canonical keys sample:', canonicalDocx.candidate_state, canonicalDocx.professional_experiences?.[0])
+  process.exit(1)
+}
+
+const extendedEmployerRow = normalizeCandidateRow({
+  ...legacyRow,
+  employers: [
+    {
+      name: 'Metro Medical',
+      role: 'Staff RN',
+      employment_type: 'Travel',
+      unit_bed_count: '24',
+      patient_scope: 'Med-Surg',
+      floated_units: ['ICU', 'ER'],
+      equipment_procedures: ['Ventilator management'],
+      avg_daily_patients: '5-6',
+      patient_acuity: 'High',
+      highlights: ['Charge nurse 2 years'],
+      trauma_level: 'II',
+      teaching_status: true,
+      city: 'Austin',
+      state: 'TX',
+    },
+  ],
+})
+
+const employer = extendedEmployerRow.employers[0]
+if (
+  employer.employmentType !== 'Travel'
+  || employer.unitBedCount !== '24'
+  || employer.patientScope !== 'Med-Surg'
+  || !employer.floatedUnits?.includes('ICU')
+  || !employer.equipmentProcedures?.includes('Ventilator management')
+  || employer.avgDailyPatients !== '5-6'
+  || employer.patientAcuity !== 'High'
+  || !employer.highlights?.includes('Charge nurse 2 years')
+) {
+  console.error('FAIL: extended employer fields not normalized', employer)
   process.exit(1)
 }
 
 console.log('OK: legacy snake_case + mixed credentials → same DOCX mapping as canonical camelCase')
+console.log('OK: extended employer JSONB fields normalize to camelCase')
 console.log('  experience_trauma_level:', legacyDocx.professional_experiences?.[0]?.experience_trauma_level)
 console.log('  ACLS expiry:', legacyDocx.ACLS_certification_expiration_date)
 console.log('  active certs:', legacyDocx.core_life_support_certifications)

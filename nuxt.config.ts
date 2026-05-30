@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     resendApiKey: process.env.RESEND_API_KEY || '',
     resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    parseRateLimitMax: Number(process.env.PARSE_RATE_LIMIT_MAX || 8),
+    parseRateLimitWindowMs: Number(process.env.PARSE_RATE_LIMIT_WINDOW_MS || 900_000),
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     },

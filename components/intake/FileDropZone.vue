@@ -42,8 +42,15 @@ async function handleFile(file: File) {
       emit('parsed', result)
     }
   } catch (e: unknown) {
-    const err = e as { data?: { statusMessage?: string }; message?: string }
-    error.value = err.data?.statusMessage || err.message || 'Upload failed'
+    const err = e as { status?: number; statusCode?: number; data?: { statusMessage?: string }; message?: string }
+    const status = err.status ?? err.statusCode
+    if (status === 429) {
+      error.value =
+        err.data?.statusMessage
+        || 'Too many upload attempts. Wait a few minutes and try again, or continue manually below.'
+    } else {
+      error.value = err.data?.statusMessage || err.message || 'Upload failed'
+    }
     emit('parseFailed')
   } finally {
     parsing.value = false

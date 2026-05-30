@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { getCookie, getHeader } from 'h3'
 
 const COOKIE_NAME = 'intake_token'
 

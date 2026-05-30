@@ -222,6 +222,7 @@ Two-week hardening sprint from `docs/PROJECT-REVIEW.md` §7: VMS mapping, JSONB 
 
 ## References
 - `docs/PROJECT-REVIEW.md`
+- `docs/RELEASE-CHECKLIST.md` — pre-release manual smoke tests
 - `docs/MVP-PLAN.md`
 - `.cursor/rules/phase-labeling.mdc`
 - `.cursor/rules/manual-test-script.mdc`

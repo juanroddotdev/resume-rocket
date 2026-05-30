@@ -40,6 +40,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: `Invite ${validation.reason}` })
   }
 
+  const config = useRuntimeConfig()
+  const rateLimit = checkParseRateLimit(token, {
+    max: config.parseRateLimitMax,
+    windowMs: config.parseRateLimitWindowMs,
+  })
+  if (!rateLimit.allowed) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: `Too many upload attempts. Wait ${rateLimit.retryAfterSec} seconds and try again, or continue manually.`,
+    })
+  }
+
   const supabase = useSupabaseAdmin()
   let resolvedCandidateId = candidateId
 
@@ -82,7 +94,6 @@ export default defineEventHandler(async (event) => {
 
   try {
     rawText = await extractTextFromBuffer(buffer, mime, filePart.filename)
-    const config = useRuntimeConfig()
     const geminiReady = isGeminiConfigured(config.geminiApiKey)
 
     if (needsDocumentVision(rawText, mime, filePart.filename)) {
@@ -160,6 +171,18 @@ export default defineEventHandler(async (event) => {
   const apiFields = parsedResumeToApiFields(parsed)
   const fieldsFound =
     countParsedFields(apiFields) + countDetectedCredentials(parsed?.detectedCredentials)
+
+  logParseOutcome({
+    candidateId: resolvedCandidateId,
+    mime,
+    charCount: rawText.length,
+    parseFailed,
+    partialParse: geminiFailed && hasFields,
+    documentScan: documentVision,
+    geminiFailed,
+    fieldsFound,
+    parseErrorKind: classifyParseError(parseFailed || geminiFailed ? parseError : null),
+  })
 
   return {
     candidateId: resolvedCandidateId,

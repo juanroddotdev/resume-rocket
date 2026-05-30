@@ -148,6 +148,6 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 3. ~~**Step 3** — Gemini schema for all parse rows~~
 4. ~~**Step 4** — Wizard UI + gap review for Required rows~~
 5. ~~**Step 5** — Replace placeholders with real values in docxBuilder~~
-6. **Step 6** — Hardening sprint (#12–#15)
+6. **Step 6** — Hardening sprint (#12–#15) — parse logging, rate limits, CI, release checklist
 
 See [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md).

@@ -14,39 +14,97 @@ Living task list for Resume Rocket. Epic context: [#16 hardening sprint](https:/
 
 ---
 
-## UX — intake (requested)
+## UX backlog (order TBD)
 
-### Parse progress animation (Step 0 upload)
+Candidate + recruiter polish. One concern per PR when implementing. Priority order not set — sort when planning sprints.
 
-**Goal:** After upload, show clear motion/progress so the screen does not look frozen while `/api/parse` runs (often 10–30+ seconds for vision PDFs).
+### Upload & parse (Step 0)
 
-**Today:** [`FileDropZone.vue`](../components/intake/FileDropZone.vue) sets `parseStage` text only (`Reading file…`, `Reading and scanning document…`) — no spinner, steps, or timed stage progression.
+- [ ] **Parse progress animation** — spinner/pulse on drop zone so upload does not look frozen during long `/api/parse` (10–30s+ on vision PDFs); staged labels: upload → extract text → AI scan → saving ([`FileDropZone.vue`](../components/intake/FileDropZone.vue))
+- [ ] **Timed stage copy** — rotate/hold messages on long waits; align with `document_scan` / `partial_parse` when known
+- [ ] **Disable drop zone while parsing** — no second upload mid-request; keep **Continue manually** on error ([empty-error-states](../.cursor/rules/empty-error-states.mdc))
+- [ ] **`prefers-reduced-motion`** — static “Working…” instead of animation when user prefers reduced motion
 
-**Ideas to implement:**
+### After parse — clarity (Steps 1–3)
 
-- Visible spinner or pulse on the drop zone + staged labels (upload → extract text → AI scan → saving)
-- Optional timed stage copy when the request is long (align with `document_scan` / partial parse outcomes)
-- Keep error + **Continue manually** path per [empty-error-states](../.cursor/rules/empty-error-states.mdc)
-- Respect `prefers-reduced-motion` for accessibility
+- [ ] **`document_scan` notice** on Step 1 when API returned `document_scan` — e.g. “We scanned your PDF visually”
+- [ ] **`partial_parse` banner** on Steps 1–3 when `partial_parse` — “Some fields used basic detection — please review”
+- [ ] **Persist `partial_parse` / `document_scan` in form state** if user refreshes mid-wizard (today only in `onParsed` message)
 
-**Files likely touched:** `components/intake/FileDropZone.vue`, maybe `pages/intake/[token].vue`
+### Wizard navigation & orientation
+
+- [ ] **Step indicator** — “Step 2 of 5: Employment” or progress dots on [`pages/intake/[token].vue`](../pages/intake/[token].vue)
+- [ ] **Visible field labels** on Step 1 (not placeholders only) — accessibility + clarity on mobile
+- [ ] **Block Next on Step 2** when `employers.length === 0` with inline message (don’t wait until gap review)
+- [ ] **Block or warn Next on Step 3** for obvious gaps (optional: license state/number if required by gap review)
+
+### Employment & facilities (Step 2)
+
+- [ ] **Reorder employer cards** — Move up / Move down (or drag) on [`EmployerCard`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}` order; autosave via PATCH
+- [ ] **Show linked facility metrics** on card — read-only chips: beds, trauma, teaching when `hospitalId` set
+- [ ] **Soft link-facility reminder** when `!hospitalId` — “Link facility for bed count & trauma (recommended)” — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
+- [ ] **Stronger empty employer CTA** under hospital search — “Add at least one hospital where you worked”
+
+### Draft & recovery
+
+- [ ] **Draft restored banner** — when `restoreLocal()` loads wizard from localStorage after refresh/return
+- [ ] **Replace resume confirmation** — warn before re-upload on Step 0 if wizard already has data
+- [ ] **Show save chip on Step 0** after draft exists — “Saved” / “Saving…” visible once `candidateId` + autosave active (today chip mainly on steps 1+)
+
+### Review & finish (Steps 4–success)
+
+- [ ] **Download again** on success step — if browser blocked download or tab closed
+- [ ] **Submit loading copy** — “Preparing your packet…” + disabled button during `finalizeAndDownload`
+- [ ] **One-line success context** — what “VMS-ready” means / what recruiter receives
+- [ ] **Focus first missing field** — when jumping from gap review (`go-to-step`), scroll/focus target step’s first empty input
+
+### Forms & accessibility
+
+- [ ] **`autocomplete` on identity fields** — `given-name`, `family-name`, `email`, `tel` on Step 1
+- [ ] **Basic phone format hint** — optional pattern or helper text (no strict validation unless product wants it)
+
+### Recruiter admin
+
+- [ ] **Candidates table empty state** — “No candidates yet — create an intake link above”
+- [ ] **Invite copy feedback** — “Copied!” toast; show readonly URL if clipboard API fails ([`CreateInvitePanel`](../components/admin/CreateInvitePanel.vue))
+- [ ] **Parse status column (optional)** — draft/submitted + icon if `parse_error` (not full audit UI)
+- [ ] **Loading skeleton** for candidates table (today plain “loading” text)
 
 ---
 
-### Reorder employment / facility cards (Step 2)
+## Parse audit & regression (dev / hardening — phased)
 
-**Goal:** Let the candidate move employer cards **up/down** so `{#professional_experiences}` in the final DOCX follows their preferred order.
+**Goal:** Make Gemini parse inspectable during MVP tuning without changing the intake API or DOCX path. Evidence fields are for **QA and prompt iteration**, not candidate-facing UI.
 
-**Today:** [`employers[]`](../types/candidate.ts) order in the form is insert order (parse + add hospital). [`docxBuilder`](../server/utils/docxBuilder.ts) maps `candidate.employers` in array order. No reorder UI on [`EmployerCard`](../components/intake/EmployerCard.vue) / [`HospitalAutocomplete`](../components/intake/HospitalAutocomplete.vue).
+**Do not:** Rename schema to template tags (`candidate_first_name`, `professional_experiences`). **Do not** return full audit blobs to the intake client. **Do not** treat citation substring checks as proof of correctness.
 
-**Ideas to implement:**
+### Phase A — Schema + server-only storage (one PR)
 
-- Per-card **Move up** / **Move down** (or drag handle) on `EmployerCard`
-- Persist order via existing PATCH / `useCandidateForm` autosave
-- Disable up on first row, down on last; empty-state copy unchanged
-- Quick test: two employers reordered → DOCX section order matches
+- [ ] Extend `resumeJsonSchema()` in [`geminiShared.ts`](../server/utils/geminiShared.ts):
+  - `identified_facilities_raw: string[]` — facility names exactly as on resume
+  - `suggested_employers[].source_snippet` — short quote per job (max length cap in prompt)
+  - Skip long `candidate_summary_analysis` unless needed (token cost)
+- [ ] Map in `mapGeminiResumeJson`; **strip** audit fields before `parsedResumeToApiFields` / client response
+- [ ] Persist under `candidates.parsed_resume.audit` (or `parse_audit` JSONB) — keep existing `{ raw: rawText }`; follow [phi-handling](../.cursor/rules/phi-handling.mdc) (no full resume in prod logs)
+- [ ] Still **no** beds/trauma/teaching from Gemini — hospital DB only
 
-**Files likely touched:** `components/intake/EmployerCard.vue`, `pages/intake/[token].vue`, `composables/useCandidateForm.ts`
+**Files:** `server/utils/geminiShared.ts`, `geminiParse.ts`, `geminiDocumentParse.ts`, `server/api/parse.post.ts`, `types/parse.ts`
+
+### Phase B — Regression scripts (one PR)
+
+- [ ] Extend [`scripts/test-gemini-parse-map.mjs`](../scripts/test-gemini-parse-map.mjs) and/or [`scripts/test-pdf-vision.mjs`](../scripts/test-pdf-vision.mjs):
+  - Fixture PDFs in `tests/fixtures/` (gitignore or synthetic minimal resumes)
+  - Assert `source_snippet` overlaps `rawText` (fuzzy/normalized), not naive `citation.includes(name.slice(0,5))`
+  - Assert `identified_facilities_raw` non-empty on multi-job fixtures
+- [ ] Optional: dev-only write of last parse JSON to `data/` (gitignored), not `logs/` in repo
+
+### Phase C — Admin parse debug UI (defer / staging only)
+
+- [ ] Admin expand row: side-by-side field vs `source_snippet` for employers
+- [ ] Gate behind env flag or non-prod only; recruiter does not need this for daily MVP
+- [ ] No true dual API pass unless Phase A quality is still poor on image PDFs
+
+**Out of scope for now:** Production recruiter audit workflow; mandatory two-call Gemini pipeline.
 
 ---
 
@@ -64,7 +122,7 @@ Data prerequisite is **done**. Remaining app work:
 
 ## Hardening / VMS (when scheduled)
 
-See [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) and GitHub issues #10–#15. Defer unless explicitly in scope for the next PR.
+See [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) and GitHub issues #10–#15. Parse audit Phases A–B belong here; defer Phase C unless actively tuning prompts.
 
 ---
 

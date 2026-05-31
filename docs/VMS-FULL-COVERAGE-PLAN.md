@@ -1,6 +1,6 @@
 # VMS Full Template Coverage — Next Steps
 
-Related: [`VMS-TEMPLATE-REGISTRY.md`](VMS-TEMPLATE-REGISTRY.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`MVP-PLAN.md`](MVP-PLAN.md). Epic **#16** (hardening sprint); issues **#10–#15**.
+Related: [`VMS-TEMPLATE-REGISTRY.md`](VMS-TEMPLATE-REGISTRY.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`MVP-PLAN.md`](MVP-PLAN.md), [`HOSPITAL-PARSE-UX-PLAN.md`](HOSPITAL-PARSE-UX-PLAN.md) (deferred — facility DB import + employer linking). Epic **#16** (hardening sprint); issues **#10–#15**.
 
 **Goal:** Every tag in the contract [`server/assets/template.docx`](../server/assets/template.docx) must be populated — Gemini parse first, wizard manual entry when parse cannot fill it.
 

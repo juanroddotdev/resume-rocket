@@ -41,7 +41,7 @@ See [`.env.example`](.env.example). Never commit `.env`.
 
 ## Plan / scope
 
-See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan. For VMS template expansion (Phase B/C), see [`docs/VMS-FULL-COVERAGE-PLAN.md`](docs/VMS-FULL-COVERAGE-PLAN.md). Pre-release smoke: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md).
+See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan. For VMS template expansion (Phase B/C), see [`docs/VMS-FULL-COVERAGE-PLAN.md`](docs/VMS-FULL-COVERAGE-PLAN.md). Backlog: [`docs/TODO.md`](docs/TODO.md). Pre-release smoke: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md).
 
 ## Admin setup
 

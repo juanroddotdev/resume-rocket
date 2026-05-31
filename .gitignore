@@ -35,6 +35,9 @@ supabase/.branches
 supabase/.temp
 .supabase/
 
+# Local hospital seed CSVs (CMS / HIFLD exports)
+data/
+
 # Generated at setup — run: node scripts/generate-template.mjs
 server/assets/template.docx
 

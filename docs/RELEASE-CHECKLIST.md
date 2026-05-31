@@ -51,10 +51,22 @@ npm run build
 
 ---
 
+## Hospital seed (after CMS/ArcGIS refresh or new Supabase project)
+
+See [`HOSPITAL-DATA.md`](HOSPITAL-DATA.md) for local vs prod rules.
+
+- [ ] `supabase db push` includes `hospitals.source_id` migrations
+- [ ] `python3 scripts/seed_hospitals.py --fetch --dry-run` — stats look reasonable
+- [ ] Seed target matches intent (local `.env` vs prod — never accidental cross-project)
+- [ ] `python3 scripts/seed_hospitals.py --fetch` — upsert completes
+- [ ] Intake Step 2: facility search returns results; linked employer shows beds in DOCX when matched
+
+---
+
 ## Security / config sanity
 
 - [ ] No secrets in client bundle (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY` server-only)
-- [ ] `.env` not committed; `template.docx` not committed
+- [ ] `.env` not committed; `template.docx` not committed; `data/` CSVs not committed
 - [ ] Production `NUXT_PUBLIC_SITE_URL` matches deployed host (invite + email links)
 
 ---

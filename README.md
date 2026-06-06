@@ -15,7 +15,6 @@ Mobile-first healthcare resume enrichment MVP: invite-gated intake, Gemini parsi
 ```bash
 cd ~/resume-rocket
 npm install
-node scripts/generate-template.mjs
 cp .env.example .env
 # Fill in Supabase, Gemini, and Resend keys
 npm run dev
@@ -38,6 +37,10 @@ Files under `supabase/migrations/` in order.
 ## Environment
 
 See [`.env.example`](.env.example). Never commit `.env`.
+
+## Deploy
+
+Staging/production on Render: [`docs/DEPLOY.md`](docs/DEPLOY.md) and [`render.yaml`](render.yaml). Copy env var **values** from your local `.env` into the Render dashboard.
 
 ## Plan / scope
 
@@ -62,13 +65,13 @@ gh pr merge --squash --delete-branch
 git checkout main && git pull
 ```
 
-Never commit `.env` or `server/assets/template.docx`.
+Never commit `.env`.
 
 ## Template
 
-Replace `server/assets/template.docx` with your VMS contract template. Tag names must match `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts` — see [`docs/VMS-TEMPLATE-REGISTRY.md`](docs/VMS-TEMPLATE-REGISTRY.md).
+Contract template: [`server/assets/template.docx`](server/assets/template.docx) (tracked in git — same file locally and on Render). Tag names must match `mapCandidateToTemplateData()` in `server/utils/docxBuilder.ts` — see [`docs/VMS-TEMPLATE-REGISTRY.md`](docs/VMS-TEMPLATE-REGISTRY.md).
 
-Regenerate dev placeholder: `node scripts/generate-template.mjs`  
+After editing the Word template, run `node scripts/inventory-template-tags.mjs` and reconcile with [`docs/VMS-FIELD-MANIFEST.md`](docs/VMS-FIELD-MANIFEST.md).  
 Inventory contract tags: `node scripts/inventory-template-tags.mjs`  
 Normalize JSONB smoke test: `node scripts/test-normalize-candidate.mjs`  
 Gemini parse map smoke test: `node scripts/test-gemini-parse-map.mjs`  

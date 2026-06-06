@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const outDir = join(__dirname, '../server/assets')
 mkdirSync(outDir, { recursive: true })
 
-/** Minimal dev placeholder aligned with mapCandidateToTemplateData() / VMS tag names. */
+/** @deprecated Minimal placeholder generator — production uses tracked server/assets/template.docx. */
 const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>

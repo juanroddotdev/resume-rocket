@@ -1,6 +1,6 @@
 # VMS field manifest
 
-Authoritative inventory of **contract** `server/assets/template.docx` tags (gitignored locally).  
+Authoritative inventory of **contract** `server/assets/template.docx` tags (tracked in git).  
 Generated from template scan on 2026-05-30; re-run after template edits:
 
 ```bash

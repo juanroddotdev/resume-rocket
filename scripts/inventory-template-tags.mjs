@@ -94,7 +94,7 @@ function applyNestedSchema(builder) {
 function loadTemplateTags() {
   if (!existsSync(templatePath)) {
     console.error(`Template not found: ${templatePath}`)
-    console.error('Copy your contract template to server/assets/template.docx or run: node scripts/generate-template.mjs')
+    console.error('Ensure server/assets/template.docx exists in the repo.')
     process.exit(1)
   }
 

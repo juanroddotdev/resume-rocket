@@ -22,6 +22,7 @@ const {
   scheduleAutosave,
   applyParseResult,
   finalizeAndDownload,
+  downloadDocxOnly,
   restoreLocal,
   persistLocal,
   clearLocal,
@@ -32,6 +33,21 @@ const submitting = ref(false)
 const prefillMessage = ref<string | null>(null)
 const submitError = ref<string | null>(null)
 const confirmationEmailSent = ref(false)
+const redownloading = ref(false)
+const redownloadError = ref<string | null>(null)
+
+const STEP_LABELS: Record<number, string> = {
+  0: 'Upload resume',
+  1: 'Your details',
+  2: 'Employment',
+  3: 'Credentials & education',
+  4: 'Review',
+}
+
+const stepIndicator = computed(() => {
+  if (typeof currentStep.value !== 'number') return null
+  return `Step ${currentStep.value + 1} of 5 · ${STEP_LABELS[currentStep.value]}`
+})
 
 const missingFields = computed(() => computeMissingTemplateFields(form.value))
 
@@ -115,6 +131,10 @@ function canAdvanceStep1() {
   return form.value.first_name && form.value.last_name && form.value.email && form.value.phone
 }
 
+function canAdvanceStep2() {
+  return form.value.employers.length > 0
+}
+
 function goToStep(step: number) {
   currentStep.value = step
   persistLocal(token.value)
@@ -131,6 +151,19 @@ async function goSuccess() {
       e instanceof Error ? e.message : 'Could not prepare your download. Check your connection and try again.'
   } finally {
     submitting.value = false
+  }
+}
+
+async function onDownloadAgain() {
+  redownloading.value = true
+  redownloadError.value = null
+  try {
+    await downloadDocxOnly()
+  } catch (e) {
+    redownloadError.value =
+      e instanceof Error ? e.message : 'Could not download your packet. Check your connection and try again.'
+  } finally {
+    redownloading.value = false
   }
 }
 </script>
@@ -159,6 +192,13 @@ async function goSuccess() {
         </span>
       </div>
 
+      <p
+        v-if="stepIndicator"
+        class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500"
+      >
+        {{ stepIndicator }}
+      </p>
+
       <!-- Step 0 -->
       <section v-if="currentStep === 0">
         <h1 class="text-xl font-bold text-slate-900">Upload resume</h1>
@@ -182,10 +222,10 @@ async function goSuccess() {
         <button type="button" class="text-sm text-brand-700" @click="currentStep = 0">
           Replace resume
         </button>
-        <input v-model="form.first_name" placeholder="First name" required class="field">
-        <input v-model="form.last_name" placeholder="Last name" required class="field">
-        <input v-model="form.email" type="email" placeholder="Email" required class="field">
-        <input v-model="form.phone" type="tel" placeholder="Phone" required class="field">
+        <input v-model="form.first_name" autocomplete="given-name" placeholder="First name" required class="field">
+        <input v-model="form.last_name" autocomplete="family-name" placeholder="Last name" required class="field">
+        <input v-model="form.email" type="email" autocomplete="email" placeholder="Email" required class="field">
+        <input v-model="form.phone" type="tel" autocomplete="tel" placeholder="Phone" required class="field">
         <div class="flex gap-2 pt-2">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 0">Back</button>
           <button
@@ -212,9 +252,20 @@ async function goSuccess() {
           :employers="form.employers"
           @update:employers="form.employers = $event"
         />
+        <p
+          v-if="!canAdvanceStep2()"
+          class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+        >
+          Add at least one hospital where you worked before continuing.
+        </p>
         <div class="flex gap-2">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 1">Back</button>
-          <button type="button" class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white" @click="currentStep = 3">
+          <button
+            type="button"
+            class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
+            :disabled="!canAdvanceStep2()"
+            @click="currentStep = 3"
+          >
             Next
           </button>
         </div>
@@ -273,7 +324,22 @@ async function goSuccess() {
           Check your inbox at <strong>{{ form.email }}</strong> for a confirmation link.
         </p>
         <p v-else class="mt-2 text-slate-600">
-          Your VMS-ready resume was downloaded. Your recruiter has your submission.
+          Your VMS-ready placement packet (DOCX) was downloaded. Your recruiter receives the same file for hospital submission.
+        </p>
+        <button
+          type="button"
+          class="mt-6 rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 disabled:opacity-50"
+          :disabled="redownloading"
+          @click="onDownloadAgain"
+        >
+          {{ redownloading ? 'Preparing…' : 'Download again' }}
+        </button>
+        <p
+          v-if="redownloadError"
+          class="mt-2 text-sm text-red-600"
+        >
+          {{ redownloadError }}
+          <button type="button" class="ml-1 underline" @click="onDownloadAgain">Retry</button>
         </p>
       </section>
     </template>

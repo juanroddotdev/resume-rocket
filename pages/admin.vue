@@ -34,7 +34,7 @@ async function loadCandidates() {
   const { data, error } = await supabase
     .from('candidates')
     .select(
-      'id, status, first_name, last_name, email, phone, license_number, license_state, specialties, credentials, employers, emr_system, updated_at, created_at',
+      'id, status, first_name, last_name, email, phone, license_number, license_state, specialties, credentials, employers, emr_system, parse_error, updated_at, created_at',
     )
     .order('updated_at', { ascending: false })
   loadingCandidates.value = false
@@ -132,9 +132,9 @@ async function downloadDocx(id: string) {
         :candidates="candidates"
         :search="search"
         :show-all="showAll"
+        :loading="loadingCandidates"
         @download="downloadDocx"
       />
-      <p v-if="loadingCandidates" class="text-sm text-slate-500">Loading…</p>
     </template>
   </div>
 </template>

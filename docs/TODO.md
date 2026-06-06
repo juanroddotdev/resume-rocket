@@ -22,8 +22,8 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 - [ ] **Parse progress animation** — spinner/pulse on drop zone so upload does not look frozen during long `/api/parse` (10–30s+ on vision PDFs); staged labels: upload → extract text → AI scan → saving ([`FileDropZone.vue`](../components/intake/FileDropZone.vue))
 - [ ] **Timed stage copy** — rotate/hold messages on long waits; align with `document_scan` / `partial_parse` when known
-- [ ] **Disable drop zone while parsing** — no second upload mid-request; keep **Continue manually** on error ([empty-error-states](../.cursor/rules/empty-error-states.mdc))
-- [ ] **`prefers-reduced-motion`** — static “Working…” instead of animation when user prefers reduced motion
+- [x] **Disable drop zone while parsing** — no second upload mid-request; keep **Continue manually** on error ([empty-error-states](../.cursor/rules/empty-error-states.mdc))
+- [x] **`prefers-reduced-motion`** — static “Working…” instead of animation when user prefers reduced motion
 
 ### After parse — clarity (Steps 1–3)
 
@@ -33,9 +33,9 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 ### Wizard navigation & orientation
 
-- [ ] **Step indicator** — “Step 2 of 5: Employment” or progress dots on [`pages/intake/[token].vue`](../pages/intake/[token].vue)
+- [x] **Step indicator** — “Step 2 of 5: Employment” or progress dots on [`pages/intake/[token].vue`](../pages/intake/[token].vue)
 - [ ] **Visible field labels** on Step 1 (not placeholders only) — accessibility + clarity on mobile
-- [ ] **Block Next on Step 2** when `employers.length === 0` with inline message (don’t wait until gap review)
+- [x] **Block Next on Step 2** when `employers.length === 0` with inline message (don’t wait until gap review)
 - [ ] **Block or warn Next on Step 3** for obvious gaps (optional: license state/number if required by gap review)
 
 ### Employment & facilities (Step 2)
@@ -43,7 +43,7 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 - [ ] **Reorder employer cards** — Move up / Move down (or drag) on [`EmployerCard`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}` order; autosave via PATCH
 - [ ] **Show linked facility metrics** on card — read-only chips: beds, trauma, teaching when `hospitalId` set
 - [ ] **Soft link-facility reminder** when `!hospitalId` — “Link facility for bed count & trauma (recommended)” — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
-- [ ] **Stronger empty employer CTA** under hospital search — “Add at least one hospital where you worked”
+- [x] **Stronger empty employer CTA** under hospital search — “Add at least one hospital where you worked”
 
 ### Draft & recovery
 
@@ -53,22 +53,27 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 ### Review & finish (Steps 4–success)
 
-- [ ] **Download again** on success step — if browser blocked download or tab closed
-- [ ] **Submit loading copy** — “Preparing your packet…” + disabled button during `finalizeAndDownload`
-- [ ] **One-line success context** — what “VMS-ready” means / what recruiter receives
+- [ ] **Document preview before download** — show what the VMS packet will look like (filled contract template) **before** triggering the final download; candidate confirms “looks right” or goes back to fix
+  - **Today:** gap review (Step 4) is field checklist only; DOCX generates on submit with no visual preview ([`finalizeAndDownload`](../pages/intake/[token].vue), [`docxBuilder`](../server/utils/docxBuilder.ts))
+  - **UX:** new step or expanded review — “Preview your packet” + primary **Download** / secondary **Go back and edit** (return to relevant wizard step without losing draft)
+  - **Implementation options (pick in PR):** server endpoint that returns preview DOCX/PDF once per session; in-browser HTML summary of mapped sections (faster, not pixel-perfect); iframe PDF if converted server-side — must not log PHI in preview URLs
+  - **Empty/error:** loading state while preview builds; retry if generation fails; if preview unavailable, keep current download-only path with clear copy
+- [x] **Download again** on success step — if browser blocked download or tab closed
+- [x] **Submit loading copy** — “Preparing your packet…” + disabled button during `finalizeAndDownload`
+- [x] **One-line success context** — what “VMS-ready” means / what recruiter receives
 - [ ] **Focus first missing field** — when jumping from gap review (`go-to-step`), scroll/focus target step’s first empty input
 
 ### Forms & accessibility
 
-- [ ] **`autocomplete` on identity fields** — `given-name`, `family-name`, `email`, `tel` on Step 1
+- [x] **`autocomplete` on identity fields** — `given-name`, `family-name`, `email`, `tel` on Step 1
 - [ ] **Basic phone format hint** — optional pattern or helper text (no strict validation unless product wants it)
 
 ### Recruiter admin
 
-- [ ] **Candidates table empty state** — “No candidates yet — create an intake link above”
-- [ ] **Invite copy feedback** — “Copied!” toast; show readonly URL if clipboard API fails ([`CreateInvitePanel`](../components/admin/CreateInvitePanel.vue))
-- [ ] **Parse status column (optional)** — draft/submitted + icon if `parse_error` (not full audit UI)
-- [ ] **Loading skeleton** for candidates table (today plain “loading” text)
+- [x] **Candidates table empty state** — “No candidates yet — create an intake link above”
+- [x] **Invite copy feedback** — “Copied!” toast; show readonly URL if clipboard API fails ([`CreateInvitePanel`](../components/admin/CreateInvitePanel.vue))
+- [x] **Parse status column (optional)** — draft/submitted + icon if `parse_error` (not full audit UI)
+- [x] **Loading skeleton** for candidates table (today plain “loading” text)
 
 ---
 

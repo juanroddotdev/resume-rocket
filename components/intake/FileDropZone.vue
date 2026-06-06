@@ -15,11 +15,31 @@ const parsing = ref(false)
 const parseStage = ref('')
 const error = ref<string | null>(null)
 const dragOver = ref(false)
+const reducedMotion = ref(false)
+
+onMounted(() => {
+  if (!import.meta.client) return
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+  reducedMotion.value = mq.matches
+  mq.addEventListener('change', (e) => {
+    reducedMotion.value = e.matches
+  })
+})
+
+const isBusy = computed(() => parsing.value || props.disabled)
+
+const displayStage = computed(() => {
+  if (!parsing.value) return ''
+  if (reducedMotion.value) return 'Working…'
+  return parseStage.value
+})
 
 async function handleFile(file: File) {
+  if (isBusy.value) return
+
   error.value = null
   parsing.value = true
-  parseStage.value = 'Reading file…'
+  parseStage.value = 'Uploading file…'
 
   const formData = new FormData()
   formData.append('file', file)
@@ -34,6 +54,8 @@ async function handleFile(file: File) {
       headers: intakeHeaders(),
       body: formData,
     })
+
+    parseStage.value = 'Saving…'
 
     if (result.parse_failed) {
       error.value = String(result.parse_error || 'Could not read enough information from your resume')
@@ -58,16 +80,25 @@ async function handleFile(file: File) {
   }
 }
 
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  if (isBusy.value) return
+  dragOver.value = true
+}
+
 function onDrop(e: DragEvent) {
   e.preventDefault()
   dragOver.value = false
+  if (isBusy.value) return
   const file = e.dataTransfer?.files?.[0]
   if (file) handleFile(file)
 }
 
 function onInput(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (file) handleFile(file)
+  input.value = ''
 }
 </script>
 
@@ -78,14 +109,24 @@ function onInput(e: Event) {
     </p>
     <div
       class="rounded-xl border-2 border-dashed px-4 py-10 text-center transition"
-      :class="dragOver ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50'"
-      @dragover.prevent="dragOver = true"
+      :class="[
+        isBusy ? 'pointer-events-none border-slate-200 bg-slate-100' : dragOver ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50',
+      ]"
+      :aria-busy="parsing"
+      @dragover="onDragOver"
       @dragleave="dragOver = false"
       @drop="onDrop"
     >
-      <p v-if="parsing" class="text-sm font-medium text-brand-700">
-        {{ parseStage }}
-      </p>
+      <div v-if="parsing" class="flex flex-col items-center gap-3">
+        <div
+          v-if="!reducedMotion"
+          class="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600"
+          aria-hidden="true"
+        />
+        <p class="text-sm font-medium text-brand-700">
+          {{ displayStage }}
+        </p>
+      </div>
       <template v-else>
         <p class="text-sm text-slate-700">Drop your resume here</p>
         <label class="mt-3 inline-block cursor-pointer rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">

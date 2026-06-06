@@ -50,7 +50,7 @@ const emit = defineEmits<{
         :disabled="submitting || missing.length > 0"
         @click="emit('submit')"
       >
-        {{ submitting ? 'Preparing…' : 'Download VMS-Ready Resume' }}
+        {{ submitting ? 'Preparing your packet…' : 'Download VMS-Ready Resume' }}
       </button>
     </div>
   </div>

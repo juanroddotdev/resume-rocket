@@ -5,6 +5,7 @@ const props = defineProps<{
   candidates: CandidateRow[]
   search: string
   showAll: boolean
+  loading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -49,29 +50,47 @@ function primaryFacility(c: CandidateRow) {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="c in filtered" :key="c.id" class="border-b last:border-0">
-          <td class="px-4 py-3">{{ c.first_name }} {{ c.last_name }}</td>
-          <td class="px-4 py-3 capitalize">{{ c.status }}</td>
-          <td class="px-4 py-3">{{ new Date(c.updated_at).toLocaleString() }}</td>
-          <td class="px-4 py-3">{{ primaryFacility(c) }}</td>
-          <td class="px-4 py-3">{{ c.emr_system || '—' }}</td>
-          <td class="px-4 py-3">
-            <button
-              type="button"
-              class="text-brand-700 hover:underline"
-              title="Download VMS resume"
-              @click="emit('download', c.id)"
-            >
-              ⬇ DOCX
-            </button>
-          </td>
-        </tr>
-        <tr v-if="!filtered.length">
-          <td colspan="6" class="px-4 py-8 text-center text-slate-500">
-            <span v-if="!candidates.length">No candidates yet. Create an intake link above, then open it to start the wizard.</span>
-            <span v-else>No candidates match your search.</span>
-          </td>
-        </tr>
+        <template v-if="loading">
+          <tr v-for="n in 4" :key="n" class="border-b last:border-0">
+            <td v-for="col in 6" :key="col" class="px-4 py-3">
+              <div class="h-4 animate-pulse rounded bg-slate-200" :class="col === 1 ? 'w-32' : col === 6 ? 'w-16' : 'w-24'" />
+            </td>
+          </tr>
+        </template>
+        <template v-else>
+          <tr v-for="c in filtered" :key="c.id" class="border-b last:border-0">
+            <td class="px-4 py-3">{{ c.first_name }} {{ c.last_name }}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-1 capitalize">
+                {{ c.status }}
+                <span
+                  v-if="c.parse_error"
+                  class="text-amber-600"
+                  title="Resume parse had issues — candidate may have entered details manually"
+                >⚠</span>
+              </span>
+            </td>
+            <td class="px-4 py-3">{{ new Date(c.updated_at).toLocaleString() }}</td>
+            <td class="px-4 py-3">{{ primaryFacility(c) }}</td>
+            <td class="px-4 py-3">{{ c.emr_system || '—' }}</td>
+            <td class="px-4 py-3">
+              <button
+                type="button"
+                class="text-brand-700 hover:underline"
+                title="Download VMS resume"
+                @click="emit('download', c.id)"
+              >
+                ⬇ DOCX
+              </button>
+            </td>
+          </tr>
+          <tr v-if="!filtered.length">
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+              <span v-if="!candidates.length">No candidates yet. Create an intake link above, then open it to start the wizard.</span>
+              <span v-else>No candidates match your search.</span>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>

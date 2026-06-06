@@ -113,7 +113,9 @@ function removeEmployer(index: number) {
         @remove="removeEmployer(index)"
       />
     </ul>
-    <p v-else class="text-xs text-slate-500">Search and add at least one facility where you have worked.</p>
+    <p v-else class="text-xs text-amber-800">
+      Add at least one hospital where you worked — search above.
+    </p>
 
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">EMR platform</label>

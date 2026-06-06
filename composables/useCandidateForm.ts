@@ -251,6 +251,30 @@ export function useCandidateForm() {
     return err.data?.statusMessage || err.message || fallback
   }
 
+  async function downloadDocxOnly() {
+    if (!candidateId.value) {
+      throw new Error('Could not download your packet. Go back and try again.')
+    }
+
+    try {
+      const blob = await $fetch<Blob>('/api/generate-docx', {
+        method: 'POST',
+        headers: intakeHeaders(),
+        body: { id: candidateId.value },
+        responseType: 'blob',
+      })
+
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume-${form.value.last_name || 'candidate'}.docx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      throw new Error(formatFetchError(e, 'Could not generate your resume file.'))
+    }
+  }
+
   async function finalizeAndDownload() {
     if (!candidateId.value) {
       await ensureDraft()
@@ -273,21 +297,9 @@ export function useCandidateForm() {
     }
 
     try {
-      const blob = await $fetch<Blob>('/api/generate-docx', {
-        method: 'POST',
-        headers: intakeHeaders(),
-        body: { id: candidateId.value },
-        responseType: 'blob',
-      })
-
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `resume-${form.value.last_name || 'candidate'}.docx`
-      a.click()
-      URL.revokeObjectURL(url)
+      await downloadDocxOnly()
     } catch (e) {
-      throw new Error(formatFetchError(e, 'Could not generate your resume file.'))
+      throw e instanceof Error ? e : new Error(formatFetchError(e, 'Could not generate your resume file.'))
     }
 
     try {
@@ -331,6 +343,7 @@ export function useCandidateForm() {
     applyParseResult,
     patchCandidate,
     finalizeAndDownload,
+    downloadDocxOnly,
     persistLocal,
     restoreLocal,
     clearLocal,

@@ -45,6 +45,10 @@ async function createInvite() {
     loading.value = false
   }
 }
+
+function selectUrlInput(e: FocusEvent) {
+  (e.target as HTMLInputElement).select()
+}
 </script>
 
 <template>
@@ -76,11 +80,18 @@ async function createInvite() {
         Open link
       </a>
     </div>
-    <p v-if="lastUrl" class="mt-3 break-all rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
-      {{ lastUrl }}
-    </p>
-    <p v-if="lastUrl && copied" class="mt-1 text-xs text-green-700">Link copied to clipboard.</p>
-    <p v-else-if="lastUrl" class="mt-1 text-xs text-slate-500">Copy the link above and send it to your candidate.</p>
+    <div v-if="lastUrl" class="mt-3">
+      <input
+        :value="lastUrl"
+        type="text"
+        readonly
+        class="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+        aria-label="Intake link URL"
+        @focus="selectUrlInput"
+      >
+      <p v-if="copied" class="mt-1 text-xs font-medium text-green-700">Copied!</p>
+      <p v-else class="mt-1 text-xs text-slate-500">Tap the link above to select and copy, then send it to your candidate.</p>
+    </div>
     <p v-if="expiresAt" class="mt-1 text-xs text-slate-500">
       Expires {{ new Date(expiresAt).toLocaleString() }}
     </p>

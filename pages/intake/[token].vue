@@ -320,11 +320,11 @@ async function onDownloadAgain() {
       <section v-else-if="currentStep === 'success'" class="py-12 text-center">
         <div class="text-4xl text-brand-600">✓</div>
         <h1 class="mt-4 text-xl font-bold">Submitted</h1>
+        <p class="mt-2 text-slate-600">
+          Your VMS-ready placement packet (DOCX) was downloaded. Your recruiter receives the same file for hospital submission.
+        </p>
         <p v-if="confirmationEmailSent" class="mt-2 text-slate-600">
           Check your inbox at <strong>{{ form.email }}</strong> for a confirmation link.
-        </p>
-        <p v-else class="mt-2 text-slate-600">
-          Your VMS-ready placement packet (DOCX) was downloaded. Your recruiter receives the same file for hospital submission.
         </p>
         <button
           type="button"

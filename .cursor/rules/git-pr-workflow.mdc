@@ -12,7 +12,7 @@ When shipping code for this repo, **do not commit or push directly to `main`**. 
 1. Create a branch: `git checkout -b feat/short-description`
 2. Make changes and verify (build/lint as appropriate)
 3. Before commit, check: `git status`, `git diff`, `git log --oneline -5`
-4. Stage only relevant files — **never** `.env`, secrets, or `server/assets/template.docx`
+4. Stage only relevant files — **never** `.env` or secrets
 5. Commit with a message focused on **why**
 6. Push: `git push -u origin HEAD`
 7. Open PR: `gh pr create` with Summary + Test plan
@@ -23,7 +23,7 @@ When shipping code for this repo, **do not commit or push directly to `main`**. 
 
 Run the **full pipeline** in order — do not merge until the branch is committed and pushed:
 
-1. `git status` / `git diff` — stage only relevant files (never `.env`, secrets, `template.docx`)
+1. `git status` / `git diff` — stage only relevant files (never `.env` or secrets)
 2. **Commit** if there are uncommitted changes (message focused on **why**)
 3. **Push** branch: `git push -u origin HEAD` (or push existing tracking branch)
 4. **Open PR** if none exists: `gh pr create` with Summary + Test plan; link `Closes #N` when applicable

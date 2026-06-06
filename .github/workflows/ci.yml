@@ -16,6 +16,5 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: node scripts/generate-template.mjs
       - run: npm run test
       - run: npm run build

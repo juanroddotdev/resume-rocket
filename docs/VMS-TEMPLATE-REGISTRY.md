@@ -1,6 +1,6 @@
 # VMS template tag registry (Phase A complete)
 
-Source template: `server/assets/template.docx` (local, gitignored).  
+Source template: `server/assets/template.docx` (tracked in git).  
 Mapping code: `server/utils/docxBuilder.ts` → `mapCandidateToTemplateData()`.
 
 **Field manifest (contract inventory):** [`VMS-FIELD-MANIFEST.md`](VMS-FIELD-MANIFEST.md) — one row per tag with parse/wizard/required columns.

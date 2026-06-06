@@ -2,7 +2,7 @@
 
 Repeatable pre-release smoke tests for Resume Rocket. Run on `main` before deploying or tagging a release.
 
-Related: [`MVP-PLAN.md`](MVP-PLAN.md), [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md).
+Related: [`MVP-PLAN.md`](MVP-PLAN.md), [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`DEPLOY.md`](DEPLOY.md).
 
 **Environment:** Local `npm run dev` with `.env` filled (Supabase, optional Gemini + Resend). Contract template at `server/assets/template.docx`.
 
@@ -66,7 +66,7 @@ See [`HOSPITAL-DATA.md`](HOSPITAL-DATA.md) for local vs prod rules.
 ## Security / config sanity
 
 - [ ] No secrets in client bundle (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY` server-only)
-- [ ] `.env` not committed; `template.docx` not committed; `data/` CSVs not committed
+- [ ] `.env` not committed; `data/` CSVs not committed
 - [ ] Production `NUXT_PUBLIC_SITE_URL` matches deployed host (invite + email links)
 
 ---

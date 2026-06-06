@@ -9,6 +9,6 @@ alwaysApply: false
 - Tags must be **exact** match to keys in `mapCandidateToTemplateData()`.
 - In Word, retype tags if merge fails — split runs break `{tag}` across XML nodes.
 - Loops: `{#professional_experiences}...{/professional_experiences}`; lists `{#clinical_specialties_list}{.}{/clinical_specialties_list}`.
-- Regenerate placeholder: `node scripts/generate-template.mjs` (overwrites local template).
+- After contract template edits in Word, run `node scripts/inventory-template-tags.mjs` and reconcile mappings.
 
 Test by downloading DOCX after intake or from admin row action.

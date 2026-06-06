@@ -7,7 +7,7 @@ alwaysApply: true
 
 Before `gh pr create`:
 
-1. `git diff` — no `.env`, secrets, or accidental `template.docx`
+1. `git diff` — no `.env` or secrets committed
 2. `npm run build` — Nuxt compiles
 3. Smoke mentally or locally:
    - Admin sign-in → create intake link

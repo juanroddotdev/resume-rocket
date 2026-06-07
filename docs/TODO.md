@@ -27,9 +27,9 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 ### After parse — clarity (Steps 1–3)
 
-- [ ] **`document_scan` notice** on Step 1 when API returned `document_scan` — e.g. “We scanned your PDF visually”
-- [ ] **`partial_parse` banner** on Steps 1–3 when `partial_parse` — “Some fields used basic detection — please review”
-- [ ] **Persist `partial_parse` / `document_scan` in form state** if user refreshes mid-wizard (today only in `onParsed` message)
+- [x] **`document_scan` notice** on Step 1 when API returned `document_scan` — e.g. “We scanned your PDF visually”
+- [x] **`partial_parse` banner** on Steps 1–3 when `partial_parse` — “Some fields used basic detection — please review”
+- [x] **Persist `partial_parse` / `document_scan` in form state** if user refreshes mid-wizard (today only in `onParsed` message)
 
 ### Wizard navigation & orientation
 
@@ -47,7 +47,7 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 ### Draft & recovery
 
-- [ ] **Draft restored banner** — when `restoreLocal()` loads wizard from localStorage after refresh/return
+- [x] **Draft restored banner** — when `restoreLocal()` loads wizard from localStorage after refresh/return
 - [ ] **Replace resume confirmation** — warn before re-upload on Step 0 if wizard already has data
 - [ ] **Show save chip on Step 0** after draft exists — “Saved” / “Saving…” visible once `candidateId` + autosave active (today chip mainly on steps 1+)
 

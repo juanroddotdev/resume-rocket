@@ -28,7 +28,9 @@ const sample = mapGeminiResumeJson(
         start_date: '2020-01',
         end_date: '2024-06',
         employment_type: 'Travel',
+        unit_bed_count: '24',
         patient_scope: 'Critical Care',
+        floated_units: ['Stepdown', 'ER overflow'],
         highlights: ['Charge nurse'],
       },
     ],
@@ -42,8 +44,12 @@ const checks = [
   sample.education?.[0]?.school === 'State University',
   sample.certificationDetails?.find(c => c.name === 'BLS')?.expiry === '2027-01',
   sample.employers?.[0]?.employmentType === 'Travel',
+  sample.employers?.[0]?.unitBedCount === '24',
+  sample.employers?.[0]?.floatedUnits?.length === 2,
   sample.employers?.[0]?.highlights?.[0] === 'Charge nurse',
   sample.detectedCredentials?.includes('BLS'),
+  !Object.prototype.hasOwnProperty.call(sample.employers?.[0] ?? {}, 'beds'),
+  !Object.prototype.hasOwnProperty.call(sample.employers?.[0] ?? {}, 'traumaLevel'),
 ]
 
 if (checks.some(c => !c)) {

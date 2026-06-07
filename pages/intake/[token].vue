@@ -2,6 +2,11 @@
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { hasIntakeDraftData } from '~/utils/intakeDraft'
+import {
+  type FinalizePhase,
+  FINALIZE_PHASE_PROGRESS,
+  finalizePhaseMessage,
+} from '~/utils/intakeProcessing'
 
 const route = useRoute()
 const token = computed(() => String(route.params.token))
@@ -36,6 +41,8 @@ const {
 const loading = ref(true)
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
+const submitPhase = ref<FinalizePhase | 'success' | null>(null)
+const submitProgress = ref(0)
 const confirmationEmailSent = ref(false)
 const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
@@ -84,6 +91,21 @@ const saveChipShowsSaved = computed(() =>
   saveStatus.value === 'saved'
   || (saveStatus.value === 'idle' && currentStep.value === 0 && Boolean(candidateId.value)),
 )
+
+const showSubmitOverlay = computed(() => submitting.value || submitPhase.value === 'success')
+
+const submitMessage = computed(() => finalizePhaseMessage(submitPhase.value))
+
+const GENERATE_SUCCESS_FLASH_MS = 600
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms))
+}
+
+function resetSubmitOverlay() {
+  submitPhase.value = null
+  submitProgress.value = 0
+}
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
@@ -197,14 +219,27 @@ async function goToField(step: number, fieldId: string) {
 async function goSuccess() {
   submitting.value = true
   submitError.value = null
+  resetSubmitOverlay()
   try {
-    const result = await finalizeAndDownload()
+    const result = await finalizeAndDownload({
+      onPhase: (phase) => {
+        submitPhase.value = phase
+        submitProgress.value = FINALIZE_PHASE_PROGRESS[phase]
+      },
+    })
+    submitPhase.value = 'success'
+    submitProgress.value = 100
+    await sleep(GENERATE_SUCCESS_FLASH_MS)
     confirmationEmailSent.value = result.confirmationEmailSent
+    currentStep.value = 'success'
+    clearLocal(token.value)
   } catch (e) {
+    resetSubmitOverlay()
     submitError.value =
       e instanceof Error ? e.message : 'Could not prepare your download. Check your connection and try again.'
   } finally {
     submitting.value = false
+    resetSubmitOverlay()
   }
 }
 
@@ -224,6 +259,19 @@ async function onDownloadAgain() {
 
 <template>
   <div class="mx-auto min-h-dvh max-w-md pb-12">
+    <div
+      v-if="showSubmitOverlay"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-white/90 px-4"
+      role="presentation"
+    >
+      <IntakeProcessingCard
+        mode="generate"
+        :status="submitPhase === 'success' ? 'success' : 'active'"
+        :message="submitMessage"
+        :progress="submitProgress"
+      />
+    </div>
+
     <div v-if="loading" class="py-20 text-center text-slate-500">Loading…</div>
 
     <div v-else-if="!inviteValid" class="py-16 text-center">

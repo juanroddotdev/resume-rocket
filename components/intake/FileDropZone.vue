@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
+import { parseStageProgress } from '~/utils/intakeProcessing'
 
 const emit = defineEmits<{
   parsed: [data: Record<string, unknown>]
@@ -17,6 +18,8 @@ const props = defineProps<{
 const { intakeHeaders } = useIntakeInvite()
 const parsing = ref(false)
 const parseStage = ref('')
+const parseCardStatus = ref<'active' | 'success'>('active')
+const parseProgress = ref(0)
 const error = ref<string | null>(null)
 const dragOver = ref(false)
 const reducedMotion = ref(false)
@@ -41,6 +44,7 @@ const LONG_WAIT_MESSAGES = [
 ] as const
 
 const STAGE_INTERVAL_MS = 8000
+const PARSE_SUCCESS_FLASH_MS = 400
 
 let stageTimer: ReturnType<typeof setInterval> | null = null
 let stageIndex = 0
@@ -67,6 +71,10 @@ const displayStage = computed(() => {
   return parseStage.value
 })
 
+function updateParseProgress() {
+  parseProgress.value = parseStageProgress(stageIndex, stageList.length)
+}
+
 function stopStageRotation() {
   if (stageTimer) {
     clearInterval(stageTimer)
@@ -79,6 +87,7 @@ function startStageRotation(isPdf: boolean) {
   stageList = isPdf ? PDF_STAGES : DOCX_STAGES
   stageIndex = 0
   parseStage.value = stageList[0]!
+  updateParseProgress()
 
   stageTimer = setInterval(() => {
     stageIndex++
@@ -88,7 +97,12 @@ function startStageRotation(isPdf: boolean) {
       const longIdx = (stageIndex - stageList.length) % LONG_WAIT_MESSAGES.length
       parseStage.value = LONG_WAIT_MESSAGES[longIdx]!
     }
+    updateParseProgress()
   }, STAGE_INTERVAL_MS)
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms))
 }
 
 async function handleFile(file: File) {
@@ -100,6 +114,8 @@ async function handleFile(file: File) {
 
   error.value = null
   parsing.value = true
+  parseCardStatus.value = 'active'
+  parseProgress.value = 10
 
   const isPdf =
     file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
@@ -129,6 +145,14 @@ async function handleFile(file: File) {
       error.value = String(result.parse_error || 'Could not read enough information from your resume')
       emit('parseFailed')
     } else {
+      parseCardStatus.value = 'success'
+      parseProgress.value = 100
+      parseStage.value = reducedMotion.value
+        ? 'Working…'
+        : 'Your fields are ready for review.'
+      if (!reducedMotion.value) {
+        await sleep(PARSE_SUCCESS_FLASH_MS)
+      }
       emit('parsed', result)
     }
   } catch (e: unknown) {
@@ -145,7 +169,9 @@ async function handleFile(file: File) {
   } finally {
     stopStageRotation()
     parsing.value = false
+    parseCardStatus.value = 'active'
     parseStage.value = ''
+    parseProgress.value = 0
   }
 }
 
@@ -177,7 +203,7 @@ function onInput(e: Event) {
       PDF or Word (.docx), max 10MB. Data is used for placement only and is not sold.
     </p>
     <div
-      class="rounded-xl border-2 border-dashed px-4 py-10 text-center transition"
+      class="rounded-xl border-2 border-dashed px-4 py-6 text-center transition"
       :class="[
         isBusy
           ? 'pointer-events-none border-brand-300 bg-brand-50/60'
@@ -186,28 +212,19 @@ function onInput(e: Event) {
             : 'border-slate-300 bg-slate-50',
         parsing && !reducedMotion ? 'parse-active' : '',
       ]"
-      :aria-busy="parsing"
-      role="status"
-      :aria-live="parsing ? 'polite' : 'off'"
       @dragover="onDragOver"
       @dragleave="dragOver = false"
       @drop="onDrop"
     >
-      <div v-if="parsing" class="flex flex-col items-center gap-3">
-        <div
-          v-if="!reducedMotion"
-          class="relative h-10 w-10"
-          aria-hidden="true"
-        >
-          <div class="absolute inset-0 animate-ping rounded-full bg-brand-200 opacity-40" />
-          <div class="relative h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
-        </div>
-        <p class="text-sm font-medium text-brand-700">
-          {{ displayStage }}
-        </p>
-        <p v-if="!reducedMotion" class="text-xs text-slate-500">
-          Please keep this tab open
-        </p>
+      <div v-if="parsing">
+        <IntakeProcessingCard
+          mode="parse"
+          :status="parseCardStatus"
+          :message="displayStage"
+          :progress="parseProgress"
+          :reduced-motion="reducedMotion"
+          show-keep-tab-open
+        />
       </div>
       <template v-else>
         <p class="text-sm text-slate-700">Drop your resume here</p>

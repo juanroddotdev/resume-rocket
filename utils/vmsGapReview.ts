@@ -6,6 +6,12 @@ export interface MissingTemplateField {
   step: number
 }
 
+export interface EmployerLinkAdvisory {
+  id: string
+  label: string
+  step: number
+}
+
 type FormShape = CandidateDraftInput & {
   first_name?: string
   last_name?: string
@@ -114,4 +120,20 @@ export function computeMissingTemplateFields(form: FormShape): MissingTemplateFi
   }
 
   return missing
+}
+
+/** Non-blocking hints when parsed employers are not linked to the hospital DB. */
+export function computeEmployerLinkAdvisories(form: FormShape): EmployerLinkAdvisory[] {
+  const advisories: EmployerLinkAdvisory[] = []
+  for (let i = 0; i < (form.employers?.length || 0); i++) {
+    const employer = form.employers![i]!
+    if (!employer.hospitalId) {
+      advisories.push({
+        id: `employer-${i}-link`,
+        label: `${employer.name}: link facility for bed count & trauma (recommended)`,
+        step: 2,
+      })
+    }
+  }
+  return advisories
 }

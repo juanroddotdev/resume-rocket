@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { EmployerEntry } from '~/types/candidate'
+import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
+import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employerLink'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -12,9 +14,24 @@ const emit = defineEmits<{
 }>()
 
 const showClinical = ref(false)
+const showLinkSearch = ref(false)
+const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
+
+const isLinked = computed(() => Boolean(props.employer.hospitalId))
 
 function patch(partial: Partial<EmployerEntry>) {
   emit('update', { ...props.employer, ...partial })
+}
+
+function linkFromHospital(hospital: HospitalRow | HospitalSuggestion) {
+  emit('update', linkEmployerFromHospital(props.employer, hospital))
+  showLinkSearch.value = false
+  clearSearch()
+}
+
+function startChangeFacility() {
+  emit('update', unlinkEmployerFacility(props.employer))
+  showLinkSearch.value = true
 }
 
 function linesToArray(value: string): string[] {
@@ -40,6 +57,90 @@ function arrayToLines(values?: string[]) {
       </div>
       <button type="button" class="text-sm text-red-600 shrink-0" @click="emit('remove')">Remove</button>
     </div>
+
+    <div v-if="isLinked" class="flex flex-wrap gap-1.5">
+      <span
+        v-if="employer.beds != null"
+        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+      >
+        {{ employer.beds }} beds
+      </span>
+      <span
+        v-if="employer.traumaLevel"
+        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+      >
+        Trauma {{ employer.traumaLevel }}
+      </span>
+      <span
+        v-if="employer.teachingStatus"
+        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+      >
+        Teaching
+      </span>
+      <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
+        Change facility
+      </button>
+    </div>
+
+    <template v-else>
+      <p class="text-xs text-slate-600">
+        Link facility for bed count &amp; trauma (recommended)
+      </p>
+
+      <div v-if="employer.hospitalSuggestions?.length" class="space-y-1">
+        <p class="text-xs font-medium text-slate-700">Suggested matches</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="suggestion in employer.hospitalSuggestions"
+            :key="suggestion.id"
+            type="button"
+            class="rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-left text-xs text-brand-900 hover:bg-brand-100"
+            @click="linkFromHospital(suggestion)"
+          >
+            {{ suggestion.name }}
+            <span v-if="suggestion.city" class="text-slate-500"> — {{ suggestion.city }}, {{ suggestion.state }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <button
+          v-if="!showLinkSearch"
+          type="button"
+          class="text-sm text-brand-700"
+          @click="showLinkSearch = true"
+        >
+          Search to link facility
+        </button>
+        <div v-else class="space-y-1">
+          <input
+            v-model="query"
+            type="search"
+            placeholder="Search hospital name…"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+          <ul v-if="results.length" class="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
+            <li
+              v-for="h in results"
+              :key="h.id"
+              class="cursor-pointer px-3 py-2 text-sm hover:bg-brand-50"
+              @click="linkFromHospital(h)"
+            >
+              {{ h.name }}
+              <span v-if="h.city" class="text-slate-500"> — {{ h.city }}, {{ h.state }}</span>
+            </li>
+          </ul>
+          <p v-if="searching" class="text-xs text-slate-500">Searching…</p>
+          <p v-else-if="showNoResults" class="text-xs text-slate-500">
+            No facilities found — try a different name.
+          </p>
+          <p v-if="searchError" class="text-xs text-red-600">{{ searchError }}</p>
+          <button type="button" class="text-xs text-slate-500 underline" @click="showLinkSearch = false; clearSearch()">
+            Cancel search
+          </button>
+        </div>
+      </div>
+    </template>
 
     <input
       :value="employer.role || ''"

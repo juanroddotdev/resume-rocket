@@ -48,6 +48,8 @@ export interface EducationEntry {
   graduationYear?: string
 }
 
+import type { HospitalSuggestion } from '~/types/hospital'
+
 export interface EmployerEntry {
   name: string
   role?: string
@@ -59,6 +61,8 @@ export interface EmployerEntry {
   beds?: number
   traumaLevel?: string
   teachingStatus?: boolean
+  /** Client-only parse suggestions until candidate links a facility */
+  hospitalSuggestions?: HospitalSuggestion[]
   /** VMS experience_employment_type */
   employmentType?: string
   /** VMS experience_unit_bed_count */

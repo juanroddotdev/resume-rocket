@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computeMissingTemplateFields } from '~/utils/vmsGapReview'
+import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 
 const route = useRoute()
 const token = computed(() => String(route.params.token))
@@ -65,6 +65,7 @@ const stepIndicator = computed(() => {
 })
 
 const missingFields = computed(() => computeMissingTemplateFields(form.value))
+const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form.value))
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
@@ -338,6 +339,7 @@ async function onDownloadAgain() {
       <section v-else-if="currentStep === 4" class="space-y-4">
         <IntakeReviewPanel
           :missing="missingFields"
+          :advisories="employerLinkAdvisories"
           :submitting="submitting"
           @back="currentStep = 3"
           @go-to-step="goToStep"

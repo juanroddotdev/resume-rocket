@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { HospitalRow } from '~/types/hospital'
 import type { EmployerEntry } from '~/types/candidate'
+import type { HospitalRow } from '~/types/hospital'
+import { isDuplicateEmployer, linkEmployerFromHospital } from '~/utils/employerLink'
 
 const props = defineProps<{
   employers: EmployerEntry[]
@@ -10,56 +11,18 @@ const emit = defineEmits<{
   'update:employers': [value: EmployerEntry[]]
 }>()
 
-const query = ref('')
-const results = ref<HospitalRow[]>([])
+const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const emr = defineModel<string>('emr', { default: '' })
-const searching = ref(false)
-const searchError = ref<string | null>(null)
-
-const showNoResults = computed(
-  () => query.value.trim().length >= 2 && !searching.value && !searchError.value && results.value.length === 0,
-)
-
-let debounce: ReturnType<typeof setTimeout> | null = null
-
-watch(query, (q) => {
-  if (debounce) clearTimeout(debounce)
-  searchError.value = null
-  if (q.length < 2) {
-    results.value = []
-    return
-  }
-  debounce = setTimeout(async () => {
-    searching.value = true
-    try {
-      const res = await $fetch<{ hospitals: HospitalRow[] }>('/api/hospitals/search', {
-        query: { query: q },
-      })
-      results.value = res.hospitals
-    } catch {
-      searchError.value = 'Could not search facilities. Check your connection and try again.'
-      results.value = []
-    } finally {
-      searching.value = false
-    }
-  }, 300)
-})
+const duplicateMessage = ref<string | null>(null)
 
 function addHospital(h: HospitalRow) {
-  const entry: EmployerEntry = {
-    name: h.name,
-    city: h.city || undefined,
-    state: h.state || undefined,
-    hospitalId: h.id,
-    beds: h.beds ?? undefined,
-    traumaLevel: h.trauma_level ?? undefined,
-    teachingStatus: h.teaching_status ?? undefined,
+  duplicateMessage.value = null
+  if (isDuplicateEmployer(props.employers, h)) {
+    duplicateMessage.value = 'This facility is already on your list.'
+    return
   }
-  if (!props.employers.some(e => e.hospitalId === h.id || e.name === h.name)) {
-    emit('update:employers', [...props.employers, entry])
-  }
-  query.value = ''
-  results.value = []
+  emit('update:employers', [...props.employers, linkEmployerFromHospital({ name: h.name }, h)])
+  clearSearch()
 }
 
 function patchEmployer(index: number, employer: EmployerEntry) {
@@ -100,6 +63,7 @@ function removeEmployer(index: number) {
       <p v-else-if="showNoResults" class="mt-1 text-xs text-slate-500">
         No facilities found — try a different name or add details manually later.
       </p>
+      <p v-if="duplicateMessage" class="mt-1 text-xs text-amber-800">{{ duplicateMessage }}</p>
       <p v-if="searchError" class="mt-1 text-xs text-red-600">{{ searchError }}</p>
     </div>
 

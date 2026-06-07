@@ -172,6 +172,10 @@ export default defineEventHandler(async (event) => {
   const fieldsFound =
     countParsedFields(apiFields) + countDetectedCredentials(parsed?.detectedCredentials)
 
+  const suggestedEmployers = apiFields.suggested_employers?.length
+    ? await attachEmployerHospitalSuggestions(apiFields.suggested_employers)
+    : []
+
   logParseOutcome({
     candidateId: resolvedCandidateId,
     mime,
@@ -193,5 +197,6 @@ export default defineEventHandler(async (event) => {
     fields_found: fieldsFound,
     detected_credentials: parsed?.detectedCredentials || [],
     ...apiFields,
+    suggested_employers: suggestedEmployers,
   }
 })

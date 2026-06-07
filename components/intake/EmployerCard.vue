@@ -6,11 +6,15 @@ import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employ
 const props = defineProps<{
   employer: EmployerEntry
   index: number
+  canMoveUp?: boolean
+  canMoveDown?: boolean
 }>()
 
 const emit = defineEmits<{
   update: [value: EmployerEntry]
   remove: []
+  'move-up': []
+  'move-down': []
 }>()
 
 const showClinical = ref(false)
@@ -49,13 +53,33 @@ function arrayToLines(values?: string[]) {
 <template>
   <li class="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
     <div class="flex items-start justify-between gap-2">
-      <div>
+      <div class="min-w-0 flex-1">
         <p class="font-medium text-slate-900">{{ employer.name }}</p>
         <p v-if="employer.city || employer.state" class="text-xs text-slate-500">
           {{ [employer.city, employer.state].filter(Boolean).join(', ') }}
         </p>
       </div>
-      <button type="button" class="text-sm text-red-600 shrink-0" @click="emit('remove')">Remove</button>
+      <div class="flex shrink-0 items-center gap-1">
+        <button
+          v-if="canMoveUp"
+          type="button"
+          class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          aria-label="Move employer up"
+          @click="emit('move-up')"
+        >
+          ↑
+        </button>
+        <button
+          v-if="canMoveDown"
+          type="button"
+          class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          aria-label="Move employer down"
+          @click="emit('move-down')"
+        >
+          ↓
+        </button>
+        <button type="button" class="text-sm text-red-600" @click="emit('remove')">Remove</button>
+      </div>
     </div>
 
     <div v-if="isLinked" class="flex flex-wrap gap-1.5">

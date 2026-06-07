@@ -36,6 +36,15 @@ function removeEmployer(index: number) {
   next.splice(index, 1)
   emit('update:employers', next)
 }
+
+function moveEmployer(index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= props.employers.length) return
+  const next = [...props.employers]
+  const [item] = next.splice(index, 1)
+  next.splice(target, 0, item!)
+  emit('update:employers', next)
+}
 </script>
 
 <template>
@@ -74,8 +83,12 @@ function removeEmployer(index: number) {
         :key="`${employer.hospitalId || employer.name}-${index}`"
         :employer="employer"
         :index="index"
+        :can-move-up="index > 0"
+        :can-move-down="index < employers.length - 1"
         @update="patchEmployer(index, $event)"
         @remove="removeEmployer(index)"
+        @move-up="moveEmployer(index, -1)"
+        @move-down="moveEmployer(index, 1)"
       />
     </ul>
     <p v-else class="text-xs text-amber-800">

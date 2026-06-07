@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
+
 const emit = defineEmits<{
   parsed: [data: Record<string, unknown>]
   parseFailed: []
@@ -8,6 +10,8 @@ const emit = defineEmits<{
 const props = defineProps<{
   candidateId?: string | null
   disabled?: boolean
+  /** When true, confirm before starting a new parse (wizard already has data). */
+  hasExistingData?: boolean
 }>()
 
 const { intakeHeaders } = useIntakeInvite()
@@ -89,6 +93,10 @@ function startStageRotation(isPdf: boolean) {
 
 async function handleFile(file: File) {
   if (isBusy.value) return
+
+  if (props.hasExistingData && import.meta.client && !confirm(REPLACE_RESUME_CONFIRM)) {
+    return
+  }
 
   error.value = null
   parsing.value = true

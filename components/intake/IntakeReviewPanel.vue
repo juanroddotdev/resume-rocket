@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { MissingTemplateField } from '~/utils/vmsGapReview'
+import type { EmployerLinkAdvisory, MissingTemplateField } from '~/utils/vmsGapReview'
 
 defineProps<{
   missing: MissingTemplateField[]
+  advisories?: EmployerLinkAdvisory[]
   submitting: boolean
 }>()
 
@@ -38,7 +39,25 @@ const emit = defineEmits<{
       </ul>
     </div>
 
-    <p v-else class="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
+    <div
+      v-if="advisories?.length"
+      class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700"
+    >
+      <p class="font-medium">Recommended (optional)</p>
+      <ul class="mt-2 space-y-1">
+        <li v-for="item in advisories" :key="item.id">
+          <button
+            type="button"
+            class="text-left underline"
+            @click="emit('go-to-step', item.step)"
+          >
+            {{ item.label }}
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <p v-if="!missing.length" class="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
       All required VMS fields look complete. You can download your packet.
     </p>
 

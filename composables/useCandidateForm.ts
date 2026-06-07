@@ -5,6 +5,8 @@ import type {
   CredentialsMap,
   CredentialEntry,
 } from '~/types/candidate'
+import type { HospitalSuggestion } from '~/types/hospital'
+import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -193,7 +195,7 @@ export function useCandidateForm() {
         license_number: form.value.license_number,
         license_state: form.value.license_state,
         emr_system: form.value.emr_system,
-        employers: form.value.employers,
+        employers: employersForPatch(form.value.employers),
         credentials: form.value.credentials,
         specialties: form.value.specialties,
         years_nursing_experience: form.value.years_nursing_experience || undefined,
@@ -219,7 +221,7 @@ export function useCandidateForm() {
     average_patient_ratios?: string
     specialized_medical_equipment?: string
     education?: EducationEntry[]
-    suggested_employers?: EmployerEntry[]
+    suggested_employers?: Array<EmployerEntry & { employer_hospital_suggestions?: HospitalSuggestion[] }>
     detected_credentials?: string[]
     fields_found?: number
     partial_parse?: boolean
@@ -247,7 +249,7 @@ export function useCandidateForm() {
     }
     if (data.education?.length) form.value.education = [...data.education]
     if (data.suggested_employers?.length) {
-      form.value.employers = [...data.suggested_employers]
+      form.value.employers = mapParsedEmployers(data.suggested_employers)
     }
     if (data.detected_credentials?.length) {
       for (const cert of data.detected_credentials) {
@@ -314,7 +316,7 @@ export function useCandidateForm() {
       await $fetch(`/api/candidates/${candidateId.value}`, {
         method: 'PATCH',
         headers: intakeHeaders(),
-        body: { ...form.value },
+        body: { ...form.value, employers: employersForPatch(form.value.employers) },
       })
       saveStatus.value = 'saved'
     } catch (e) {

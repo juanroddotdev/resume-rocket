@@ -41,8 +41,8 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 ### Employment & facilities (Step 2)
 
 - [ ] **Reorder employer cards** — Move up / Move down (or drag) on [`EmployerCard`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}` order; autosave via PATCH
-- [ ] **Show linked facility metrics** on card — read-only chips: beds, trauma, teaching when `hospitalId` set
-- [ ] **Soft link-facility reminder** when `!hospitalId` — “Link facility for bed count & trauma (recommended)” — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
+- [x] **Show linked facility metrics** on card — read-only chips: beds, trauma, teaching when `hospitalId` set
+- [x] **Soft link-facility reminder** when `!hospitalId` — “Link facility for bed count & trauma (recommended)” — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
 - [x] **Stronger empty employer CTA** under hospital search — “Add at least one hospital where you worked”
 
 ### Draft & recovery
@@ -117,8 +117,8 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 Data prerequisite is **done**. Remaining app work:
 
-- [ ] **PR 2** — `hospitalMatch` util + `employer_hospital_suggestions` on parse response
-- [ ] **PR 3** — In-place facility linking on `EmployerCard` (avoid duplicate parsed vs search-added rows)
+- [x] **PR 2** — `hospitalMatch` util + `employer_hospital_suggestions` on parse response
+- [x] **PR 3** — In-place facility linking on `EmployerCard` (avoid duplicate parsed vs search-added rows)
 - [ ] **PR 4** — Expand `GEMINI_VMS_FIELD_GUIDE` (unit beds vs hospital beds; no facility metrics from Gemini)
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
 - [ ] **PR 5 (optional)** — Multi-license `licenses[]` if resumes often list several active licenses

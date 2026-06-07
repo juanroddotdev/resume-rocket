@@ -23,6 +23,9 @@ const {
   applyParseResult,
   finalizeAndDownload,
   downloadDocxOnly,
+  parseMeta,
+  setParseMeta,
+  clearParseMeta,
   restoreLocal,
   persistLocal,
   clearLocal,
@@ -30,11 +33,23 @@ const {
 
 const loading = ref(true)
 const submitting = ref(false)
-const prefillMessage = ref<string | null>(null)
 const submitError = ref<string | null>(null)
 const confirmationEmailSent = ref(false)
 const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
+const draftRestoredBanner = ref(false)
+
+function isWizardStep(step: number | 'success'): step is number {
+  return typeof step === 'number' && step >= 1 && step <= 4
+}
+
+function updateDraftRestoredBanner(restored: boolean) {
+  draftRestoredBanner.value = restored && isWizardStep(currentStep.value)
+}
+
+function dismissDraftRestoredBanner() {
+  draftRestoredBanner.value = false
+}
 
 const STEP_LABELS: Record<number, string> = {
   0: 'Upload resume',
@@ -53,20 +68,25 @@ const missingFields = computed(() => computeMissingTemplateFields(form.value))
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
+  draftRestoredBanner.value = false
   const ok = await validate(routeToken)
   if (!ok) return false
 
-  restoreLocal(routeToken)
+  const draftRestored = restoreLocal(routeToken)
 
   if (inviteCandidateId.value) {
     if (candidateId.value && candidateId.value !== inviteCandidateId.value) {
       clearLocal(routeToken)
       resetWizard()
+    } else {
+      candidateId.value = inviteCandidateId.value
+      updateDraftRestoredBanner(draftRestored)
     }
-    candidateId.value = inviteCandidateId.value
   } else if (candidateId.value) {
     clearLocal(routeToken)
     resetWizard()
+  } else {
+    updateDraftRestoredBanner(draftRestored)
   }
 
   if (prefilledEmail.value && !form.value.email) {
@@ -90,6 +110,15 @@ watch(token, async (newToken, oldToken) => {
 })
 
 watch(
+  () => currentStep.value,
+  (step) => {
+    if (step === 0 || step === 'success') {
+      draftRestoredBanner.value = false
+    }
+  },
+)
+
+watch(
   () => form.value,
   () => {
     if (currentStep.value !== 0 && currentStep.value !== 'success') {
@@ -106,22 +135,18 @@ async function onParsed(data: Record<string, unknown>) {
   if (!candidateId.value) await ensureDraft()
 
   const fieldsFound = applyParseResult(data as Parameters<typeof applyParseResult>[0])
-  const partialNote = data.partial_parse
-    ? ' Some fields were filled with basic detection — please review everything.'
-    : ''
-  prefillMessage.value =
-    fieldsFound > 0
-      ? data.document_scan
-        ? `We scanned ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.${partialNote}`
-        : `We pulled ${fieldsFound} field${fieldsFound === 1 ? '' : 's'} from your resume. Review and edit anything that looks off.${partialNote}`
-      : null
+  setParseMeta({
+    document_scan: Boolean(data.document_scan),
+    partial_parse: Boolean(data.partial_parse),
+    fields_found: fieldsFound,
+  })
 
   currentStep.value = 1
   persistLocal(token.value)
 }
 
 async function onManual() {
-  prefillMessage.value = null
+  clearParseMeta()
   await ensureDraft()
   currentStep.value = 1
   persistLocal(token.value)
@@ -192,6 +217,20 @@ async function onDownloadAgain() {
         </span>
       </div>
 
+      <div
+        v-if="draftRestoredBanner"
+        class="mb-3 flex items-start justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+      >
+        <p><strong>Draft restored</strong> — You can pick up where you left off.</p>
+        <button
+          type="button"
+          class="shrink-0 text-xs text-slate-500 underline"
+          @click="dismissDraftRestoredBanner"
+        >
+          Dismiss
+        </button>
+      </div>
+
       <p
         v-if="stepIndicator"
         class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500"
@@ -213,12 +252,7 @@ async function onDownloadAgain() {
       <!-- Step 1 -->
       <section v-else-if="currentStep === 1" class="space-y-4">
         <h1 class="text-xl font-bold">Your details</h1>
-        <p
-          v-if="prefillMessage"
-          class="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900"
-        >
-          {{ prefillMessage }}
-        </p>
+        <ParseNoticeBanner :meta="parseMeta" show-fields-found />
         <button type="button" class="text-sm text-brand-700" @click="currentStep = 0">
           Replace resume
         </button>
@@ -242,6 +276,7 @@ async function onDownloadAgain() {
       <!-- Step 2 -->
       <section v-else-if="currentStep === 2" class="space-y-4">
         <h1 class="text-xl font-bold">Employment</h1>
+        <ParseNoticeBanner :meta="parseMeta" />
         <SpecialtyChipInput
           v-model="form.specialties"
           label="Specialties / units"
@@ -274,6 +309,7 @@ async function onDownloadAgain() {
       <!-- Step 3 -->
       <section v-else-if="currentStep === 3" class="space-y-4">
         <h1 class="text-xl font-bold">Credentials & education</h1>
+        <ParseNoticeBanner :meta="parseMeta" />
         <CredentialsChecklist
           :credentials="form.credentials"
           :license-number="form.license_number"

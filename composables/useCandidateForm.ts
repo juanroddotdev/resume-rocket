@@ -49,12 +49,23 @@ function storageKey(token: string) {
   return `resume-rocket-draft:${token}`
 }
 
+export type ParseMeta = {
+  document_scan?: boolean
+  partial_parse?: boolean
+  fields_found?: number
+}
+
+function defaultParseMeta(): ParseMeta | null {
+  return null
+}
+
 export function useCandidateForm() {
   const candidateId = useState<string | null>('form-candidate-id', () => null)
   const currentStep = useState<number | 'success'>('form-step', () => 0)
   const saveStatus = useState<'idle' | 'saving' | 'saved' | 'error'>('save-status', () => 'idle')
 
   const form = useState('candidate-form', defaultForm)
+  const parseMeta = useState<ParseMeta | null>('form-parse-meta', defaultParseMeta)
 
   const { intakeHeaders, token: inviteToken } = useIntakeInvite()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -64,6 +75,15 @@ export function useCandidateForm() {
     currentStep.value = 0
     saveStatus.value = 'idle'
     form.value = defaultForm()
+    parseMeta.value = null
+  }
+
+  function setParseMeta(meta: ParseMeta | null) {
+    parseMeta.value = meta
+  }
+
+  function clearParseMeta() {
+    parseMeta.value = null
   }
 
   function persistLocal(explicitToken?: string) {
@@ -77,24 +97,26 @@ export function useCandidateForm() {
         step: currentStep.value,
         passedStep0: currentStep.value !== 0 && currentStep.value !== 'success',
         form: form.value,
+        parseMeta: parseMeta.value,
       }),
     )
   }
 
-  function restoreLocal(token: string) {
-    if (!import.meta.client || !token) return
+  function restoreLocal(token: string): boolean {
+    if (!import.meta.client || !token) return false
 
     // Drop pre-token-scoping drafts that leaked steps across invite links.
     localStorage.removeItem(LEGACY_STORAGE_KEY)
 
     const raw = localStorage.getItem(storageKey(token))
-    if (!raw) return
+    if (!raw) return false
     try {
       const data = JSON.parse(raw) as {
         candidateId?: string
         step?: number | 'success'
         passedStep0?: boolean
         form?: ReturnType<typeof defaultForm>
+        parseMeta?: ParseMeta | null
       }
 
       if (data.candidateId) candidateId.value = data.candidateId
@@ -106,17 +128,20 @@ export function useCandidateForm() {
         }
       }
 
+      parseMeta.value = data.parseMeta ?? null
+
       const step = data.step
-      if (step == null || step === 'success') return
+      if (step == null || step === 'success') return false
 
       if (step > 0 && !data.passedStep0) {
         currentStep.value = 0
-        return
+        return false
       }
 
       currentStep.value = step
+      return typeof step === 'number' && step >= 1 && step <= 4
     } catch {
-      /* ignore */
+      return false
     }
   }
 
@@ -125,6 +150,7 @@ export function useCandidateForm() {
     const token = explicitToken || inviteToken.value
     if (token) localStorage.removeItem(storageKey(token))
     localStorage.removeItem(LEGACY_STORAGE_KEY)
+    parseMeta.value = null
   }
 
   async function ensureDraft() {
@@ -336,6 +362,7 @@ export function useCandidateForm() {
     currentStep,
     saveStatus,
     form,
+    parseMeta,
     certKeys: CERT_KEYS,
     resetWizard,
     ensureDraft,
@@ -344,6 +371,8 @@ export function useCandidateForm() {
     patchCandidate,
     finalizeAndDownload,
     downloadDocxOnly,
+    setParseMeta,
+    clearParseMeta,
     persistLocal,
     restoreLocal,
     clearLocal,

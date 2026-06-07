@@ -20,8 +20,8 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 
 ### Upload & parse (Step 0)
 
-- [ ] **Parse progress animation** — spinner/pulse on drop zone so upload does not look frozen during long `/api/parse` (10–30s+ on vision PDFs); staged labels: upload → extract text → AI scan → saving ([`FileDropZone.vue`](../components/intake/FileDropZone.vue))
-- [ ] **Timed stage copy** — rotate/hold messages on long waits; align with `document_scan` / `partial_parse` when known
+- [x] **Parse progress animation** — spinner/pulse on drop zone so upload does not look frozen during long `/api/parse` (10–30s+ on vision PDFs); staged labels: upload → extract text → AI scan → saving ([`FileDropZone.vue`](../components/intake/FileDropZone.vue))
+- [x] **Timed stage copy** — rotate/hold messages on long waits; align with `document_scan` / `partial_parse` when known
 - [x] **Disable drop zone while parsing** — no second upload mid-request; keep **Continue manually** on error ([empty-error-states](../.cursor/rules/empty-error-states.mdc))
 - [x] **`prefers-reduced-motion`** — static “Working…” instead of animation when user prefers reduced motion
 
@@ -34,7 +34,7 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 ### Wizard navigation & orientation
 
 - [x] **Step indicator** — “Step 2 of 5: Employment” or progress dots on [`pages/intake/[token].vue`](../pages/intake/[token].vue)
-- [ ] **Visible field labels** on Step 1 (not placeholders only) — accessibility + clarity on mobile
+- [x] **Visible field labels** on Step 1 (not placeholders only) — accessibility + clarity on mobile
 - [x] **Block Next on Step 2** when `employers.length === 0` with inline message (don’t wait until gap review)
 - [ ] **Block or warn Next on Step 3** for obvious gaps (optional: license state/number if required by gap review)
 
@@ -61,12 +61,12 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 - [x] **Download again** on success step — if browser blocked download or tab closed
 - [x] **Submit loading copy** — “Preparing your packet…” + disabled button during `finalizeAndDownload`
 - [x] **One-line success context** — what “VMS-ready” means / what recruiter receives
-- [ ] **Focus first missing field** — when jumping from gap review (`go-to-step`), scroll/focus target step’s first empty input
+- [x] **Focus first missing field** — when jumping from gap review (`go-to-step`), scroll/focus target step’s first empty input
 
 ### Forms & accessibility
 
 - [x] **`autocomplete` on identity fields** — `given-name`, `family-name`, `email`, `tel` on Step 1
-- [ ] **Basic phone format hint** — optional pattern or helper text (no strict validation unless product wants it)
+- [x] **Basic phone format hint** — optional pattern or helper text (no strict validation unless product wants it)
 
 ### Recruiter admin
 

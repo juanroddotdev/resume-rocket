@@ -17,6 +17,31 @@ const error = ref<string | null>(null)
 const dragOver = ref(false)
 const reducedMotion = ref(false)
 
+const PDF_STAGES = [
+  'Uploading file…',
+  'Reading document…',
+  'Scanning with AI…',
+  'Extracting placement fields…',
+] as const
+
+const DOCX_STAGES = [
+  'Uploading file…',
+  'Extracting text…',
+  'Analyzing resume…',
+] as const
+
+const LONG_WAIT_MESSAGES = [
+  'Still working — image PDFs can take up to a minute',
+  'Almost there…',
+  'Checking licenses, employers, and credentials…',
+] as const
+
+const STAGE_INTERVAL_MS = 8000
+
+let stageTimer: ReturnType<typeof setInterval> | null = null
+let stageIndex = 0
+let stageList: readonly string[] = PDF_STAGES
+
 onMounted(() => {
   if (!import.meta.client) return
   const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -24,6 +49,10 @@ onMounted(() => {
   mq.addEventListener('change', (e) => {
     reducedMotion.value = e.matches
   })
+})
+
+onUnmounted(() => {
+  stopStageRotation()
 })
 
 const isBusy = computed(() => parsing.value || props.disabled)
@@ -34,28 +63,59 @@ const displayStage = computed(() => {
   return parseStage.value
 })
 
+function stopStageRotation() {
+  if (stageTimer) {
+    clearInterval(stageTimer)
+    stageTimer = null
+  }
+}
+
+function startStageRotation(isPdf: boolean) {
+  stopStageRotation()
+  stageList = isPdf ? PDF_STAGES : DOCX_STAGES
+  stageIndex = 0
+  parseStage.value = stageList[0]!
+
+  stageTimer = setInterval(() => {
+    stageIndex++
+    if (stageIndex < stageList.length) {
+      parseStage.value = stageList[stageIndex]!
+    } else {
+      const longIdx = (stageIndex - stageList.length) % LONG_WAIT_MESSAGES.length
+      parseStage.value = LONG_WAIT_MESSAGES[longIdx]!
+    }
+  }, STAGE_INTERVAL_MS)
+}
+
 async function handleFile(file: File) {
   if (isBusy.value) return
 
   error.value = null
   parsing.value = true
-  parseStage.value = 'Uploading file…'
+
+  const isPdf =
+    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+  startStageRotation(isPdf)
 
   const formData = new FormData()
   formData.append('file', file)
   if (props.candidateId) formData.append('candidateId', props.candidateId)
 
   try {
-    const isPdf =
-      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    parseStage.value = isPdf ? 'Reading and scanning document…' : 'Extracting fields…'
     const result = await $fetch<Record<string, unknown>>('/api/parse', {
       method: 'POST',
       headers: intakeHeaders(),
       body: formData,
     })
 
-    parseStage.value = 'Saving…'
+    stopStageRotation()
+    parseStage.value = reducedMotion.value
+      ? 'Working…'
+      : result.document_scan
+        ? 'Saving — we scanned your PDF visually…'
+        : result.partial_parse
+          ? 'Saving — some fields need your review…'
+          : 'Saving…'
 
     if (result.parse_failed) {
       error.value = String(result.parse_error || 'Could not read enough information from your resume')
@@ -75,6 +135,7 @@ async function handleFile(file: File) {
     }
     emit('parseFailed')
   } finally {
+    stopStageRotation()
     parsing.value = false
     parseStage.value = ''
   }
@@ -110,9 +171,16 @@ function onInput(e: Event) {
     <div
       class="rounded-xl border-2 border-dashed px-4 py-10 text-center transition"
       :class="[
-        isBusy ? 'pointer-events-none border-slate-200 bg-slate-100' : dragOver ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-slate-50',
+        isBusy
+          ? 'pointer-events-none border-brand-300 bg-brand-50/60'
+          : dragOver
+            ? 'border-brand-500 bg-brand-50'
+            : 'border-slate-300 bg-slate-50',
+        parsing && !reducedMotion ? 'parse-active' : '',
       ]"
       :aria-busy="parsing"
+      role="status"
+      :aria-live="parsing ? 'polite' : 'off'"
       @dragover="onDragOver"
       @dragleave="dragOver = false"
       @drop="onDrop"
@@ -120,11 +188,17 @@ function onInput(e: Event) {
       <div v-if="parsing" class="flex flex-col items-center gap-3">
         <div
           v-if="!reducedMotion"
-          class="h-8 w-8 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600"
+          class="relative h-10 w-10"
           aria-hidden="true"
-        />
+        >
+          <div class="absolute inset-0 animate-ping rounded-full bg-brand-200 opacity-40" />
+          <div class="relative h-10 w-10 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+        </div>
         <p class="text-sm font-medium text-brand-700">
           {{ displayStage }}
+        </p>
+        <p v-if="!reducedMotion" class="text-xs text-slate-500">
+          Please keep this tab open
         </p>
       </div>
       <template v-else>
@@ -154,3 +228,27 @@ function onInput(e: Event) {
     </button>
   </div>
 </template>
+
+<style scoped>
+.parse-active {
+  animation: parse-pulse 2s ease-in-out infinite;
+}
+
+@keyframes parse-pulse {
+  0%,
+  100% {
+    border-color: rgb(147 197 253);
+    background-color: rgb(239 246 255 / 0.6);
+  }
+  50% {
+    border-color: rgb(59 130 246);
+    background-color: rgb(219 234 254 / 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parse-active {
+    animation: none;
+  }
+}
+</style>

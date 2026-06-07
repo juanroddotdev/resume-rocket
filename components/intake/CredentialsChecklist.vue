@@ -79,6 +79,7 @@ function setExpiry(cert: string, value: string) {
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">License number</label>
       <input
+        id="intake-field-license_number"
         :value="licenseNumber"
         type="text"
         class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base"
@@ -88,6 +89,7 @@ function setExpiry(cert: string, value: string) {
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">License state</label>
       <input
+        id="intake-field-license_state"
         :value="licenseState"
         type="text"
         maxlength="2"

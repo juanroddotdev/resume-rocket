@@ -43,6 +43,7 @@ function removeEmployer(index: number) {
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">Search facilities</label>
       <input
+        id="intake-field-employers"
         v-model="query"
         type="search"
         placeholder="Hospital name…"
@@ -84,6 +85,7 @@ function removeEmployer(index: number) {
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">EMR platform</label>
       <select
+        id="intake-field-emr_system"
         v-model="emr"
         class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base"
       >

@@ -106,14 +106,17 @@ function arrayToLines(values?: string[]) {
       <div>
         <button
           v-if="!showLinkSearch"
+          :id="`intake-field-employer-${index}-link`"
           type="button"
           class="text-sm text-brand-700"
           @click="showLinkSearch = true"
+          @focus="showLinkSearch = true"
         >
           Search to link facility
         </button>
         <div v-else class="space-y-1">
           <input
+            :id="`intake-field-employer-${index}-link`"
             v-model="query"
             type="search"
             placeholder="Search hospital name…"
@@ -143,6 +146,7 @@ function arrayToLines(values?: string[]) {
     </template>
 
     <input
+      :id="`intake-field-employer-${index}-role`"
       :value="employer.role || ''"
       placeholder="Role / unit (e.g. ICU Staff RN)"
       class="field"
@@ -151,12 +155,14 @@ function arrayToLines(values?: string[]) {
 
     <div class="grid grid-cols-2 gap-2">
       <input
+        :id="`intake-field-employer-${index}-start`"
         :value="employer.startDate || ''"
         placeholder="Start (YYYY-MM)"
         class="field"
         @input="patch({ startDate: ($event.target as HTMLInputElement).value })"
       >
       <input
+        :id="`intake-field-employer-${index}-end`"
         :value="employer.endDate || ''"
         placeholder="End (YYYY-MM or Present)"
         class="field"
@@ -165,6 +171,7 @@ function arrayToLines(values?: string[]) {
     </div>
 
     <input
+      :id="`intake-field-employer-${index}-type`"
       :value="employer.employmentType || ''"
       placeholder="Employment type (Travel, Staff, PRN…)"
       class="field"
@@ -172,18 +179,21 @@ function arrayToLines(values?: string[]) {
     >
 
     <input
+      :id="`intake-field-employer-${index}-scope`"
       :value="employer.patientScope || ''"
       placeholder="Patient scope (e.g. adult ICU, pediatrics)"
       class="field"
       @input="patch({ patientScope: ($event.target as HTMLInputElement).value })"
     >
     <input
+      :id="`intake-field-employer-${index}-acuity`"
       :value="employer.patientAcuity || ''"
       placeholder="Patient acuity level"
       class="field"
       @input="patch({ patientAcuity: ($event.target as HTMLInputElement).value })"
     >
     <textarea
+      :id="`intake-field-employer-${index}-highlights`"
       :value="arrayToLines(employer.highlights)"
       placeholder="Highlights (one per line)"
       rows="3"

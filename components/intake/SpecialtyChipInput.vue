@@ -3,6 +3,7 @@ const props = defineProps<{
   modelValue: string[]
   label?: string
   placeholder?: string
+  fieldId?: string
 }>()
 
 const emit = defineEmits<{
@@ -41,6 +42,7 @@ function removeChip(index: number) {
     <label v-if="label" class="mb-1 block text-sm font-medium text-slate-700">{{ label }}</label>
     <div class="flex gap-2">
       <input
+        :id="fieldId ? `intake-field-${fieldId}` : undefined"
         v-model="draft"
         type="text"
         :placeholder="placeholder || 'Add specialty and press Enter'"

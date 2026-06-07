@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
+import { focusIntakeField } from '~/utils/focusIntakeField'
 
 const route = useRoute()
 const token = computed(() => String(route.params.token))
@@ -161,9 +162,15 @@ function canAdvanceStep2() {
   return form.value.employers.length > 0
 }
 
-function goToStep(step: number) {
+async function goToField(step: number, fieldId: string) {
+  const stepChanging = currentStep.value !== step
   currentStep.value = step
   persistLocal(token.value)
+  if (stepChanging) {
+    await nextTick()
+    await nextTick()
+  }
+  await focusIntakeField(fieldId)
 }
 
 async function goSuccess() {
@@ -257,10 +264,23 @@ async function onDownloadAgain() {
         <button type="button" class="text-sm text-brand-700" @click="currentStep = 0">
           Replace resume
         </button>
-        <input v-model="form.first_name" autocomplete="given-name" placeholder="First name" required class="field">
-        <input v-model="form.last_name" autocomplete="family-name" placeholder="Last name" required class="field">
-        <input v-model="form.email" type="email" autocomplete="email" placeholder="Email" required class="field">
-        <input v-model="form.phone" type="tel" autocomplete="tel" placeholder="Phone" required class="field">
+        <label class="block">
+          <span class="mb-1 block text-sm font-medium text-slate-700">First name</span>
+          <input id="intake-field-first_name" v-model="form.first_name" autocomplete="given-name" placeholder="Jane" required class="field">
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-sm font-medium text-slate-700">Last name</span>
+          <input id="intake-field-last_name" v-model="form.last_name" autocomplete="family-name" placeholder="Doe" required class="field">
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-sm font-medium text-slate-700">Email</span>
+          <input id="intake-field-email" v-model="form.email" type="email" autocomplete="email" placeholder="you@example.com" required class="field">
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-sm font-medium text-slate-700">Phone</span>
+          <input id="intake-field-phone" v-model="form.phone" type="tel" autocomplete="tel" placeholder="(555) 555-5555" required class="field">
+          <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
+        </label>
         <div class="flex gap-2 pt-2">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 0">Back</button>
           <button
@@ -282,6 +302,7 @@ async function onDownloadAgain() {
           v-model="form.specialties"
           label="Specialties / units"
           placeholder="e.g. ICU, ER, Med-Surg"
+          field-id="specialties"
         />
         <HospitalAutocomplete
           v-model:emr="form.emr_system"
@@ -342,7 +363,7 @@ async function onDownloadAgain() {
           :advisories="employerLinkAdvisories"
           :submitting="submitting"
           @back="currentStep = 3"
-          @go-to-step="goToStep"
+          @go-to-field="goToField"
           @submit="goSuccess"
         />
         <p

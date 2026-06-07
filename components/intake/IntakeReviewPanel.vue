@@ -10,7 +10,7 @@ defineProps<{
 const emit = defineEmits<{
   back: []
   submit: []
-  'go-to-step': [step: number]
+  'go-to-field': [payload: { step: number; fieldId: string }]
 }>()
 </script>
 
@@ -31,7 +31,7 @@ const emit = defineEmits<{
           <button
             type="button"
             class="text-left underline"
-            @click="emit('go-to-step', field.step)"
+            @click="emit('go-to-field', { step: field.step, fieldId: field.id })"
           >
             {{ field.label }}
           </button>
@@ -49,7 +49,7 @@ const emit = defineEmits<{
           <button
             type="button"
             class="text-left underline"
-            @click="emit('go-to-step', item.step)"
+            @click="emit('go-to-field', { step: item.step, fieldId: item.id })"
           >
             {{ item.label }}
           </button>

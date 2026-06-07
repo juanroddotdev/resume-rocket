@@ -36,11 +36,11 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 - [x] **Step indicator** — “Step 2 of 5: Employment” or progress dots on [`pages/intake/[token].vue`](../pages/intake/[token].vue)
 - [x] **Visible field labels** on Step 1 (not placeholders only) — accessibility + clarity on mobile
 - [x] **Block Next on Step 2** when `employers.length === 0` with inline message (don’t wait until gap review)
-- [ ] **Block or warn Next on Step 3** for obvious gaps (optional: license state/number if required by gap review)
+- [x] **Block or warn Next on Step 3** for obvious gaps (optional: license state/number if required by gap review)
 
 ### Employment & facilities (Step 2)
 
-- [ ] **Reorder employer cards** — Move up / Move down (or drag) on [`EmployerCard`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}` order; autosave via PATCH
+- [x] **Reorder employer cards** — Move up / Move down (or drag) on [`EmployerCard`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}` order; autosave via PATCH
 - [x] **Show linked facility metrics** on card — read-only chips: beds, trauma, teaching when `hospitalId` set
 - [x] **Soft link-facility reminder** when `!hospitalId` — “Link facility for bed count & trauma (recommended)” — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
 - [x] **Stronger empty employer CTA** under hospital search — “Add at least one hospital where you worked”
@@ -48,8 +48,8 @@ Candidate + recruiter polish. One concern per PR when implementing. Priority ord
 ### Draft & recovery
 
 - [x] **Draft restored banner** — when `restoreLocal()` loads wizard from localStorage after refresh/return
-- [ ] **Replace resume confirmation** — warn before re-upload on Step 0 if wizard already has data
-- [ ] **Show save chip on Step 0** after draft exists — “Saved” / “Saving…” visible once `candidateId` + autosave active (today chip mainly on steps 1+)
+- [x] **Replace resume confirmation** — warn before re-upload on Step 0 if wizard already has data
+- [x] **Show save chip on Step 0** after draft exists — “Saved” / “Saving…” visible once `candidateId` + autosave active (today chip mainly on steps 1+)
 
 ### Review & finish (Steps 4–success)
 

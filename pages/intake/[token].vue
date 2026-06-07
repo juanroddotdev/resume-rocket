@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
+import { hasIntakeDraftData } from '~/utils/intakeDraft'
 
 const route = useRoute()
 const token = computed(() => String(route.params.token))
@@ -67,6 +68,22 @@ const stepIndicator = computed(() => {
 
 const missingFields = computed(() => computeMissingTemplateFields(form.value))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form.value))
+const hasDraftData = computed(() => hasIntakeDraftData(form.value, candidateId.value))
+
+const step3LicenseMissing = computed(() =>
+  missingFields.value.filter(f => f.step === 3 && (f.id === 'license_number' || f.id === 'license_state')),
+)
+const step3OtherMissing = computed(() =>
+  missingFields.value.filter(f => f.step === 3 && f.id !== 'license_number' && f.id !== 'license_state'),
+)
+
+const showSaveChip = computed(() =>
+  saveStatus.value !== 'idle' || (currentStep.value === 0 && Boolean(candidateId.value)),
+)
+const saveChipShowsSaved = computed(() =>
+  saveStatus.value === 'saved'
+  || (saveStatus.value === 'idle' && currentStep.value === 0 && Boolean(candidateId.value)),
+)
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
@@ -162,6 +179,10 @@ function canAdvanceStep2() {
   return form.value.employers.length > 0
 }
 
+function canAdvanceStep3() {
+  return step3LicenseMissing.value.length === 0
+}
+
 async function goToField(step: number, fieldId: string) {
   const stepChanging = currentStep.value !== step
   currentStep.value = step
@@ -216,9 +237,9 @@ async function onDownloadAgain() {
     </div>
 
     <template v-else>
-      <div v-if="saveStatus !== 'idle'" class="mb-2 text-right text-xs text-slate-500">
+      <div v-if="showSaveChip" class="mb-2 text-right text-xs text-slate-500">
         <span v-if="saveStatus === 'saving'">Saving…</span>
-        <span v-else-if="saveStatus === 'saved'">Saved</span>
+        <span v-else-if="saveChipShowsSaved">Saved</span>
         <span v-else-if="saveStatus === 'error'" class="text-red-600">
           Save failed —
           <button type="button" class="underline" @click="scheduleAutosave({})">Retry</button>
@@ -252,6 +273,7 @@ async function onDownloadAgain() {
         <FileDropZone
           class="mt-4"
           :candidate-id="candidateId"
+          :has-existing-data="hasDraftData"
           @parsed="onParsed"
           @manual="onManual"
         />
@@ -348,9 +370,26 @@ async function onDownloadAgain() {
           v-model:specialized-medical-equipment="form.specialized_medical_equipment"
         />
         <EducationRepeater v-model="form.education" />
+        <p
+          v-if="step3LicenseMissing.length"
+          class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+        >
+          Add your RN license number and state before review — required for your VMS packet.
+        </p>
+        <p
+          v-else-if="step3OtherMissing.length"
+          class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+        >
+          {{ step3OtherMissing.length }} more field{{ step3OtherMissing.length === 1 ? '' : 's' }} recommended on this step — you can fix them on review.
+        </p>
         <div class="flex gap-2">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 2">Back</button>
-          <button type="button" class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white" @click="currentStep = 4">
+          <button
+            type="button"
+            class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
+            :disabled="!canAdvanceStep3()"
+            @click="currentStep = 4"
+          >
             Review
           </button>
         </div>

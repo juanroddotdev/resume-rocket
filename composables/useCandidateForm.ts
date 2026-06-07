@@ -163,6 +163,7 @@ export function useCandidateForm() {
       headers: intakeHeaders(),
     })
     candidateId.value = res.id
+    saveStatus.value = 'saved'
     persistLocal()
     return res.id
   }

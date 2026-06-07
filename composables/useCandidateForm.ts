@@ -7,6 +7,7 @@ import type {
 } from '~/types/candidate'
 import type { HospitalSuggestion } from '~/types/hospital'
 import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
+import type { FinalizePhase } from '~/utils/intakeProcessing'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -304,7 +305,9 @@ export function useCandidateForm() {
     }
   }
 
-  async function finalizeAndDownload() {
+  async function finalizeAndDownload(options?: {
+    onPhase?: (phase: FinalizePhase) => void
+  }) {
     if (!candidateId.value) {
       await ensureDraft()
     }
@@ -312,6 +315,7 @@ export function useCandidateForm() {
       throw new Error('Could not start your application. Go back and try again.')
     }
 
+    options?.onPhase?.('saving')
     saveStatus.value = 'saving'
     try {
       await $fetch(`/api/candidates/${candidateId.value}`, {
@@ -325,12 +329,14 @@ export function useCandidateForm() {
       throw new Error(formatFetchError(e, 'Could not save your answers.'))
     }
 
+    options?.onPhase?.('generating')
     try {
       await downloadDocxOnly()
     } catch (e) {
       throw e instanceof Error ? e : new Error(formatFetchError(e, 'Could not generate your resume file.'))
     }
 
+    options?.onPhase?.('finalizing')
     try {
       await $fetch(`/api/candidates/${candidateId.value}`, {
         method: 'PATCH',
@@ -341,6 +347,7 @@ export function useCandidateForm() {
       throw new Error(formatFetchError(e, 'Download succeeded but submission could not be finalized.'))
     }
 
+    options?.onPhase?.('email')
     let confirmationEmailSent = false
     try {
       const emailResult = await $fetch<{ sent?: boolean; skipped?: boolean }>(
@@ -355,8 +362,6 @@ export function useCandidateForm() {
       confirmationEmailSent = false
     }
 
-    currentStep.value = 'success'
-    clearLocal()
     return { confirmationEmailSent }
   }
 

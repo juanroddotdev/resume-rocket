@@ -119,7 +119,7 @@ Data prerequisite is **done**. Remaining app work:
 
 - [x] **PR 2** — `hospitalMatch` util + `employer_hospital_suggestions` on parse response
 - [x] **PR 3** — In-place facility linking on `EmployerCard` (avoid duplicate parsed vs search-added rows)
-- [ ] **PR 4** — Expand `GEMINI_VMS_FIELD_GUIDE` (unit beds vs hospital beds; no facility metrics from Gemini)
+- [x] **PR 4** — Expand `GEMINI_VMS_FIELD_GUIDE` (unit beds vs hospital beds; no facility metrics from Gemini)
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
 - [ ] **PR 5 (optional)** — Multi-license `licenses[]` if resumes often list several active licenses
 

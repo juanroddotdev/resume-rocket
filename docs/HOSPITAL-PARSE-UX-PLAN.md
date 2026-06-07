@@ -51,7 +51,7 @@ flowchart LR
 - [ ] **PR 1b** — Hospital search quality (`pg_trgm` tuning) if needed after seed
 - [ ] **PR 2** — Server matching + parse response suggestions
 - [ ] **PR 3** — Step 2 in-place facility linking (main UX fix)
-- [ ] **PR 4** — Gemini guidance (small, no schema flattening)
+- [x] **PR 4** — Gemini guidance (small, no schema flattening)
 - [ ] **PR 5 (optional)** — Multi-license list
 
 ---

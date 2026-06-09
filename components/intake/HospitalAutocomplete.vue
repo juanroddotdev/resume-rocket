@@ -50,13 +50,13 @@ function moveEmployer(index: number, direction: -1 | 1) {
 <template>
   <div class="space-y-4">
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Search facilities</label>
+      <label class="field-label">Search facilities</label>
       <input
         id="intake-field-employers"
         v-model="query"
         type="search"
         placeholder="Hospital name…"
-        class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base"
+        class="field"
       >
       <ul v-if="results.length" class="mt-1 max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
         <li
@@ -96,11 +96,11 @@ function moveEmployer(index: number, direction: -1 | 1) {
     </p>
 
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">EMR platform</label>
+      <label class="field-label">EMR platform</label>
       <select
         id="intake-field-emr_system"
         v-model="emr"
-        class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base"
+        class="field"
       >
         <option value="">Select…</option>
         <option value="Epic">Epic</option>

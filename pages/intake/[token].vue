@@ -351,19 +351,19 @@ async function onDownloadAgain() {
           Replace resume
         </button>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-700">First name</span>
+          <span class="field-label">First name</span>
           <input id="intake-field-first_name" v-model="form.first_name" autocomplete="given-name" placeholder="Jane" required class="field">
         </label>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-700">Last name</span>
+          <span class="field-label">Last name</span>
           <input id="intake-field-last_name" v-model="form.last_name" autocomplete="family-name" placeholder="Doe" required class="field">
         </label>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-700">Email</span>
+          <span class="field-label">Email</span>
           <input id="intake-field-email" v-model="form.email" type="email" autocomplete="email" placeholder="you@example.com" required class="field">
         </label>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-700">Phone</span>
+          <span class="field-label">Phone</span>
           <input id="intake-field-phone" v-model="form.phone" type="tel" autocomplete="tel" placeholder="(555) 555-5555" required class="field">
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
@@ -507,9 +507,3 @@ async function onDownloadAgain() {
     </template>
   </div>
 </template>
-
-<style scoped>
-.field {
-  @apply w-full rounded-lg border border-slate-300 px-3 py-3 text-base;
-}
-</style>

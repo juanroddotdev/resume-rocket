@@ -9,7 +9,7 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
   <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
     <p class="text-sm font-medium text-slate-800">Clinical summary</p>
     <label class="block">
-      <span class="mb-1 block text-xs font-medium text-slate-600">Years of nursing experience</span>
+      <span class="field-label-compact">Years of nursing experience</span>
       <input
         id="intake-field-years_nursing_experience"
         v-model="yearsNursingExperience"
@@ -20,7 +20,7 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
       >
     </label>
     <label class="block">
-      <span class="mb-1 block text-xs font-medium text-slate-600">Compact license status</span>
+      <span class="field-label-compact">Compact license status</span>
       <select id="intake-field-compact_license_status" v-model="compactLicenseStatus" class="field">
         <option value="">Select…</option>
         <option value="Yes">Yes — compact/multistate</option>
@@ -29,7 +29,7 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
       </select>
     </label>
     <label class="block">
-      <span class="mb-1 block text-xs font-medium text-slate-600">Average patient ratios</span>
+      <span class="field-label-compact">Average patient ratios</span>
       <input
         id="intake-field-average_patient_ratios"
         v-model="averagePatientRatios"
@@ -39,7 +39,7 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
       >
     </label>
     <label class="block">
-      <span class="mb-1 block text-xs font-medium text-slate-600">Specialized medical equipment</span>
+      <span class="field-label-compact">Specialized medical equipment</span>
       <input
         id="intake-field-specialized_medical_equipment"
         v-model="specializedMedicalEquipment"
@@ -50,9 +50,3 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
     </label>
   </div>
 </template>
-
-<style scoped>
-.field {
-  @apply w-full rounded-lg border border-slate-300 px-3 py-3 text-base bg-white;
-}
-</style>

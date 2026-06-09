@@ -82,25 +82,22 @@ function arrayToLines(values?: string[]) {
       </div>
     </div>
 
-    <div v-if="isLinked" class="flex flex-wrap gap-1.5">
-      <span
+    <div v-if="isLinked" class="flex flex-wrap items-end gap-2">
+      <MetricTile
         v-if="employer.beds != null"
-        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
-      >
-        {{ employer.beds }} beds
-      </span>
-      <span
+        label="Hospital beds"
+        :value="employer.beds"
+      />
+      <MetricTile
         v-if="employer.traumaLevel"
-        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
-      >
-        Trauma {{ employer.traumaLevel }}
-      </span>
-      <span
+        label="Trauma level"
+        :value="employer.traumaLevel"
+      />
+      <MetricTile
         v-if="employer.teachingStatus"
-        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
-      >
-        Teaching
-      </span>
+        label="Teaching hospital"
+        value="Yes"
+      />
       <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
         Change facility
       </button>
@@ -139,12 +136,15 @@ function arrayToLines(values?: string[]) {
           Search to link facility
         </button>
         <div v-else class="space-y-1">
+          <label class="block" :for="`intake-field-employer-${index}-link`">
+            <span class="field-label-compact">Link to facility database</span>
+          </label>
           <input
             :id="`intake-field-employer-${index}-link`"
             v-model="query"
             type="search"
             placeholder="Search hospital name…"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            class="field"
           >
           <ul v-if="results.length" class="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
             <li
@@ -169,61 +169,84 @@ function arrayToLines(values?: string[]) {
       </div>
     </template>
 
-    <input
-      :id="`intake-field-employer-${index}-role`"
-      :value="employer.role || ''"
-      placeholder="Role / unit (e.g. ICU Staff RN)"
-      class="field"
-      @input="patch({ role: ($event.target as HTMLInputElement).value })"
-    >
+    <label class="block" :for="`intake-field-employer-${index}-role`">
+      <span class="field-label-compact">Role / unit</span>
+      <input
+        :id="`intake-field-employer-${index}-role`"
+        :value="employer.role || ''"
+        placeholder="e.g. ICU Staff RN"
+        class="field"
+        @input="patch({ role: ($event.target as HTMLInputElement).value })"
+      >
+    </label>
 
     <div class="grid grid-cols-2 gap-2">
-      <input
-        :id="`intake-field-employer-${index}-start`"
-        :value="employer.startDate || ''"
-        placeholder="Start (YYYY-MM)"
-        class="field"
-        @input="patch({ startDate: ($event.target as HTMLInputElement).value })"
-      >
-      <input
-        :id="`intake-field-employer-${index}-end`"
-        :value="employer.endDate || ''"
-        placeholder="End (YYYY-MM or Present)"
-        class="field"
-        @input="patch({ endDate: ($event.target as HTMLInputElement).value })"
-      >
+      <label class="block" :for="`intake-field-employer-${index}-start`">
+        <span class="field-label-compact">Start date</span>
+        <input
+          :id="`intake-field-employer-${index}-start`"
+          :value="employer.startDate || ''"
+          placeholder="YYYY-MM"
+          class="field"
+          @input="patch({ startDate: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
+      <label class="block" :for="`intake-field-employer-${index}-end`">
+        <span class="field-label-compact">End date</span>
+        <input
+          :id="`intake-field-employer-${index}-end`"
+          :value="employer.endDate || ''"
+          placeholder="YYYY-MM or Present"
+          class="field"
+          @input="patch({ endDate: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
     </div>
 
-    <input
-      :id="`intake-field-employer-${index}-type`"
-      :value="employer.employmentType || ''"
-      placeholder="Employment type (Travel, Staff, PRN…)"
-      class="field"
-      @input="patch({ employmentType: ($event.target as HTMLInputElement).value })"
-    >
+    <label class="block" :for="`intake-field-employer-${index}-type`">
+      <span class="field-label-compact">Employment type</span>
+      <input
+        :id="`intake-field-employer-${index}-type`"
+        :value="employer.employmentType || ''"
+        placeholder="Travel, Staff, PRN…"
+        class="field"
+        @input="patch({ employmentType: ($event.target as HTMLInputElement).value })"
+      >
+    </label>
 
-    <input
-      :id="`intake-field-employer-${index}-scope`"
-      :value="employer.patientScope || ''"
-      placeholder="Patient scope (e.g. adult ICU, pediatrics)"
-      class="field"
-      @input="patch({ patientScope: ($event.target as HTMLInputElement).value })"
-    >
-    <input
-      :id="`intake-field-employer-${index}-acuity`"
-      :value="employer.patientAcuity || ''"
-      placeholder="Patient acuity level"
-      class="field"
-      @input="patch({ patientAcuity: ($event.target as HTMLInputElement).value })"
-    >
-    <textarea
-      :id="`intake-field-employer-${index}-highlights`"
-      :value="arrayToLines(employer.highlights)"
-      placeholder="Highlights (one per line)"
-      rows="3"
-      class="field"
-      @input="patch({ highlights: linesToArray(($event.target as HTMLTextAreaElement).value) })"
-    />
+    <label class="block" :for="`intake-field-employer-${index}-scope`">
+      <span class="field-label-compact">Patient scope</span>
+      <input
+        :id="`intake-field-employer-${index}-scope`"
+        :value="employer.patientScope || ''"
+        placeholder="e.g. adult ICU, pediatrics"
+        class="field"
+        @input="patch({ patientScope: ($event.target as HTMLInputElement).value })"
+      >
+    </label>
+
+    <label class="block" :for="`intake-field-employer-${index}-acuity`">
+      <span class="field-label-compact">Patient acuity</span>
+      <input
+        :id="`intake-field-employer-${index}-acuity`"
+        :value="employer.patientAcuity || ''"
+        placeholder="e.g. high acuity, level III NICU"
+        class="field"
+        @input="patch({ patientAcuity: ($event.target as HTMLInputElement).value })"
+      >
+    </label>
+
+    <label class="block" :for="`intake-field-employer-${index}-highlights`">
+      <span class="field-label-compact">Highlights</span>
+      <textarea
+        :id="`intake-field-employer-${index}-highlights`"
+        :value="arrayToLines(employer.highlights)"
+        placeholder="One achievement per line"
+        rows="3"
+        class="field"
+        @input="patch({ highlights: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+      />
+    </label>
 
     <button
       type="button"
@@ -234,38 +257,49 @@ function arrayToLines(values?: string[]) {
     </button>
 
     <div v-if="showClinical" class="space-y-2 border-t border-slate-100 pt-2">
-      <input
-        :value="employer.unitBedCount || ''"
-        placeholder="Unit bed count"
-        class="field"
-        @input="patch({ unitBedCount: ($event.target as HTMLInputElement).value })"
-      >
-      <input
-        :value="employer.avgDailyPatients || ''"
-        placeholder="Average daily patients"
-        class="field"
-        @input="patch({ avgDailyPatients: ($event.target as HTMLInputElement).value })"
-      >
-      <textarea
-        :value="arrayToLines(employer.floatedUnits)"
-        placeholder="Floated units (one per line)"
-        rows="2"
-        class="field"
-        @input="patch({ floatedUnits: linesToArray(($event.target as HTMLTextAreaElement).value) })"
-      />
-      <textarea
-        :value="arrayToLines(employer.equipmentProcedures)"
-        placeholder="Equipment / procedures (one per line)"
-        rows="2"
-        class="field"
-        @input="patch({ equipmentProcedures: linesToArray(($event.target as HTMLTextAreaElement).value) })"
-      />
+      <p class="text-xs font-medium text-slate-700">Unit details (your unit — not hospital-wide)</p>
+      <label class="block" :for="`intake-field-employer-${index}-unit-beds`">
+        <span class="field-label-compact">Unit beds</span>
+        <input
+          :id="`intake-field-employer-${index}-unit-beds`"
+          :value="employer.unitBedCount || ''"
+          placeholder="e.g. 24-bed ICU"
+          class="field"
+          @input="patch({ unitBedCount: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
+      <label class="block" :for="`intake-field-employer-${index}-avg-patients`">
+        <span class="field-label-compact">Average daily patients</span>
+        <input
+          :id="`intake-field-employer-${index}-avg-patients`"
+          :value="employer.avgDailyPatients || ''"
+          placeholder="e.g. 4–5 couplets"
+          class="field"
+          @input="patch({ avgDailyPatients: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
+      <label class="block" :for="`intake-field-employer-${index}-floated`">
+        <span class="field-label-compact">Floated units</span>
+        <textarea
+          :id="`intake-field-employer-${index}-floated`"
+          :value="arrayToLines(employer.floatedUnits)"
+          placeholder="One unit per line"
+          rows="2"
+          class="field"
+          @input="patch({ floatedUnits: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+        />
+      </label>
+      <label class="block" :for="`intake-field-employer-${index}-equipment`">
+        <span class="field-label-compact">Equipment / procedures</span>
+        <textarea
+          :id="`intake-field-employer-${index}-equipment`"
+          :value="arrayToLines(employer.equipmentProcedures)"
+          placeholder="One item per line"
+          rows="2"
+          class="field"
+          @input="patch({ equipmentProcedures: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+        />
+      </label>
     </div>
   </li>
 </template>
-
-<style scoped>
-.field {
-  @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-base;
-}
-</style>

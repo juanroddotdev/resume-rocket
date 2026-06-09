@@ -5,3 +5,34 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+@layer components {
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  .field-label-compact {
+    @apply mb-1 block text-xs font-medium text-slate-600;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900;
+    @apply focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30;
+  }
+}
+
+/* Keep autofill backgrounds aligned with white inputs (intake + admin sign-in). */
+input.field:-webkit-autofill,
+input.field:-webkit-autofill:hover,
+input.field:-webkit-autofill:focus,
+textarea.field:-webkit-autofill,
+textarea.field:-webkit-autofill:hover,
+textarea.field:-webkit-autofill:focus,
+select.field:-webkit-autofill,
+select.field:-webkit-autofill:hover,
+select.field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: theme('colors.slate.900');
+  transition: background-color 5000s ease-in-out 0s;
+}

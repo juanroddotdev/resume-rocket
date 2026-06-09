@@ -59,7 +59,7 @@ function selectUrlInput(e: FocusEvent) {
       v-model="email"
       type="email"
       placeholder="Candidate email (optional)"
-      class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      class="field mt-3"
     >
     <div class="mt-3 flex flex-wrap gap-2">
       <button

@@ -78,8 +78,8 @@ async function downloadDocx(id: string) {
   <div class="space-y-8">
     <div v-if="!user" class="mx-auto max-w-sm rounded-xl border bg-white p-6 shadow-sm">
       <h1 class="text-xl font-bold">Recruiter sign in</h1>
-      <input v-model="email" type="email" placeholder="Email" class="mt-4 w-full rounded-lg border px-3 py-2">
-      <input v-model="password" type="password" placeholder="Password" class="mt-2 w-full rounded-lg border px-3 py-2">
+      <input v-model="email" type="email" autocomplete="email" placeholder="Email" class="field mt-4">
+      <input v-model="password" type="password" autocomplete="current-password" placeholder="Password" class="field mt-2">
       <button
         type="button"
         class="mt-4 w-full rounded-lg bg-brand-600 py-2 font-medium text-white"
@@ -103,7 +103,7 @@ async function downloadDocx(id: string) {
           v-model="search"
           type="search"
           placeholder="Search candidates…"
-          class="flex-1 rounded-lg border px-3 py-2 text-sm min-w-[200px]"
+          class="field min-w-[200px] flex-1 text-sm"
         >
         <label class="flex items-center gap-2 text-sm">
           <input v-model="showAll" type="checkbox">

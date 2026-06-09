@@ -39,7 +39,7 @@ function removeChip(index: number) {
 
 <template>
   <div>
-    <label v-if="label" class="mb-1 block text-sm font-medium text-slate-700">{{ label }}</label>
+    <label v-if="label" class="field-label">{{ label }}</label>
     <div class="flex gap-2">
       <input
         :id="fieldId ? `intake-field-${fieldId}` : undefined"
@@ -66,9 +66,3 @@ function removeChip(index: number) {
     <p v-else class="mt-1 text-xs text-slate-500">Add units you have worked in (e.g. ICU, ER, Med-Surg).</p>
   </div>
 </template>
-
-<style scoped>
-.field {
-  @apply w-full rounded-lg border border-slate-300 px-3 py-3 text-base;
-}
-</style>

@@ -1,8 +1,14 @@
+import type { EmployerEntry } from '~/types/candidate'
 import {
   collectParsePrefillFieldIds,
   employerFacilityMetricsKey,
   mergeFieldIdMaps,
 } from '~/utils/intakePrefillHighlight'
+
+export type PrefillHighlightSnapshot = {
+  parseFields?: Record<string, true>
+  dbMetricFields?: Record<string, true>
+}
 
 export function useIntakePrefillHighlight() {
   const route = useRoute()
@@ -60,6 +66,29 @@ export function useIntakePrefillHighlight() {
     dbMetricFields.value = {}
   }
 
+  function snapshotHighlights(): PrefillHighlightSnapshot {
+    return {
+      parseFields: { ...parseFields.value },
+      dbMetricFields: { ...dbMetricFields.value },
+    }
+  }
+
+  function restoreHighlights(snapshot: PrefillHighlightSnapshot | null | undefined) {
+    if (!snapshot) return
+    if (snapshot.parseFields) parseFields.value = { ...snapshot.parseFields }
+    if (snapshot.dbMetricFields) dbMetricFields.value = { ...snapshot.dbMetricFields }
+  }
+
+  function restoreDbMetricsFromEmployers(employers: EmployerEntry[]) {
+    const next = { ...dbMetricFields.value }
+    employers.forEach((employer, index) => {
+      if (employer.hospitalId) {
+        next[employerFacilityMetricsKey(index)] = true
+      }
+    })
+    dbMetricFields.value = next
+  }
+
   return {
     isParseHighlighted,
     isDbMetricHighlighted,
@@ -70,5 +99,8 @@ export function useIntakePrefillHighlight() {
     markEmployerDbMetrics,
     clearEmployerDbMetrics,
     clearAllPrefillHighlights,
+    snapshotHighlights,
+    restoreHighlights,
+    restoreDbMetricsFromEmployers,
   }
 }

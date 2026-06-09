@@ -12,10 +12,12 @@ const emit = defineEmits<{
   download: [candidate: CandidateRow]
 }>()
 
+const submittedStatuses = new Set(['submitted', 'confirmed'])
+
 const filtered = computed(() => {
   let list = props.candidates
   if (!props.showAll) {
-    list = list.filter(c => c.status === 'submitted' || c.status === 'confirmed')
+    list = list.filter(c => submittedStatuses.has(c.status))
   }
   const q = props.search.toLowerCase().trim()
   if (!q) return list
@@ -26,6 +28,35 @@ const filtered = computed(() => {
     return name.includes(q) || emr.includes(q) || facility.includes(q)
   })
 })
+
+const emptyMessage = computed(() => {
+  if (!props.candidates.length) {
+    return 'No candidates yet. Create an intake link above, then open it to start the wizard.'
+  }
+  const q = props.search.trim()
+  if (q) {
+    return `No candidates match “${q}”. Try a different name, facility, or EMR.`
+  }
+  if (!props.showAll) {
+    const hasDrafts = props.candidates.some(c => c.status === 'draft')
+    const hasSubmitted = props.candidates.some(c => submittedStatuses.has(c.status))
+    if (hasDrafts && !hasSubmitted) {
+      return 'Only drafts so far — turn on Show drafts to see in-progress candidates.'
+    }
+  }
+  return 'No candidates match your filters.'
+})
+
+function formatSubmittedAt(value: string) {
+  const date = new Date(value)
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
 
 function primaryFacility(c: CandidateRow) {
   const e = c.employers?.[0]
@@ -58,7 +89,7 @@ function primaryFacility(c: CandidateRow) {
           </tr>
         </template>
         <template v-else>
-          <tr v-for="c in filtered" :key="c.id" class="border-b last:border-0">
+          <tr v-for="c in filtered" :key="c.id" class="border-b last:border-0 hover:bg-slate-50">
             <td class="px-4 py-3">{{ c.first_name }} {{ c.last_name }}</td>
             <td class="px-4 py-3">
               <span class="inline-flex items-center gap-1 capitalize">
@@ -70,24 +101,23 @@ function primaryFacility(c: CandidateRow) {
                 >⚠</span>
               </span>
             </td>
-            <td class="px-4 py-3">{{ new Date(c.updated_at).toLocaleString() }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ formatSubmittedAt(c.updated_at) }}</td>
             <td class="px-4 py-3">{{ primaryFacility(c) }}</td>
             <td class="px-4 py-3">{{ c.emr_system || '—' }}</td>
             <td class="px-4 py-3">
               <button
                 type="button"
-                class="text-brand-700 hover:underline"
-                title="Download VMS resume"
+                class="rounded-lg border border-brand-200 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                title="Download VMS-ready resume (DOCX)"
                 @click="emit('download', c)"
               >
-                ⬇ DOCX
+                Download DOCX
               </button>
             </td>
           </tr>
           <tr v-if="!filtered.length">
             <td colspan="6" class="px-4 py-8 text-center text-slate-500">
-              <span v-if="!candidates.length">No candidates yet. Create an intake link above, then open it to start the wizard.</span>
-              <span v-else>No candidates match your search.</span>
+              {{ emptyMessage }}
             </td>
           </tr>
         </template>

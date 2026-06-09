@@ -37,7 +37,7 @@ const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
       </select>
     </label>
     <label class="block">
-      <span class="field-label-compact">Average patient ratios</span>
+      <span class="field-label-compact">Average patient ratios (career-wide)</span>
       <input
         id="intake-field-average_patient_ratios"
         v-model="averagePatientRatios"
@@ -46,6 +46,9 @@ const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
         :class="fieldClasses('average_patient_ratios')"
         @input="clearParseHighlight('average_patient_ratios')"
       >
+      <span class="mt-1 block text-xs text-slate-500">
+        Your typical nurse-to-patient ratio across roles — not per-hospital stats on Step 2.
+      </span>
     </label>
     <label class="block">
       <span class="field-label-compact">Specialized medical equipment</span>

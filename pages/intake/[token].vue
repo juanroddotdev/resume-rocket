@@ -2,6 +2,7 @@
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { hasIntakeDraftData } from '~/utils/intakeDraft'
+import { isEmrComplete, resolveEmrFields } from '~/utils/emrSystem'
 import {
   type FinalizePhase,
   FINALIZE_PHASE_PROGRESS,
@@ -57,6 +58,7 @@ const {
   markParsePrefillFromApi,
   clearParseHighlight,
   clearAllPrefillHighlights,
+  restoreDbMetricsFromEmployers,
 } = useIntakePrefillHighlight()
 
 const {
@@ -113,13 +115,19 @@ const step3OtherMissing = computed(() =>
   missingFields.value.filter(f => f.step === 3 && f.id !== 'license_number' && f.id !== 'license_state'),
 )
 
-const showSaveChip = computed(() =>
-  saveStatus.value !== 'idle' || (currentStep.value === 0 && Boolean(candidateId.value)),
+const showSaveStatus = computed(() => {
+  if (currentStep.value === 'success') return false
+  if (typeof currentStep.value === 'number' && currentStep.value >= 1 && currentStep.value <= 4) return true
+  if (currentStep.value === 0 && candidateId.value) return true
+  return saveStatus.value === 'saving' || saveStatus.value === 'error'
+})
+
+const saveStatusShowSavedIdle = computed(
+  () => currentStep.value === 0 && Boolean(candidateId.value) && saveStatus.value === 'idle',
 )
-const saveChipShowsSaved = computed(() =>
-  saveStatus.value === 'saved'
-  || (saveStatus.value === 'idle' && currentStep.value === 0 && Boolean(candidateId.value)),
-)
+
+const emrFields = computed(() => resolveEmrFields(form.value.emr_system))
+const emrComplete = computed(() => isEmrComplete(emrFields.value.selection, emrFields.value.custom))
 
 const showSubmitOverlay = computed(() => submitting.value || submitPhase.value === 'success')
 
@@ -142,7 +150,6 @@ function hasPassedStep0() {
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
-  clearAllPrefillHighlights()
   draftRestoredBanner.value = false
   const ok = await validate(routeToken)
   if (!ok) return false
@@ -165,6 +172,8 @@ async function bootstrapInvite(routeToken: string) {
   if (candidateId.value) {
     serverRestored = await hydrateDraftFromServer()
   }
+
+  restoreDbMetricsFromEmployers(form.value.employers)
 
   if (prefilledEmail.value && !form.value.email) {
     form.value.email = prefilledEmail.value
@@ -244,7 +253,7 @@ function canAdvanceStep1() {
 
 function canAdvanceStep2() {
   if (isAdminView.value) return true
-  return form.value.employers.length > 0
+  return form.value.employers.length > 0 && emrComplete.value
 }
 
 function canAdvanceStep3() {
@@ -358,15 +367,6 @@ async function onDownloadAgain() {
         @update:model-value="setPreviewMode"
       />
 
-      <div v-if="showSaveChip" class="mb-2 text-right text-xs text-slate-500">
-        <span v-if="saveStatus === 'saving'">Saving…</span>
-        <span v-else-if="saveChipShowsSaved">Saved</span>
-        <span v-else-if="saveStatus === 'error'" class="text-red-600">
-          Save failed —
-          <button type="button" class="underline" @click="scheduleAutosave({})">Retry</button>
-        </span>
-      </div>
-
       <div
         v-if="draftRestoredBanner"
         class="mb-3 flex items-start justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
@@ -381,12 +381,24 @@ async function onDownloadAgain() {
         </button>
       </div>
 
-      <p
-        v-if="stepIndicator"
-        class="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500"
+      <div
+        v-if="stepIndicator || showSaveStatus"
+        class="mb-3 flex items-center justify-between gap-3"
       >
-        {{ stepIndicator }}
-      </p>
+        <p
+          v-if="stepIndicator"
+          class="text-xs font-medium uppercase tracking-wide text-slate-500"
+        >
+          {{ stepIndicator }}
+        </p>
+        <div v-else class="min-w-0 flex-1" />
+        <IntakeSaveStatus
+          v-if="showSaveStatus"
+          :status="saveStatus"
+          :show-saved-idle="saveStatusShowSavedIdle"
+          @retry="scheduleAutosave({})"
+        />
+      </div>
 
       <!-- Step 0 -->
       <section v-if="currentStep === 0">
@@ -404,7 +416,12 @@ async function onDownloadAgain() {
       <section v-else-if="currentStep === 1" class="space-y-4">
         <h1 class="text-xl font-bold">Your details</h1>
         <ParseNoticeBanner :meta="parseMeta" show-fields-found />
-        <button type="button" class="text-sm text-brand-700" @click="goToStep(0, { replace: true })">
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          @click="goToStep(0, { replace: true })"
+        >
+          <span aria-hidden="true">↻</span>
           Replace resume
         </button>
         <label class="block">
@@ -458,7 +475,7 @@ async function onDownloadAgain() {
           >
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
-        <div class="flex gap-2 pt-2">
+        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
             type="button"
@@ -488,12 +505,18 @@ async function onDownloadAgain() {
           @update:employers="form.employers = $event"
         />
         <p
-          v-if="isClientView && !canAdvanceStep2()"
+          v-if="isClientView && !form.employers.length"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Add at least one hospital where you worked before continuing.
         </p>
-        <div class="flex gap-2">
+        <p
+          v-else-if="isClientView && form.employers.length && !emrComplete"
+          class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+        >
+          Select your EMR platform below. If you choose Other, enter the system name.
+        </p>
+        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>
           <button
             type="button"
@@ -538,7 +561,7 @@ async function onDownloadAgain() {
         >
           {{ step3OtherMissing.length }} more field{{ step3OtherMissing.length === 1 ? '' : 's' }} recommended on this step — you can fix them on review.
         </p>
-        <div class="flex gap-2">
+        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(2)">Back</button>
           <button
             type="button"

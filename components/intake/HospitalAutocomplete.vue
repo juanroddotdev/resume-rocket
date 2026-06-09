@@ -14,6 +14,20 @@ const emit = defineEmits<{
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const emr = defineModel<string>('emr', { default: '' })
 const duplicateMessage = ref<string | null>(null)
+const activeCardIndex = ref(0)
+const linkSearchRequested = ref<number | null>(null)
+
+watch(
+  () => props.employers.length,
+  async (len, prevLen) => {
+    if (len > prevLen) {
+      activeCardIndex.value = len - 1
+      await scrollCardToTop(len - 1)
+    } else if (activeCardIndex.value >= len) {
+      activeCardIndex.value = Math.max(0, len - 1)
+    }
+  },
+)
 
 function addHospital(h: HospitalRow) {
   duplicateMessage.value = null
@@ -35,6 +49,11 @@ function removeEmployer(index: number) {
   const next = [...props.employers]
   next.splice(index, 1)
   emit('update:employers', next)
+  if (activeCardIndex.value >= next.length) {
+    activeCardIndex.value = Math.max(0, next.length - 1)
+  } else if (activeCardIndex.value > index) {
+    activeCardIndex.value -= 1
+  }
 }
 
 function moveEmployer(index: number, direction: -1 | 1) {
@@ -44,7 +63,51 @@ function moveEmployer(index: number, direction: -1 | 1) {
   const [item] = next.splice(index, 1)
   next.splice(target, 0, item!)
   emit('update:employers', next)
+  if (activeCardIndex.value === index) {
+    activeCardIndex.value = target
+  } else if (activeCardIndex.value === target) {
+    activeCardIndex.value = index
+  }
 }
+
+function prefersReducedMotion() {
+  return import.meta.client && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+async function scrollCardToTop(index: number) {
+  if (!import.meta.client) return
+  await nextTick()
+  requestAnimationFrame(() => {
+    document.getElementById(`employer-card-${index}`)?.scrollIntoView({
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      block: 'start',
+    })
+  })
+}
+
+async function openCard(index: number) {
+  if (activeCardIndex.value === index) return
+  linkSearchRequested.value = null
+  await scrollCardToTop(index)
+  activeCardIndex.value = index
+}
+
+async function openEmployerField(fieldId: string): boolean {
+  const match = fieldId.match(/^employer-(\d+)-/)
+  if (!match) return false
+  const index = Number(match[1])
+  if (index < 0 || index >= props.employers.length) return false
+  activeCardIndex.value = index
+  if (fieldId.endsWith('-link')) {
+    linkSearchRequested.value = index
+  } else {
+    linkSearchRequested.value = null
+  }
+  await scrollCardToTop(index)
+  return true
+}
+
+defineExpose({ openEmployerField })
 </script>
 
 <template>
@@ -77,18 +140,21 @@ function moveEmployer(index: number, direction: -1 | 1) {
       <p v-if="searchError" class="mt-1 text-xs text-red-600">{{ searchError }}</p>
     </div>
 
-    <ul v-if="employers.length" class="space-y-3">
+    <ul v-if="employers.length" class="employer-deck">
       <EmployerCard
         v-for="(employer, index) in employers"
         :key="`${employer.hospitalId || employer.name}-${index}`"
         :employer="employer"
         :index="index"
+        :expanded="activeCardIndex === index"
         :can-move-up="index > 0"
         :can-move-down="index < employers.length - 1"
+        :request-link-search="linkSearchRequested === index"
         @update="patchEmployer(index, $event)"
         @remove="removeEmployer(index)"
         @move-up="moveEmployer(index, -1)"
         @move-down="moveEmployer(index, 1)"
+        @toggle="openCard(index)"
       />
     </ul>
     <p v-else class="text-xs text-amber-800">

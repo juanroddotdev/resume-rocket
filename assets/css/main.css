@@ -19,6 +19,23 @@ body {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900;
     @apply focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30;
   }
+
+  .employer-deck {
+    @apply space-y-0;
+  }
+
+  .employer-deck-row {
+    @apply bg-slate-50 transition-[padding,margin] duration-300 ease-in-out motion-reduce:transition-none;
+    scroll-margin-top: 0.5rem;
+  }
+
+  .employer-card-surface {
+    @apply transition-[box-shadow,border-color] duration-300 ease-in-out motion-reduce:transition-none;
+  }
+
+  .employer-card-panel {
+    @apply transition-[grid-template-rows] duration-500 ease-in-out motion-reduce:transition-none;
+  }
 }
 
 /* Keep autofill backgrounds aligned with white inputs (intake + admin sign-in). */

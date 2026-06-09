@@ -46,6 +46,7 @@ const confirmationEmailSent = ref(false)
 const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
 const draftRestoredBanner = ref(false)
+const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
 
 const { goToStep, resolveInitialStep } = useIntakeWizardNav({
   token,
@@ -229,6 +230,10 @@ async function goToField(step: number, fieldId: string) {
     await nextTick()
     await nextTick()
   }
+  if (step === 2 && fieldId.startsWith('employer-')) {
+    hospitalAutocompleteRef.value?.openEmployerField(fieldId)
+    await nextTick()
+  }
   await focusIntakeField(fieldId)
 }
 
@@ -391,6 +396,7 @@ async function onDownloadAgain() {
           field-id="specialties"
         />
         <HospitalAutocomplete
+          ref="hospitalAutocompleteRef"
           v-model:emr="form.emr_system"
           :employers="form.employers"
           @update:employers="form.employers = $event"

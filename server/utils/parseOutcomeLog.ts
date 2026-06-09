@@ -18,6 +18,9 @@ export function classifyParseError(message: string | null | undefined): string |
     return 'vision_required'
   }
   if (m.includes('no text extracted')) return 'no_text'
+  if (m.includes('ai parser is busy') || m.includes('ai scanner is busy') || m.includes('high demand')) {
+    return 'gemini_capacity'
+  }
   if (m.includes('ai parse') || m.includes('gemini')) return 'gemini_error'
   if (m.includes('only pdf and docx')) return 'unsupported_mime'
   if (m.includes('10mb')) return 'file_too_large'

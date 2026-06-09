@@ -8,6 +8,7 @@ alwaysApply: true
 | Service | If missing / fails |
 |---------|-------------------|
 | `GEMINI_API_KEY` | Text PDF: heuristic parse only; no hard crash. Image PDF: manual continue (heuristics need text). |
+| Gemini 503 / high demand | Retry with backoff; fall back to heuristics on text PDFs; image PDF → friendly error + **Continue manually** |
 | `RESEND_API_KEY` | Skip confirmation email; log server-side; intake still completes |
 | Parse failure | Stay on upload step; manual continue |
 | Supabase misconfig | Clear 500 / module warn at startup |

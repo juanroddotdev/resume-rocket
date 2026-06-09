@@ -14,6 +14,13 @@ describe('classifyParseError', () => {
     assert.equal(classifyParseError('No text extracted from document'), 'no_text')
   })
 
+  it('classifies Gemini capacity failures', () => {
+    assert.equal(
+      classifyParseError('Our AI scanner is busy right now. Please try again in a few minutes.'),
+      'gemini_capacity',
+    )
+  })
+
   it('returns undefined for empty input', () => {
     assert.equal(classifyParseError(null), undefined)
     assert.equal(classifyParseError(''), undefined)

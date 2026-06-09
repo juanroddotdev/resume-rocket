@@ -149,12 +149,11 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 
 ### Backlog
 
-- [ ] **Admin intake preview (unblocked wizard)** — signed-in recruiter can open an invite link and move through the full intake wizard (all steps + review) without candidate completion gates; use for QA, support, and verifying parse/prefill
-  - **Today:** admin uses the same [`pages/intake/[token].vue`](../pages/intake/[token].vue) as candidates — `canAdvanceStep2()` / `canAdvanceStep3()`, gap review, and submit still block progress when fields are empty
-  - **Candidate rules unchanged** — invite-only intake keeps required validation, license gate, and gap review before DOCX for normal users
-  - **Admin bypass (pick in PR):** detect recruiter session (Supabase auth cookie / server flag on invite validate); skip or soften step Next/Review disabled states; allow submit/download with missing template tags (warn, don’t block); optional “Preview as admin” banner on wizard
-  - **Scope:** navigation + submit path only — not a separate admin-only field schema; optional link from [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) row (“Open intake”) later
-  - **Test:** admin walks draft with empty employers → can reach Step 4 and download; candidate on same link still blocked until requirements met
+- [x] **Admin intake preview (client / admin toggle)** — signed-in recruiter sees **Client view** / **Admin view** on [`pages/intake/[token].vue`](../pages/intake/[token].vue); [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue)
+  - **Client view:** same gates as candidates (`canAdvanceStep*`, gap review blocks submit)
+  - **Admin view:** Next/Review enabled with incomplete data; review **Download draft packet** saves + DOCX only (no `submitted` status, no confirmation email)
+  - Mode persisted per invite token in `sessionStorage`
+  - **Later:** “Open intake” link from [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue)
 - [ ] **Submitted column date layout** — split date + time or `whitespace-nowrap` in [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue); avoid locale string wrapping
 - [ ] **Filter-specific empty copy** — distinguish search no-match vs “Show drafts” off when all rows are drafts
 - [ ] **Invite success feedback (stronger)** — prominent banner or “Intake link created and copied”; reduce double-click anxiety; optional shared toast only if reused elsewhere

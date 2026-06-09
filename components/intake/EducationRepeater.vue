@@ -50,8 +50,7 @@ function patchRow(index: number, partial: Partial<EducationEntry>) {
       :key="index"
       class="space-y-2 rounded-lg border border-slate-200 p-3"
     >
-      <div class="flex justify-between">
-        <span class="text-xs font-medium text-slate-600">School {{ index + 1 }}</span>
+      <div class="flex justify-end">
         <button type="button" class="text-xs text-red-600" @click="removeRow(index)">Remove</button>
       </div>
       <label class="block" :for="`intake-field-education-${index}-degree`">

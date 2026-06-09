@@ -115,6 +115,17 @@ Run once end-to-end as baseline:
 - [ ] “Change facility” → can relink without duplicate row
 - [ ] Add same hospital twice via search → duplicate blocked
 
+### Step 2 — employer card deck ([EMPLOYER-CARD-DECK-PLAN.md](./EMPLOYER-CARD-DECK-PLAN.md))
+
+- [ ] 3+ employers (parse or manual) → stacked headers visible; only one card expanded at a time
+- [ ] Header shows hospital name, role, and dates on every card
+- [ ] Tap header → previous card collapses; target expands with smooth height transition
+- [ ] Expanded card has visible gap above and below collapsed headers (does not touch stack)
+- [ ] Add employer via search → new card expands
+- [ ] Remove active employer → no crash; index clamps correctly
+- [ ] Reorder ↑ / ↓ → active card follows when the moved row was open
+- [ ] `prefers-reduced-motion` → expansion is instant (no animation jank)
+
 ### Step 3 — credentials & license gate
 
 - [ ] **Review disabled** until license number + license state filled
@@ -130,8 +141,8 @@ Run once end-to-end as baseline:
 
 - [ ] Step 4 lists missing required fields
 - [ ] Tap “License number” → Step 3, license field focused/scrolled into view
-- [ ] Tap employer gap (e.g. “Employer 1: role”) → Step 2, correct input focused
-- [ ] Tap facility link advisory → Step 2, inline link search opens on that card
+- [ ] Tap employer gap (e.g. “Employer 2: role”) → Step 2, **card 2 opens**, correct input focused
+- [ ] Tap facility link advisory → Step 2, **correct card opens**, inline link search visible on that row
 
 ### Submit & success
 

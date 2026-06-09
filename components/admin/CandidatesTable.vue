@@ -9,7 +9,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  download: [id: string]
+  download: [candidate: CandidateRow]
 }>()
 
 const filtered = computed(() => {
@@ -78,7 +78,7 @@ function primaryFacility(c: CandidateRow) {
                 type="button"
                 class="text-brand-700 hover:underline"
                 title="Download VMS resume"
-                @click="emit('download', c.id)"
+                @click="emit('download', c)"
               >
                 ⬇ DOCX
               </button>

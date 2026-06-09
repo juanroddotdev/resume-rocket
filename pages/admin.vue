@@ -49,27 +49,20 @@ watch(user, (u) => {
   if (u) loadCandidates()
 }, { immediate: true })
 
-async function downloadDocx(id: string) {
+async function downloadDocx(candidate: CandidateRow) {
   downloadError.value = null
   try {
     const { data: { session } } = await supabase.auth.getSession()
-    const blob = await $fetch<Blob>('/api/generate-docx', {
-      method: 'POST',
+    await downloadResumeDocxFromApi({
+      body: { id: candidate.id },
       headers: session?.access_token
         ? { Authorization: `Bearer ${session.access_token}` }
         : {},
-      body: { id },
-      responseType: 'blob',
+      firstName: candidate.first_name,
+      lastName: candidate.last_name,
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `candidate-${id}.docx`
-    a.click()
-    URL.revokeObjectURL(url)
   } catch (e: unknown) {
-    const err = e as { data?: { statusMessage?: string }; message?: string }
-    downloadError.value = err.data?.statusMessage || err.message || 'Could not download DOCX. Try again.'
+    downloadError.value = e instanceof Error ? e.message : 'Could not download DOCX. Try again.'
   }
 }
 </script>

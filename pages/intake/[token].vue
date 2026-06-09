@@ -31,6 +31,7 @@ const {
   applyParseResult,
   finalizeAndDownload,
   downloadDocxOnly,
+  flushAutosave,
   parseMeta,
   setParseMeta,
   clearParseMeta,
@@ -49,6 +50,19 @@ const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
+const adminDraftDownloadNotice = ref<string | null>(null)
+
+const {
+  isRecruiterPreview,
+  previewMode,
+  isAdminView,
+  isClientView,
+  setPreviewMode,
+} = useIntakePreviewMode(token)
+
+watch(previewMode, () => {
+  adminDraftDownloadNotice.value = null
+})
 
 const { goToStep, resolveInitialStep } = useIntakeWizardNav({
   token,
@@ -214,14 +228,17 @@ async function onManual() {
 }
 
 function canAdvanceStep1() {
+  if (isAdminView.value) return true
   return form.value.first_name && form.value.last_name && form.value.email && form.value.phone
 }
 
 function canAdvanceStep2() {
+  if (isAdminView.value) return true
   return form.value.employers.length > 0
 }
 
 function canAdvanceStep3() {
+  if (isAdminView.value) return true
   return step3LicenseMissing.value.length === 0
 }
 
@@ -240,9 +257,26 @@ async function goToField(step: number, fieldId: string) {
 }
 
 async function goSuccess() {
+  adminDraftDownloadNotice.value = null
   submitting.value = true
   submitError.value = null
   resetSubmitOverlay()
+
+  if (isAdminView.value) {
+    try {
+      await flushAutosave()
+      await downloadDocxOnly()
+      adminDraftDownloadNotice.value =
+        'Draft packet downloaded. Candidate status is unchanged — switch to Client view to test the real submit path.'
+    } catch (e) {
+      submitError.value =
+        e instanceof Error ? e.message : 'Could not download draft packet. Check your connection and try again.'
+    } finally {
+      submitting.value = false
+    }
+    return
+  }
+
   try {
     const result = await finalizeAndDownload({
       onPhase: (phase) => {
@@ -308,6 +342,12 @@ async function onDownloadAgain() {
     </div>
 
     <template v-else>
+      <IntakePreviewModeToggle
+        v-if="isRecruiterPreview"
+        :model-value="previewMode"
+        @update:model-value="setPreviewMode"
+      />
+
       <div v-if="showSaveChip" class="mb-2 text-right text-xs text-slate-500">
         <span v-if="saveStatus === 'saving'">Saving…</span>
         <span v-else-if="saveChipShowsSaved">Saved</span>
@@ -404,7 +444,7 @@ async function onDownloadAgain() {
           @update:employers="form.employers = $event"
         />
         <p
-          v-if="!canAdvanceStep2()"
+          v-if="isClientView && !canAdvanceStep2()"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Add at least one hospital where you worked before continuing.
@@ -443,13 +483,13 @@ async function onDownloadAgain() {
         />
         <EducationRepeater v-model="form.education" />
         <p
-          v-if="step3LicenseMissing.length"
+          v-if="isClientView && step3LicenseMissing.length"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Add your RN license number and state before review — required for your VMS packet.
         </p>
         <p
-          v-else-if="step3OtherMissing.length"
+          v-else-if="isClientView && step3OtherMissing.length"
           class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
         >
           {{ step3OtherMissing.length }} more field{{ step3OtherMissing.length === 1 ? '' : 's' }} recommended on this step — you can fix them on review.
@@ -473,10 +513,17 @@ async function onDownloadAgain() {
           :missing="missingFields"
           :advisories="employerLinkAdvisories"
           :submitting="submitting"
+          :allow-incomplete-submit="isAdminView"
           @back="goToStep(3)"
           @go-to-field="goToField"
           @submit="goSuccess"
         />
+        <p
+          v-if="adminDraftDownloadNotice"
+          class="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900"
+        >
+          {{ adminDraftDownloadNotice }}
+        </p>
         <p
           v-if="submitError"
           class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"

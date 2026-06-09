@@ -14,7 +14,12 @@ export default defineNuxtConfig({
     parseRateLimitMax: Number(process.env.PARSE_RATE_LIMIT_MAX || 8),
     parseRateLimitWindowMs: Number(process.env.PARSE_RATE_LIMIT_WINDOW_MS || 900_000),
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      // .env.development / .env.production set NUXT_PUBLIC_SITE_URL per mode
+      siteUrl:
+        process.env.NUXT_PUBLIC_SITE_URL
+        || (process.env.NODE_ENV === 'production'
+          ? 'https://resume-rocket-4dk3.onrender.com'
+          : 'http://localhost:3000'),
     },
   },
   supabase: {

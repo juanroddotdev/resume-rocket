@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
-import { hasIntakeDraftData } from '~/utils/intakeDraft'
+import { hasIntakeDraftData, REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { isEmrComplete, resolveEmrFields } from '~/utils/emrSystem'
 import {
   type FinalizePhase,
@@ -52,6 +52,7 @@ const redownloadError = ref<string | null>(null)
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
 const adminDraftDownloadNotice = ref<string | null>(null)
+const devPrefilling = ref(false)
 
 const {
   fieldClasses,
@@ -246,6 +247,20 @@ async function onManual() {
   await goToStep(1)
 }
 
+async function onDevPrefill() {
+  if (!import.meta.dev) return
+  if (hasDraftData.value && !confirm(REPLACE_RESUME_CONFIRM)) return
+
+  devPrefilling.value = true
+  try {
+    const { buildDevIntakeParsePayload } = await import('~/utils/devIntakeFixture')
+    if (!candidateId.value) await ensureDraft()
+    await onParsed(buildDevIntakeParsePayload(candidateId.value) as Record<string, unknown>)
+  } finally {
+    devPrefilling.value = false
+  }
+}
+
 function canAdvanceStep1() {
   if (isAdminView.value) return true
   return form.value.first_name && form.value.last_name && form.value.email && form.value.phone
@@ -407,8 +422,13 @@ async function onDownloadAgain() {
           class="mt-4"
           :candidate-id="candidateId"
           :has-existing-data="hasDraftData"
+          :disabled="devPrefilling"
           @parsed="onParsed"
           @manual="onManual"
+        />
+        <DevPrefillButton
+          :disabled="devPrefilling"
+          @prefill="onDevPrefill"
         />
       </section>
 

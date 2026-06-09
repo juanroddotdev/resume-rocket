@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow } from '~/types/hospital'
-import { isDuplicateEmployer, linkEmployerFromHospital } from '~/utils/employerLink'
+import { isDuplicateEmployer, linkEmployerFromHospital, createManualEmployer, isDuplicateEmployerEntry } from '~/utils/employerLink'
 
 const props = defineProps<{
   employers: EmployerEntry[]
@@ -16,6 +16,11 @@ const emr = defineModel<string>('emr', { default: '' })
 const duplicateMessage = ref<string | null>(null)
 const activeCardIndex = ref(0)
 const linkSearchRequested = ref<number | null>(null)
+const showManualForm = ref(false)
+const manualName = ref('')
+const manualCity = ref('')
+const manualState = ref('')
+const manualError = ref<string | null>(null)
 
 watch(
   () => props.employers.length,
@@ -31,11 +36,37 @@ watch(
 
 function addHospital(h: HospitalRow) {
   duplicateMessage.value = null
+  manualError.value = null
   if (isDuplicateEmployer(props.employers, h)) {
     duplicateMessage.value = 'This facility is already on your list.'
     return
   }
   emit('update:employers', [...props.employers, linkEmployerFromHospital({ name: h.name }, h)])
+  clearSearch()
+  showManualForm.value = false
+}
+
+function addManualEmployer() {
+  duplicateMessage.value = null
+  manualError.value = null
+  const entry = createManualEmployer({
+    name: manualName.value,
+    city: manualCity.value,
+    state: manualState.value,
+  })
+  if (!entry.name) {
+    manualError.value = 'Enter a hospital name to continue.'
+    return
+  }
+  if (isDuplicateEmployerEntry(props.employers, entry)) {
+    manualError.value = 'This hospital is already on your list.'
+    return
+  }
+  emit('update:employers', [...props.employers, entry])
+  manualName.value = ''
+  manualCity.value = ''
+  manualState.value = ''
+  showManualForm.value = false
   clearSearch()
 }
 
@@ -134,10 +165,64 @@ defineExpose({ openEmployerField })
       </ul>
       <p v-if="searching" class="mt-1 text-xs text-slate-500">Searching…</p>
       <p v-else-if="showNoResults" class="mt-1 text-xs text-slate-500">
-        No facilities found — try a different name or add details manually later.
+        No facilities found — add your hospital manually below.
       </p>
       <p v-if="duplicateMessage" class="mt-1 text-xs text-amber-800">{{ duplicateMessage }}</p>
       <p v-if="searchError" class="mt-1 text-xs text-red-600">{{ searchError }}</p>
+      <button
+        type="button"
+        class="mt-2 text-sm text-brand-700 underline"
+        @click="showManualForm = !showManualForm; manualError = null"
+      >
+        {{ showManualForm ? 'Hide manual entry' : '+ Add hospital manually' }}
+      </button>
+      <div
+        v-if="showManualForm"
+        class="mt-2 space-y-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3"
+      >
+        <p class="text-xs text-slate-600">
+          Not in our database? Enter the hospital as it should appear on your packet.
+        </p>
+        <label class="block">
+          <span class="field-label-compact">Hospital name</span>
+          <input
+            id="intake-field-employers-manual-name"
+            v-model="manualName"
+            type="text"
+            placeholder="e.g. St. Mary's Medical Center"
+            class="field"
+          >
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="block">
+            <span class="field-label-compact">City</span>
+            <input
+              v-model="manualCity"
+              type="text"
+              placeholder="City"
+              class="field"
+            >
+          </label>
+          <label class="block">
+            <span class="field-label-compact">State</span>
+            <input
+              v-model="manualState"
+              type="text"
+              placeholder="ST"
+              maxlength="2"
+              class="field"
+            >
+          </label>
+        </div>
+        <p v-if="manualError" class="text-xs text-amber-800">{{ manualError }}</p>
+        <button
+          type="button"
+          class="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-medium text-white"
+          @click="addManualEmployer"
+        >
+          Add to list
+        </button>
+      </div>
     </div>
 
     <ul v-if="employers.length" class="employer-deck">
@@ -158,7 +243,7 @@ defineExpose({ openEmployerField })
       />
     </ul>
     <p v-else class="text-xs text-amber-800">
-      Add at least one hospital where you worked — search above.
+      Add at least one hospital where you worked — search above or add manually.
     </p>
 
     <div>

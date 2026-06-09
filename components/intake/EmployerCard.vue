@@ -26,6 +26,9 @@ const { query, results, searching, searchError, showNoResults, clearSearch } = u
 
 const isLinked = computed(() => Boolean(props.employer.hospitalId))
 
+const displayName = computed(() => props.employer.name?.trim() || 'Hospital name not set')
+const nameIsMissing = computed(() => !props.employer.name?.trim())
+
 const roleSummary = computed(() => props.employer.role?.trim() || 'Role not set')
 
 const dateSummary = computed(() => {
@@ -96,7 +99,9 @@ function arrayToLines(values?: string[]) {
         :aria-controls="`employer-panel-${index}`"
         @click="emit('toggle')"
       >
-        <p class="font-medium text-slate-900">{{ employer.name }}</p>
+        <p class="font-medium" :class="nameIsMissing ? 'text-slate-500 italic' : 'text-slate-900'">
+          {{ displayName }}
+        </p>
         <p class="mt-0.5 text-xs text-slate-500">
           {{ roleSummary }} · {{ dateSummary }}
         </p>
@@ -138,6 +143,42 @@ function arrayToLines(values?: string[]) {
         :class="!expanded && 'pointer-events-none'"
       >
         <div class="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">
+          <template v-if="!isLinked">
+            <label class="block" :for="`intake-field-employer-${index}-name`">
+              <span class="field-label-compact">Hospital name</span>
+              <input
+                :id="`intake-field-employer-${index}-name`"
+                :value="employer.name || ''"
+                placeholder="Hospital name"
+                class="field"
+                @input="patch({ name: ($event.target as HTMLInputElement).value })"
+              >
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="block" :for="`intake-field-employer-${index}-city`">
+                <span class="field-label-compact">City</span>
+                <input
+                  :id="`intake-field-employer-${index}-city`"
+                  :value="employer.city || ''"
+                  placeholder="City"
+                  class="field"
+                  @input="patch({ city: ($event.target as HTMLInputElement).value })"
+                >
+              </label>
+              <label class="block" :for="`intake-field-employer-${index}-state`">
+                <span class="field-label-compact">State</span>
+                <input
+                  :id="`intake-field-employer-${index}-state`"
+                  :value="employer.state || ''"
+                  placeholder="ST"
+                  maxlength="2"
+                  class="field"
+                  @input="patch({ state: ($event.target as HTMLInputElement).value.toUpperCase() })"
+                >
+              </label>
+            </div>
+          </template>
+
           <div v-if="isLinked" class="flex flex-wrap items-end gap-2">
             <MetricTile
               v-if="employer.beds != null"

@@ -10,17 +10,9 @@ async function download() {
   loading.value = true
   error.value = null
   try {
-    const blob = await $fetch<Blob>('/api/generate-docx', {
-      method: 'POST',
+    await downloadResumeDocxFromApi({
       body: { access_token: accessToken.value },
-      responseType: 'blob',
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'resume.docx'
-    a.click()
-    URL.revokeObjectURL(url)
   } catch {
     error.value = 'Unable to download. Link may be invalid.'
   } finally {

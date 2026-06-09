@@ -1,3 +1,8 @@
+import {
+  buildResumeDownloadFilename,
+  contentDispositionAttachment,
+} from '../../utils/resumeDownloadFilename'
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ id?: string; access_token?: string }>(event)
   const supabase = useSupabaseAdmin()
@@ -51,10 +56,13 @@ export default defineEventHandler(async (event) => {
     specialized_medical_equipment: candidate.specialized_medical_equipment as string | null,
   })
 
-  const filename = `resume-${candidate.last_name || 'candidate'}.docx`.replace(/\s+/g, '-')
+  const filename = buildResumeDownloadFilename({
+    firstName: candidate.first_name as string | null,
+    lastName: candidate.last_name as string | null,
+  })
 
   setHeader(event, 'Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-  setHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`)
+  setHeader(event, 'Content-Disposition', contentDispositionAttachment(filename))
 
   return buffer
 })

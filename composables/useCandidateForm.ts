@@ -437,21 +437,14 @@ export function useCandidateForm() {
     }
 
     try {
-      const blob = await $fetch<Blob>('/api/generate-docx', {
-        method: 'POST',
-        headers: intakeHeaders(),
+      await downloadResumeDocxFromApi({
         body: { id: candidateId.value },
-        responseType: 'blob',
+        headers: intakeHeaders(),
+        firstName: form.value.first_name,
+        lastName: form.value.last_name,
       })
-
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `resume-${form.value.last_name || 'candidate'}.docx`
-      a.click()
-      URL.revokeObjectURL(url)
     } catch (e) {
-      throw new Error(formatFetchError(e, 'Could not generate your resume file.'))
+      throw new Error(e instanceof Error ? e.message : formatFetchError(e, 'Could not generate your resume file.'))
     }
   }
 

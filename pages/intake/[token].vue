@@ -7,7 +7,6 @@ import {
   FINALIZE_PHASE_PROGRESS,
   finalizePhaseMessage,
 } from '~/utils/intakeProcessing'
-
 const route = useRoute()
 const token = computed(() => String(route.params.token))
 
@@ -34,8 +33,8 @@ const {
   setParseMeta,
   clearParseMeta,
   restoreLocal,
-  persistLocal,
   clearLocal,
+  hydrateDraftFromServer,
 } = useCandidateForm()
 
 const loading = ref(true)
@@ -47,6 +46,12 @@ const confirmationEmailSent = ref(false)
 const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
 const draftRestoredBanner = ref(false)
+
+const { goToStep, resolveInitialStep } = useIntakeWizardNav({
+  token,
+  submitting,
+  ready: computed(() => !loading.value),
+})
 
 function isWizardStep(step: number | 'success'): step is number {
   return typeof step === 'number' && step >= 1 && step <= 4
@@ -107,13 +112,17 @@ function resetSubmitOverlay() {
   submitProgress.value = 0
 }
 
+function hasPassedStep0() {
+  return Boolean(candidateId.value) || hasIntakeDraftData(form.value, candidateId.value)
+}
+
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
   draftRestoredBanner.value = false
   const ok = await validate(routeToken)
   if (!ok) return false
 
-  const draftRestored = restoreLocal(routeToken)
+  const { restored: localRestored } = restoreLocal(routeToken)
 
   if (inviteCandidateId.value) {
     if (candidateId.value && candidateId.value !== inviteCandidateId.value) {
@@ -121,18 +130,28 @@ async function bootstrapInvite(routeToken: string) {
       resetWizard()
     } else {
       candidateId.value = inviteCandidateId.value
-      updateDraftRestoredBanner(draftRestored)
     }
   } else if (candidateId.value) {
     clearLocal(routeToken)
     resetWizard()
-  } else {
-    updateDraftRestoredBanner(draftRestored)
+  }
+
+  let serverRestored = false
+  if (candidateId.value) {
+    serverRestored = await hydrateDraftFromServer()
   }
 
   if (prefilledEmail.value && !form.value.email) {
     form.value.email = prefilledEmail.value
   }
+
+  let initialStep = resolveInitialStep(route.query.step, currentStep.value)
+  if (typeof initialStep === 'number' && initialStep > 0 && !hasPassedStep0()) {
+    initialStep = 0
+  }
+
+  await goToStep(initialStep, { replace: true, skipFlush: true })
+  updateDraftRestoredBanner(localRestored || serverRestored)
 
   return true
 }
@@ -182,15 +201,13 @@ async function onParsed(data: Record<string, unknown>) {
     fields_found: fieldsFound,
   })
 
-  currentStep.value = 1
-  persistLocal(token.value)
+  await goToStep(1)
 }
 
 async function onManual() {
   clearParseMeta()
   await ensureDraft()
-  currentStep.value = 1
-  persistLocal(token.value)
+  await goToStep(1)
 }
 
 function canAdvanceStep1() {
@@ -207,8 +224,7 @@ function canAdvanceStep3() {
 
 async function goToField(step: number, fieldId: string) {
   const stepChanging = currentStep.value !== step
-  currentStep.value = step
-  persistLocal(token.value)
+  await goToStep(step)
   if (stepChanging) {
     await nextTick()
     await nextTick()
@@ -231,7 +247,7 @@ async function goSuccess() {
     submitProgress.value = 100
     await sleep(GENERATE_SUCCESS_FLASH_MS)
     confirmationEmailSent.value = result.confirmationEmailSent
-    currentStep.value = 'success'
+    await goToStep('success', { replace: true, skipFlush: true })
     clearLocal(token.value)
   } catch (e) {
     resetSubmitOverlay()
@@ -331,7 +347,7 @@ async function onDownloadAgain() {
       <section v-else-if="currentStep === 1" class="space-y-4">
         <h1 class="text-xl font-bold">Your details</h1>
         <ParseNoticeBanner :meta="parseMeta" show-fields-found />
-        <button type="button" class="text-sm text-brand-700" @click="currentStep = 0">
+        <button type="button" class="text-sm text-brand-700" @click="goToStep(0, { replace: true })">
           Replace resume
         </button>
         <label class="block">
@@ -352,12 +368,12 @@ async function onDownloadAgain() {
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
         <div class="flex gap-2 pt-2">
-          <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 0">Back</button>
+          <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
             type="button"
             class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
             :disabled="!canAdvanceStep1()"
-            @click="currentStep = 2"
+            @click="goToStep(2)"
           >
             Next
           </button>
@@ -386,12 +402,12 @@ async function onDownloadAgain() {
           Add at least one hospital where you worked before continuing.
         </p>
         <div class="flex gap-2">
-          <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 1">Back</button>
+          <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>
           <button
             type="button"
             class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
             :disabled="!canAdvanceStep2()"
-            @click="currentStep = 3"
+            @click="goToStep(3)"
           >
             Next
           </button>
@@ -431,12 +447,12 @@ async function onDownloadAgain() {
           {{ step3OtherMissing.length }} more field{{ step3OtherMissing.length === 1 ? '' : 's' }} recommended on this step — you can fix them on review.
         </p>
         <div class="flex gap-2">
-          <button type="button" class="flex-1 rounded-lg border py-3" @click="currentStep = 2">Back</button>
+          <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(2)">Back</button>
           <button
             type="button"
             class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
             :disabled="!canAdvanceStep3()"
-            @click="currentStep = 4"
+            @click="goToStep(4)"
           >
             Review
           </button>
@@ -449,7 +465,7 @@ async function onDownloadAgain() {
           :missing="missingFields"
           :advisories="employerLinkAdvisories"
           :submitting="submitting"
-          @back="currentStep = 3"
+          @back="goToStep(3)"
           @go-to-field="goToField"
           @submit="goSuccess"
         />

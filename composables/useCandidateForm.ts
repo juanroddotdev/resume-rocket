@@ -4,6 +4,7 @@ import type {
   EducationEntry,
   CredentialsMap,
   CredentialEntry,
+  CandidateStatus,
 } from '~/types/candidate'
 import type { HospitalSuggestion } from '~/types/hospital'
 import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
@@ -11,6 +12,27 @@ import type { FinalizePhase } from '~/utils/intakeProcessing'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
+
+export type ServerDraftResponse = {
+  id: string
+  status: CandidateStatus
+  updated_at?: string
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  phone?: string | null
+  license_number?: string | null
+  license_state?: string | null
+  emr_system?: string | null
+  specialties?: string[] | null
+  credentials?: CredentialsMap | null
+  employers?: EmployerEntry[] | null
+  education?: EducationEntry[] | null
+  years_nursing_experience?: string | null
+  compact_license_status?: string | null
+  average_patient_ratios?: string | null
+  specialized_medical_equipment?: string | null
+}
 
 function normalizeStoredCredentials(raw: unknown): CredentialsMap {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
@@ -52,6 +74,34 @@ function storageKey(token: string) {
   return `resume-rocket-draft:${token}`
 }
 
+function stripEmployerSuggestions(employers: EmployerEntry[]): EmployerEntry[] {
+  return employers.map(({ hospitalSuggestions: _s, ...rest }) => rest)
+}
+
+function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput {
+  return {
+    first_name: form.first_name,
+    last_name: form.last_name,
+    email: form.email,
+    phone: form.phone,
+    license_number: form.license_number,
+    license_state: form.license_state,
+    emr_system: form.emr_system,
+    employers: employersForPatch(form.employers),
+    credentials: form.credentials,
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience || undefined,
+    compact_license_status: form.compact_license_status || undefined,
+    average_patient_ratios: form.average_patient_ratios || undefined,
+    specialized_medical_equipment: form.specialized_medical_equipment || undefined,
+    education: form.education.length ? form.education : undefined,
+  }
+}
+
+function isEmptyString(value: string | null | undefined): boolean {
+  return !value?.trim()
+}
+
 export type ParseMeta = {
   document_scan?: boolean
   partial_parse?: boolean
@@ -60,6 +110,11 @@ export type ParseMeta = {
 
 function defaultParseMeta(): ParseMeta | null {
   return null
+}
+
+export type RestoreLocalResult = {
+  restored: boolean
+  savedAt?: string
 }
 
 export function useCandidateForm() {
@@ -72,6 +127,7 @@ export function useCandidateForm() {
 
   const { intakeHeaders, token: inviteToken } = useIntakeInvite()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
+  let localSavedAt: string | undefined
 
   function resetWizard() {
     candidateId.value = null
@@ -79,6 +135,11 @@ export function useCandidateForm() {
     saveStatus.value = 'idle'
     form.value = defaultForm()
     parseMeta.value = null
+    localSavedAt = undefined
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
   }
 
   function setParseMeta(meta: ParseMeta | null) {
@@ -93,6 +154,7 @@ export function useCandidateForm() {
     if (!import.meta.client) return
     const token = explicitToken || inviteToken.value
     if (!token) return
+    localSavedAt = new Date().toISOString()
     localStorage.setItem(
       storageKey(token),
       JSON.stringify({
@@ -101,18 +163,18 @@ export function useCandidateForm() {
         passedStep0: currentStep.value !== 0 && currentStep.value !== 'success',
         form: form.value,
         parseMeta: parseMeta.value,
+        savedAt: localSavedAt,
       }),
     )
   }
 
-  function restoreLocal(token: string): boolean {
-    if (!import.meta.client || !token) return false
+  function restoreLocal(token: string): RestoreLocalResult {
+    if (!import.meta.client || !token) return { restored: false }
 
-    // Drop pre-token-scoping drafts that leaked steps across invite links.
     localStorage.removeItem(LEGACY_STORAGE_KEY)
 
     const raw = localStorage.getItem(storageKey(token))
-    if (!raw) return false
+    if (!raw) return { restored: false }
     try {
       const data = JSON.parse(raw) as {
         candidateId?: string
@@ -120,6 +182,7 @@ export function useCandidateForm() {
         passedStep0?: boolean
         form?: ReturnType<typeof defaultForm>
         parseMeta?: ParseMeta | null
+        savedAt?: string
       }
 
       if (data.candidateId) candidateId.value = data.candidateId
@@ -132,19 +195,23 @@ export function useCandidateForm() {
       }
 
       parseMeta.value = data.parseMeta ?? null
+      localSavedAt = data.savedAt
 
       const step = data.step
-      if (step == null || step === 'success') return false
+      if (step == null || step === 'success') return { restored: false, savedAt: localSavedAt }
 
       if (step > 0 && !data.passedStep0) {
         currentStep.value = 0
-        return false
+        return { restored: false, savedAt: localSavedAt }
       }
 
       currentStep.value = step
-      return typeof step === 'number' && step >= 1 && step <= 4
+      return {
+        restored: typeof step === 'number' && step >= 1 && step <= 4,
+        savedAt: localSavedAt,
+      }
     } catch {
-      return false
+      return { restored: false }
     }
   }
 
@@ -154,6 +221,7 @@ export function useCandidateForm() {
     if (token) localStorage.removeItem(storageKey(token))
     localStorage.removeItem(LEGACY_STORAGE_KEY)
     parseMeta.value = null
+    localSavedAt = undefined
   }
 
   async function ensureDraft() {
@@ -173,39 +241,121 @@ export function useCandidateForm() {
     if (!candidateId.value) return
     saveStatus.value = 'saving'
     try {
-      await $fetch(`/api/candidates/${candidateId.value}`, {
+      const data = await $fetch<{ updated_at?: string }>(`/api/candidates/${candidateId.value}`, {
         method: 'PATCH',
         headers: intakeHeaders(),
         body: partial,
       })
       saveStatus.value = 'saved'
+      if (data?.updated_at) localSavedAt = data.updated_at
       persistLocal()
     } catch {
       saveStatus.value = 'error'
     }
   }
 
+  async function flushAutosave() {
+    if (saveTimer) {
+      clearTimeout(saveTimer)
+      saveTimer = null
+    }
+    if (!candidateId.value) return
+    if (currentStep.value === 0 || currentStep.value === 'success') return
+    await patchCandidate(formSnapshot(form.value))
+  }
+
+  function applyServerDraft(row: ServerDraftResponse) {
+    form.value = {
+      ...defaultForm(),
+      first_name: row.first_name ?? '',
+      last_name: row.last_name ?? '',
+      email: row.email ?? '',
+      phone: row.phone ?? '',
+      license_number: row.license_number ?? '',
+      license_state: row.license_state ?? '',
+      emr_system: row.emr_system ?? '',
+      employers: stripEmployerSuggestions(row.employers ?? []),
+      credentials: normalizeStoredCredentials(row.credentials ?? {}),
+      specialties: row.specialties ?? [],
+      years_nursing_experience: row.years_nursing_experience ?? '',
+      compact_license_status: row.compact_license_status ?? '',
+      average_patient_ratios: row.average_patient_ratios ?? '',
+      specialized_medical_equipment: row.specialized_medical_equipment ?? '',
+      education: row.education ?? [],
+    }
+  }
+
+  function mergeServerDraft(row: ServerDraftResponse) {
+    const serverTime = row.updated_at ? Date.parse(row.updated_at) : 0
+    const localTime = localSavedAt ? Date.parse(localSavedAt) : 0
+    const preferLocal = localTime > serverTime && Number.isFinite(localTime)
+
+    if (!preferLocal) {
+      applyServerDraft(row)
+      return
+    }
+
+    const current = form.value
+    form.value = {
+      ...current,
+      first_name: isEmptyString(current.first_name) ? (row.first_name ?? '') : current.first_name,
+      last_name: isEmptyString(current.last_name) ? (row.last_name ?? '') : current.last_name,
+      email: isEmptyString(current.email) ? (row.email ?? '') : current.email,
+      phone: isEmptyString(current.phone) ? (row.phone ?? '') : current.phone,
+      license_number: isEmptyString(current.license_number)
+        ? (row.license_number ?? '')
+        : current.license_number,
+      license_state: isEmptyString(current.license_state)
+        ? (row.license_state ?? '')
+        : current.license_state,
+      emr_system: isEmptyString(current.emr_system) ? (row.emr_system ?? '') : current.emr_system,
+      employers: current.employers.length
+        ? current.employers
+        : stripEmployerSuggestions(row.employers ?? []),
+      credentials: Object.keys(current.credentials).length
+        ? current.credentials
+        : normalizeStoredCredentials(row.credentials ?? {}),
+      specialties: current.specialties.length ? current.specialties : (row.specialties ?? []),
+      years_nursing_experience: isEmptyString(current.years_nursing_experience)
+        ? (row.years_nursing_experience ?? '')
+        : current.years_nursing_experience,
+      compact_license_status: isEmptyString(current.compact_license_status)
+        ? (row.compact_license_status ?? '')
+        : current.compact_license_status,
+      average_patient_ratios: isEmptyString(current.average_patient_ratios)
+        ? (row.average_patient_ratios ?? '')
+        : current.average_patient_ratios,
+      specialized_medical_equipment: isEmptyString(current.specialized_medical_equipment)
+        ? (row.specialized_medical_equipment ?? '')
+        : current.specialized_medical_equipment,
+      education: current.education.length ? current.education : (row.education ?? []),
+    }
+  }
+
+  async function loadDraftFromServer(id: string): Promise<ServerDraftResponse | null> {
+    try {
+      return await $fetch<ServerDraftResponse>(`/api/candidates/${id}`, {
+        headers: intakeHeaders(),
+      })
+    } catch {
+      return null
+    }
+  }
+
+  async function hydrateDraftFromServer(): Promise<boolean> {
+    if (!candidateId.value) return false
+    const row = await loadDraftFromServer(candidateId.value)
+    if (!row || row.status !== 'draft') return false
+    mergeServerDraft(row)
+    persistLocal()
+    return true
+  }
+
   function scheduleAutosave(partial: CandidateDraftInput) {
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = setTimeout(() => {
       Object.assign(form.value, partial)
-      patchCandidate({
-        first_name: form.value.first_name,
-        last_name: form.value.last_name,
-        email: form.value.email,
-        phone: form.value.phone,
-        license_number: form.value.license_number,
-        license_state: form.value.license_state,
-        emr_system: form.value.emr_system,
-        employers: employersForPatch(form.value.employers),
-        credentials: form.value.credentials,
-        specialties: form.value.specialties,
-        years_nursing_experience: form.value.years_nursing_experience || undefined,
-        compact_license_status: form.value.compact_license_status || undefined,
-        average_patient_ratios: form.value.average_patient_ratios || undefined,
-        specialized_medical_equipment: form.value.specialized_medical_equipment || undefined,
-        education: form.value.education.length ? form.value.education : undefined,
-      })
+      patchCandidate(formSnapshot(form.value))
     }, 800)
   }
 
@@ -318,12 +468,13 @@ export function useCandidateForm() {
     options?.onPhase?.('saving')
     saveStatus.value = 'saving'
     try {
-      await $fetch(`/api/candidates/${candidateId.value}`, {
+      const data = await $fetch<{ updated_at?: string }>(`/api/candidates/${candidateId.value}`, {
         method: 'PATCH',
         headers: intakeHeaders(),
-        body: { ...form.value, employers: employersForPatch(form.value.employers) },
+        body: { ...formSnapshot(form.value) },
       })
       saveStatus.value = 'saved'
+      if (data?.updated_at) localSavedAt = data.updated_at
     } catch (e) {
       saveStatus.value = 'error'
       throw new Error(formatFetchError(e, 'Could not save your answers.'))
@@ -375,7 +526,12 @@ export function useCandidateForm() {
     resetWizard,
     ensureDraft,
     scheduleAutosave,
+    flushAutosave,
     applyParseResult,
+    applyServerDraft,
+    mergeServerDraft,
+    loadDraftFromServer,
+    hydrateDraftFromServer,
     patchCandidate,
     finalizeAndDownload,
     downloadDocxOnly,

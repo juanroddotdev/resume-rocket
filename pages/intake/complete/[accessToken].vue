@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'intake' })
+
 const route = useRoute()
 const accessToken = computed(() => String(route.params.accessToken))
 const loading = ref(false)
@@ -28,7 +30,7 @@ async function download() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-md py-16 text-center">
+  <div class="py-10 text-center">
     <h1 class="text-xl font-bold">Your resume</h1>
     <p class="mt-2 text-slate-600">Download your VMS-ready document.</p>
     <button

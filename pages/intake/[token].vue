@@ -7,6 +7,8 @@ import {
   FINALIZE_PHASE_PROGRESS,
   finalizePhaseMessage,
 } from '~/utils/intakeProcessing'
+definePageMeta({ layout: 'intake' })
+
 const route = useRoute()
 const token = computed(() => String(route.params.token))
 
@@ -279,7 +281,7 @@ async function onDownloadAgain() {
 </script>
 
 <template>
-  <div class="mx-auto min-h-dvh max-w-md pb-12">
+  <div class="relative pb-12">
     <div
       v-if="showSubmitOverlay"
       class="fixed inset-0 z-50 flex items-center justify-center bg-white/90 px-4"

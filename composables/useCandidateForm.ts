@@ -9,6 +9,7 @@ import type {
 import type { HospitalSuggestion } from '~/types/hospital'
 import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
 import type { FinalizePhase } from '~/utils/intakeProcessing'
+import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -126,6 +127,7 @@ export function useCandidateForm() {
   const parseMeta = useState<ParseMeta | null>('form-parse-meta', defaultParseMeta)
 
   const { intakeHeaders, token: inviteToken } = useIntakeInvite()
+  const { snapshotHighlights, restoreHighlights, clearAllPrefillHighlights } = useIntakePrefillHighlight()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   let localSavedAt: string | undefined
 
@@ -136,6 +138,7 @@ export function useCandidateForm() {
     form.value = defaultForm()
     parseMeta.value = null
     localSavedAt = undefined
+    clearAllPrefillHighlights()
     if (saveTimer) {
       clearTimeout(saveTimer)
       saveTimer = null
@@ -163,6 +166,7 @@ export function useCandidateForm() {
         passedStep0: currentStep.value !== 0 && currentStep.value !== 'success',
         form: form.value,
         parseMeta: parseMeta.value,
+        prefillHighlights: snapshotHighlights(),
         savedAt: localSavedAt,
       }),
     )
@@ -182,6 +186,7 @@ export function useCandidateForm() {
         passedStep0?: boolean
         form?: ReturnType<typeof defaultForm>
         parseMeta?: ParseMeta | null
+        prefillHighlights?: PrefillHighlightSnapshot
         savedAt?: string
       }
 
@@ -195,6 +200,7 @@ export function useCandidateForm() {
       }
 
       parseMeta.value = data.parseMeta ?? null
+      restoreHighlights(data.prefillHighlights)
       localSavedAt = data.savedAt
 
       const step = data.step
@@ -222,6 +228,7 @@ export function useCandidateForm() {
     localStorage.removeItem(LEGACY_STORAGE_KEY)
     parseMeta.value = null
     localSavedAt = undefined
+    clearAllPrefillHighlights()
   }
 
   async function ensureDraft() {

@@ -387,7 +387,7 @@ function arrayToLines(values?: string[]) {
               >
             </label>
             <label class="block" :for="`intake-field-employer-${index}-avg-patients`">
-              <span class="field-label-compact">Average daily patients</span>
+              <span class="field-label-compact">Average daily patients (this unit)</span>
               <input
                 :id="`intake-field-${employerFieldId('avg-patients')}`"
                 :value="employer.avgDailyPatients || ''"
@@ -395,6 +395,9 @@ function arrayToLines(values?: string[]) {
                 :class="fieldClasses(employerFieldId('avg-patients'))"
                 @input="patchField('avg-patients', { avgDailyPatients: ($event.target as HTMLInputElement).value })"
               >
+              <span class="mt-1 block text-xs text-slate-500">
+                Patients you cared for at this hospital — separate from career-wide ratios on Step 3.
+              </span>
             </label>
             <label class="block" :for="`intake-field-employer-${index}-floated`">
               <span class="field-label-compact">Floated units</span>

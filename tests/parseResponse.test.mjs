@@ -54,6 +54,8 @@ describe('parse response contract', () => {
 
     assertParseResponseContract(payload)
     assert.ok(payload.fields_found >= 5)
+    assert.equal('audit' in payload, false)
+    assert.equal('identified_facilities_raw' in payload, false)
   })
 
   it('matches total failure shape', () => {

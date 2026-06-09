@@ -4,7 +4,7 @@
  */
 import { mapGeminiResumeJson } from '../server/utils/geminiShared.ts'
 
-const sample = mapGeminiResumeJson(
+const { resume: sample, audit } = mapGeminiResumeJson(
   {
     first_name: 'Jane',
     last_name: 'Doe',
@@ -32,8 +32,10 @@ const sample = mapGeminiResumeJson(
         patient_scope: 'Critical Care',
         floated_units: ['Stepdown', 'ER overflow'],
         highlights: ['Charge nurse'],
+        source_snippet: 'ICU RN — Metro Hospital, Austin TX',
       },
     ],
+    identified_facilities_raw: ['Metro Hospital'],
   },
   'fallback text',
 )
@@ -50,6 +52,9 @@ const checks = [
   sample.detectedCredentials?.includes('BLS'),
   !Object.prototype.hasOwnProperty.call(sample.employers?.[0] ?? {}, 'beds'),
   !Object.prototype.hasOwnProperty.call(sample.employers?.[0] ?? {}, 'traumaLevel'),
+  !Object.prototype.hasOwnProperty.call(sample.employers?.[0] ?? {}, 'sourceSnippet'),
+  audit?.suggestedEmployers?.[0]?.sourceSnippet?.includes('Metro Hospital'),
+  audit?.identifiedFacilitiesRaw?.includes('Metro Hospital'),
 ]
 
 if (checks.some(c => !c)) {

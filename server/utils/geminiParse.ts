@@ -1,4 +1,3 @@
-import type { ParsedResume } from '~/types/parse'
 import { callGeminiWithRetry } from '~/server/utils/geminiErrors'
 import {
   createGeminiClient,
@@ -6,10 +5,11 @@ import {
   GEMINI_VMS_FIELD_GUIDE,
   mapGeminiResumeJson,
   resumeJsonSchema,
+  type GeminiParseMapResult,
   type GeminiResumeJson,
 } from '~/server/utils/geminiShared'
 
-export async function parseResumeWithGemini(rawText: string): Promise<ParsedResume> {
+export async function parseResumeWithGemini(rawText: string): Promise<GeminiParseMapResult> {
   const ai = createGeminiClient()
   let lastError: unknown
 

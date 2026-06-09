@@ -1,4 +1,3 @@
-import type { ParsedResume } from '~/types/parse'
 import { callGeminiWithRetry } from '~/server/utils/geminiErrors'
 import {
   createGeminiClient,
@@ -8,6 +7,7 @@ import {
   mapGeminiResumeJson,
   MIN_EXTRACTED_TEXT_CHARS,
   resumeJsonSchema,
+  type GeminiParseMapResult,
   type GeminiResumeJson,
 } from '~/server/utils/geminiShared'
 
@@ -24,7 +24,7 @@ export function needsDocumentVision(
 export async function parseResumeWithGeminiDocument(
   buffer: Buffer,
   mime: string,
-): Promise<ParsedResume> {
+): Promise<GeminiParseMapResult> {
   if (!isGeminiConfigured(useRuntimeConfig().geminiApiKey)) {
     throw new Error('Gemini is not configured')
   }

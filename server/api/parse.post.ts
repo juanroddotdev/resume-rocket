@@ -1,4 +1,14 @@
+import type { ParseAudit, ParsedResume } from '~/types/parse'
+
 const MAX_BYTES = 10 * 1024 * 1024
+
+function buildParsedResumeBlob(rawText: string | undefined, audit: ParseAudit | null) {
+  if (!rawText) return null
+  return {
+    raw: rawText,
+    ...(audit ? { audit } : {}),
+  }
+}
 
 export default defineEventHandler(async (event) => {
   const form = await readMultipartFormData(event)
@@ -90,7 +100,8 @@ export default defineEventHandler(async (event) => {
   let geminiFailed = false
   let documentVision = false
   let documentVisionAttempted = false
-  let parsed: Awaited<ReturnType<typeof parseResumeWithGemini>> | null = null
+  let parsed: ParsedResume | null = null
+  let parseAudit: ParseAudit | null = null
   let rawText = ''
 
   try {
@@ -106,8 +117,10 @@ export default defineEventHandler(async (event) => {
       documentVisionAttempted = true
       documentVision = true
       try {
-        parsed = await parseResumeWithGeminiDocument(buffer, mime)
-        rawText = parsed.rawText || rawText
+        const docResult = await parseResumeWithGeminiDocument(buffer, mime)
+        parsed = docResult.resume
+        parseAudit = docResult.audit
+        rawText = docResult.resume.rawText || rawText
       } catch (e) {
         geminiFailed = true
         documentVision = false
@@ -121,7 +134,9 @@ export default defineEventHandler(async (event) => {
 
     if (geminiReady && !documentVisionAttempted) {
       try {
-        parsed = await parseResumeWithGemini(rawText)
+        const textResult = await parseResumeWithGemini(rawText)
+        parsed = textResult.resume
+        parseAudit = textResult.audit
       } catch (e) {
         geminiFailed = true
         parseError = userFacingGeminiError(e, 'text')
@@ -147,7 +162,7 @@ export default defineEventHandler(async (event) => {
     resume_storage_path: storagePath,
     resume_original_filename: filePart.filename,
     parse_error: parseFailed ? parseError : geminiFailed ? parseError : null,
-    parsed_resume: parsed ? { raw: parsed.rawText } : null,
+    parsed_resume: buildParsedResumeBlob(parsed?.rawText, parseAudit),
   }
 
   if (parsed && hasFields) {

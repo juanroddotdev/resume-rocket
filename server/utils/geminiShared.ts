@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from '@google/genai'
-import type { ParsedResume } from '~/types/parse'
+import type { ParseAudit, ParsedResume } from '~/types/parse'
 
 export const GEMINI_PLACEHOLDER_KEYS = new Set([
   'your-gemini-api-key',
@@ -10,6 +10,9 @@ export const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash'] as const
 
 /** PDFs with fewer chars than this after pdf-parse use Gemini document vision. */
 export const MIN_EXTRACTED_TEXT_CHARS = 40
+
+/** Max length for employer source_snippet in Gemini schema + stored audit. */
+export const PARSE_AUDIT_SNIPPET_MAX_CHARS = 200
 
 /** Shared field guide for text + vision Gemini parse prompts (Phase C / VMS manifest). */
 export const GEMINI_VMS_FIELD_GUIDE = `Extract all fields you can find. Use empty strings, empty arrays, or omit keys when not present. Do not invent data.
@@ -30,15 +33,20 @@ Education: education[] with degree, school, graduation_year
 Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (YYYY-MM or readable date)
 - Split combined cert lines into one object per certification
 
-Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[]
+Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], source_snippet
 - One object per hospital/facility assignment; split combined job blocks into separate employers when dates or facilities differ
 - name: facility or hospital name as on the resume
+- source_snippet: short verbatim excerpt from the resume supporting this employer (max ${PARSE_AUDIT_SNIPPET_MAX_CHARS} characters); QA evidence only — do not include beds/trauma/teaching here
 - Do NOT put hospital-wide bed counts, trauma level, teaching status, or facility type on suggested_employers — those are filled from our facility database after the candidate links the hospital
 - unit_bed_count: ONLY the nursing unit bed count when explicitly stated (e.g. "24-bed ICU", "36-bed Med-Surg"); NEVER use hospital-wide or facility total beds (e.g. "450-bed hospital" → leave unit_bed_count empty)
 - employment_type: Travel, Staff, Per Diem, Contract, etc. when stated
 - floated_units[]: other units floated to at this employer
 - equipment_procedures[]: unit-specific equipment or procedures for this job
-- highlights[]: short bullet achievements for this assignment only`
+- highlights[]: short bullet achievements for this assignment only
+
+Parse audit (server QA only — not shown to candidates):
+- identified_facilities_raw: every distinct hospital/facility name string found on the resume, as written
+- Do not invent facility metrics (beds, trauma, teaching) anywhere in the response`
 
 const stringArraySchema = {
   type: Type.ARRAY,
@@ -85,6 +93,7 @@ export type GeminiEmployerJson = {
   avg_daily_patients?: string
   patient_acuity?: string
   highlights?: string[]
+  source_snippet?: string
 }
 
 export type GeminiResumeJson = {
@@ -103,6 +112,12 @@ export type GeminiResumeJson = {
   education?: GeminiEducationJson[]
   certifications?: GeminiCertificationJson[]
   suggested_employers?: GeminiEmployerJson[]
+  identified_facilities_raw?: string[]
+}
+
+export type GeminiParseMapResult = {
+  resume: ParsedResume
+  audit: ParseAudit | null
 }
 
 export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
@@ -158,9 +173,11 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
           avg_daily_patients: { type: Type.STRING },
           patient_acuity: { type: Type.STRING },
           highlights: stringArraySchema,
+          source_snippet: { type: Type.STRING },
         },
       },
     },
+    identified_facilities_raw: stringArraySchema,
   }
 
   if (options?.includeRawText) {
@@ -170,6 +187,38 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
   return {
     type: Type.OBJECT,
     properties,
+  }
+}
+
+function truncateAuditSnippet(value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+  return trimmed.slice(0, PARSE_AUDIT_SNIPPET_MAX_CHARS)
+}
+
+/** Build server-only audit payload; strips before intake API response. */
+export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
+  const identifiedFacilitiesRaw = parsed.identified_facilities_raw
+    ?.map(name => name.trim())
+    .filter(Boolean)
+
+  const suggestedEmployers = parsed.suggested_employers
+    ?.map((employer) => {
+      const name = employer.name?.trim()
+      if (!name) return null
+      const sourceSnippet = truncateAuditSnippet(employer.source_snippet)
+      return sourceSnippet ? { name, sourceSnippet } : { name }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  if (!identifiedFacilitiesRaw?.length && !suggestedEmployers?.length) {
+    return null
+  }
+
+  return {
+    ...(identifiedFacilitiesRaw?.length ? { identifiedFacilitiesRaw } : {}),
+    ...(suggestedEmployers?.length ? { suggestedEmployers } : {}),
+    capturedAt: new Date().toISOString(),
   }
 }
 
@@ -196,7 +245,7 @@ function mapGeminiEmployer(e: GeminiEmployerJson) {
 export function mapGeminiResumeJson(
   parsed: GeminiResumeJson,
   rawTextFallback: string,
-): ParsedResume {
+): GeminiParseMapResult {
   const rawText = (parsed.raw_resume_text || rawTextFallback).slice(0, 5000)
 
   const certificationDetails = parsed.certifications
@@ -209,29 +258,32 @@ export function mapGeminiResumeJson(
   const detectedFromCerts = certificationDetails?.map(c => c.name)
 
   return {
-    firstName: parsed.first_name?.trim() || undefined,
-    lastName: parsed.last_name?.trim() || undefined,
-    email: parsed.email?.trim() || undefined,
-    phone: parsed.phone?.trim() || undefined,
-    licenseNumber: parsed.license_number?.trim() || undefined,
-    licenseState: parsed.license_state?.trim() || undefined,
-    specialties: parsed.specialties?.map(s => s.trim()).filter(Boolean),
-    yearsNursingExperience: parsed.years_nursing_experience?.trim() || undefined,
-    compactLicenseStatus: parsed.compact_license_status?.trim() || undefined,
-    averagePatientRatios: parsed.average_patient_ratios?.trim() || undefined,
-    specializedMedicalEquipment: parsed.specialized_medical_equipment?.trim() || undefined,
-    education: parsed.education
-      ?.map(ed => ({
-        degree: ed.degree?.trim() || undefined,
-        school: ed.school?.trim() || undefined,
-        graduationYear: ed.graduation_year?.trim() || undefined,
-      }))
-      .filter(ed => ed.degree || ed.school || ed.graduationYear),
-    certificationDetails: certificationDetails?.length ? certificationDetails : undefined,
-    detectedCredentials: detectedFromCerts?.length ? [...new Set(detectedFromCerts)] : undefined,
-    employers: parsed.suggested_employers
-      ?.map(mapGeminiEmployer)
-      .filter((e): e is NonNullable<ReturnType<typeof mapGeminiEmployer>> => e !== null),
-    rawText,
+    resume: {
+      firstName: parsed.first_name?.trim() || undefined,
+      lastName: parsed.last_name?.trim() || undefined,
+      email: parsed.email?.trim() || undefined,
+      phone: parsed.phone?.trim() || undefined,
+      licenseNumber: parsed.license_number?.trim() || undefined,
+      licenseState: parsed.license_state?.trim() || undefined,
+      specialties: parsed.specialties?.map(s => s.trim()).filter(Boolean),
+      yearsNursingExperience: parsed.years_nursing_experience?.trim() || undefined,
+      compactLicenseStatus: parsed.compact_license_status?.trim() || undefined,
+      averagePatientRatios: parsed.average_patient_ratios?.trim() || undefined,
+      specializedMedicalEquipment: parsed.specialized_medical_equipment?.trim() || undefined,
+      education: parsed.education
+        ?.map(ed => ({
+          degree: ed.degree?.trim() || undefined,
+          school: ed.school?.trim() || undefined,
+          graduationYear: ed.graduation_year?.trim() || undefined,
+        }))
+        .filter(ed => ed.degree || ed.school || ed.graduationYear),
+      certificationDetails: certificationDetails?.length ? certificationDetails : undefined,
+      detectedCredentials: detectedFromCerts?.length ? [...new Set(detectedFromCerts)] : undefined,
+      employers: parsed.suggested_employers
+        ?.map(mapGeminiEmployer)
+        .filter((e): e is NonNullable<ReturnType<typeof mapGeminiEmployer>> => e !== null),
+      rawText,
+    },
+    audit: buildParseAudit(parsed),
   }
 }

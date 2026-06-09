@@ -18,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
+const { markEmployerDbMetrics } = useIntakePrefillHighlight()
 const emr = defineModel<string>('emr', { default: '' })
 const emrSelection = ref('')
 const emrCustom = ref('')
@@ -78,6 +79,7 @@ function addHospital(h: HospitalRow) {
     return
   }
   emit('update:employers', [...props.employers, linkEmployerFromHospital({ name: h.name }, h)])
+  markEmployerDbMetrics(props.employers.length)
   clearSearch()
   showManualForm.value = false
 }

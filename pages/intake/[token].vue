@@ -53,6 +53,13 @@ const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => bo
 const adminDraftDownloadNotice = ref<string | null>(null)
 
 const {
+  fieldClasses,
+  markParsePrefillFromApi,
+  clearParseHighlight,
+  clearAllPrefillHighlights,
+} = useIntakePrefillHighlight()
+
+const {
   isRecruiterPreview,
   previewMode,
   isAdminView,
@@ -135,6 +142,7 @@ function hasPassedStep0() {
 
 async function bootstrapInvite(routeToken: string) {
   resetWizard()
+  clearAllPrefillHighlights()
   draftRestoredBanner.value = false
   const ok = await validate(routeToken)
   if (!ok) return false
@@ -212,6 +220,7 @@ async function onParsed(data: Record<string, unknown>) {
   if (!candidateId.value) await ensureDraft()
 
   const fieldsFound = applyParseResult(data as Parameters<typeof applyParseResult>[0])
+  markParsePrefillFromApi(data as Parameters<typeof markParsePrefillFromApi>[0])
   setParseMeta({
     document_scan: Boolean(data.document_scan),
     partial_parse: Boolean(data.partial_parse),
@@ -223,6 +232,7 @@ async function onParsed(data: Record<string, unknown>) {
 
 async function onManual() {
   clearParseMeta()
+  clearAllPrefillHighlights()
   await ensureDraft()
   await goToStep(1)
 }
@@ -399,19 +409,53 @@ async function onDownloadAgain() {
         </button>
         <label class="block">
           <span class="field-label">First name</span>
-          <input id="intake-field-first_name" v-model="form.first_name" autocomplete="given-name" placeholder="Jane" required class="field">
+          <input
+            id="intake-field-first_name"
+            v-model="form.first_name"
+            autocomplete="given-name"
+            placeholder="Jane"
+            required
+            :class="fieldClasses('first_name')"
+            @input="clearParseHighlight('first_name')"
+          >
         </label>
         <label class="block">
           <span class="field-label">Last name</span>
-          <input id="intake-field-last_name" v-model="form.last_name" autocomplete="family-name" placeholder="Doe" required class="field">
+          <input
+            id="intake-field-last_name"
+            v-model="form.last_name"
+            autocomplete="family-name"
+            placeholder="Doe"
+            required
+            :class="fieldClasses('last_name')"
+            @input="clearParseHighlight('last_name')"
+          >
         </label>
         <label class="block">
           <span class="field-label">Email</span>
-          <input id="intake-field-email" v-model="form.email" type="email" autocomplete="email" placeholder="you@example.com" required class="field">
+          <input
+            id="intake-field-email"
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            required
+            :class="fieldClasses('email')"
+            @input="clearParseHighlight('email')"
+          >
         </label>
         <label class="block">
           <span class="field-label">Phone</span>
-          <input id="intake-field-phone" v-model="form.phone" type="tel" autocomplete="tel" placeholder="(555) 555-5555" required class="field">
+          <input
+            id="intake-field-phone"
+            v-model="form.phone"
+            type="tel"
+            autocomplete="tel"
+            placeholder="(555) 555-5555"
+            required
+            :class="fieldClasses('phone')"
+            @input="clearParseHighlight('phone')"
+          >
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
         <div class="flex gap-2 pt-2">

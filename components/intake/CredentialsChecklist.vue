@@ -14,11 +14,14 @@ const emit = defineEmits<{
   'update:licenseState': [value: string]
 }>()
 
+const { fieldClasses, clearParseHighlight, isParseHighlighted } = useIntakePrefillHighlight()
+
 function isActive(cert: string) {
   return props.credentials[cert]?.active === true
 }
 
 function toggle(cert: string) {
+  clearParseHighlight(`credential-${cert}`)
   const next = { ...props.credentials }
   if (isActive(cert)) {
     delete next[cert]
@@ -34,6 +37,7 @@ function expiryFor(cert: string) {
 
 function setExpiry(cert: string, value: string) {
   if (!isActive(cert)) return
+  clearParseHighlight(`credential-${cert}`)
   const next = { ...props.credentials }
   next[cert] = { active: true, expiry: value.trim() || undefined }
   emit('update:credentials', next)
@@ -50,7 +54,10 @@ function setExpiry(cert: string, value: string) {
           :key="cert"
           type="button"
           class="rounded-full px-4 py-2 text-sm font-medium transition"
-          :class="isActive(cert) ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700'"
+          :class="[
+            isActive(cert) ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
+            isParseHighlighted(`credential-${cert}`) && isActive(cert) ? 'ring-2 ring-brand-600/30 ring-offset-1' : null,
+          ]"
           @click="toggle(cert)"
         >
           {{ cert }}
@@ -82,8 +89,8 @@ function setExpiry(cert: string, value: string) {
         id="intake-field-license_number"
         :value="licenseNumber"
         type="text"
-        class="field"
-        @input="emit('update:licenseNumber', ($event.target as HTMLInputElement).value)"
+        :class="fieldClasses('license_number')"
+        @input="clearParseHighlight('license_number'); emit('update:licenseNumber', ($event.target as HTMLInputElement).value)"
       >
     </div>
     <div>
@@ -94,8 +101,8 @@ function setExpiry(cert: string, value: string) {
         type="text"
         maxlength="2"
         placeholder="e.g. CA"
-        class="field uppercase"
-        @input="emit('update:licenseState', ($event.target as HTMLInputElement).value)"
+        :class="fieldClasses('license_state', 'uppercase')"
+        @input="clearParseHighlight('license_state'); emit('update:licenseState', ($event.target as HTMLInputElement).value)"
       >
     </div>
   </div>

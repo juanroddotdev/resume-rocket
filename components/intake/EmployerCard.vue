@@ -23,6 +23,13 @@ const emit = defineEmits<{
 const showClinical = ref(false)
 const showLinkSearch = ref(false)
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
+const {
+  fieldClasses,
+  clearParseHighlight,
+  markEmployerDbMetrics,
+  clearEmployerDbMetrics,
+  isEmployerDbMetricsHighlighted,
+} = useIntakePrefillHighlight()
 
 const isLinked = computed(() => Boolean(props.employer.hospitalId))
 
@@ -49,13 +56,24 @@ function patch(partial: Partial<EmployerEntry>) {
   emit('update', { ...props.employer, ...partial })
 }
 
+function employerFieldId(suffix: string) {
+  return `employer-${props.index}-${suffix}`
+}
+
+function patchField(suffix: string, partial: Partial<EmployerEntry>) {
+  clearParseHighlight(employerFieldId(suffix))
+  patch(partial)
+}
+
 function linkFromHospital(hospital: HospitalRow | HospitalSuggestion) {
   emit('update', linkEmployerFromHospital(props.employer, hospital))
+  markEmployerDbMetrics(props.index)
   showLinkSearch.value = false
   clearSearch()
 }
 
 function startChangeFacility() {
+  clearEmployerDbMetrics(props.index)
   emit('update', unlinkEmployerFacility(props.employer))
   showLinkSearch.value = true
 }
@@ -144,36 +162,36 @@ function arrayToLines(values?: string[]) {
       >
         <div class="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">
           <template v-if="!isLinked">
-            <label class="block" :for="`intake-field-employer-${index}-name`">
+            <label class="block" :for="`intake-field-${employerFieldId('name')}`">
               <span class="field-label-compact">Hospital name</span>
               <input
-                :id="`intake-field-employer-${index}-name`"
+                :id="`intake-field-${employerFieldId('name')}`"
                 :value="employer.name || ''"
                 placeholder="Hospital name"
-                class="field"
-                @input="patch({ name: ($event.target as HTMLInputElement).value })"
+                :class="fieldClasses(employerFieldId('name'))"
+                @input="patchField('name', { name: ($event.target as HTMLInputElement).value })"
               >
             </label>
             <div class="grid grid-cols-2 gap-2">
-              <label class="block" :for="`intake-field-employer-${index}-city`">
+              <label class="block" :for="`intake-field-${employerFieldId('city')}`">
                 <span class="field-label-compact">City</span>
                 <input
-                  :id="`intake-field-employer-${index}-city`"
+                  :id="`intake-field-${employerFieldId('city')}`"
                   :value="employer.city || ''"
                   placeholder="City"
-                  class="field"
-                  @input="patch({ city: ($event.target as HTMLInputElement).value })"
+                  :class="fieldClasses(employerFieldId('city'))"
+                  @input="patchField('city', { city: ($event.target as HTMLInputElement).value })"
                 >
               </label>
-              <label class="block" :for="`intake-field-employer-${index}-state`">
+              <label class="block" :for="`intake-field-${employerFieldId('state')}`">
                 <span class="field-label-compact">State</span>
                 <input
-                  :id="`intake-field-employer-${index}-state`"
+                  :id="`intake-field-${employerFieldId('state')}`"
                   :value="employer.state || ''"
                   placeholder="ST"
                   maxlength="2"
-                  class="field"
-                  @input="patch({ state: ($event.target as HTMLInputElement).value.toUpperCase() })"
+                  :class="fieldClasses(employerFieldId('state'))"
+                  @input="patchField('state', { state: ($event.target as HTMLInputElement).value.toUpperCase() })"
                 >
               </label>
             </div>
@@ -184,16 +202,19 @@ function arrayToLines(values?: string[]) {
               v-if="employer.beds != null"
               label="Hospital beds"
               :value="employer.beds"
+              :from-database="isEmployerDbMetricsHighlighted(index)"
             />
             <MetricTile
               v-if="employer.traumaLevel"
               label="Trauma level"
               :value="employer.traumaLevel"
+              :from-database="isEmployerDbMetricsHighlighted(index)"
             />
             <MetricTile
               v-if="employer.teachingStatus"
               label="Teaching hospital"
               value="Yes"
+              :from-database="isEmployerDbMetricsHighlighted(index)"
             />
             <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
               Change facility
@@ -269,11 +290,11 @@ function arrayToLines(values?: string[]) {
           <label class="block" :for="`intake-field-employer-${index}-role`">
             <span class="field-label-compact">Role / unit</span>
             <input
-              :id="`intake-field-employer-${index}-role`"
+              :id="`intake-field-${employerFieldId('role')}`"
               :value="employer.role || ''"
               placeholder="e.g. ICU Staff RN"
-              class="field"
-              @input="patch({ role: ($event.target as HTMLInputElement).value })"
+              :class="fieldClasses(employerFieldId('role'))"
+              @input="patchField('role', { role: ($event.target as HTMLInputElement).value })"
             >
           </label>
 
@@ -281,21 +302,21 @@ function arrayToLines(values?: string[]) {
             <label class="block" :for="`intake-field-employer-${index}-start`">
               <span class="field-label-compact">Start date</span>
               <input
-                :id="`intake-field-employer-${index}-start`"
+                :id="`intake-field-${employerFieldId('start')}`"
                 :value="employer.startDate || ''"
                 placeholder="YYYY-MM"
-                class="field"
-                @input="patch({ startDate: ($event.target as HTMLInputElement).value })"
+                :class="fieldClasses(employerFieldId('start'))"
+                @input="patchField('start', { startDate: ($event.target as HTMLInputElement).value })"
               >
             </label>
             <label class="block" :for="`intake-field-employer-${index}-end`">
               <span class="field-label-compact">End date</span>
               <input
-                :id="`intake-field-employer-${index}-end`"
+                :id="`intake-field-${employerFieldId('end')}`"
                 :value="employer.endDate || ''"
                 placeholder="YYYY-MM or Present"
-                class="field"
-                @input="patch({ endDate: ($event.target as HTMLInputElement).value })"
+                :class="fieldClasses(employerFieldId('end'))"
+                @input="patchField('end', { endDate: ($event.target as HTMLInputElement).value })"
               >
             </label>
           </div>
@@ -303,45 +324,45 @@ function arrayToLines(values?: string[]) {
           <label class="block" :for="`intake-field-employer-${index}-type`">
             <span class="field-label-compact">Employment type</span>
             <input
-              :id="`intake-field-employer-${index}-type`"
+              :id="`intake-field-${employerFieldId('type')}`"
               :value="employer.employmentType || ''"
               placeholder="Travel, Staff, PRN…"
-              class="field"
-              @input="patch({ employmentType: ($event.target as HTMLInputElement).value })"
+              :class="fieldClasses(employerFieldId('type'))"
+              @input="patchField('type', { employmentType: ($event.target as HTMLInputElement).value })"
             >
           </label>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">
             <span class="field-label-compact">Patient scope</span>
             <input
-              :id="`intake-field-employer-${index}-scope`"
+              :id="`intake-field-${employerFieldId('scope')}`"
               :value="employer.patientScope || ''"
               placeholder="e.g. adult ICU, pediatrics"
-              class="field"
-              @input="patch({ patientScope: ($event.target as HTMLInputElement).value })"
+              :class="fieldClasses(employerFieldId('scope'))"
+              @input="patchField('scope', { patientScope: ($event.target as HTMLInputElement).value })"
             >
           </label>
 
           <label class="block" :for="`intake-field-employer-${index}-acuity`">
             <span class="field-label-compact">Patient acuity</span>
             <input
-              :id="`intake-field-employer-${index}-acuity`"
+              :id="`intake-field-${employerFieldId('acuity')}`"
               :value="employer.patientAcuity || ''"
               placeholder="e.g. high acuity, level III NICU"
-              class="field"
-              @input="patch({ patientAcuity: ($event.target as HTMLInputElement).value })"
+              :class="fieldClasses(employerFieldId('acuity'))"
+              @input="patchField('acuity', { patientAcuity: ($event.target as HTMLInputElement).value })"
             >
           </label>
 
           <label class="block" :for="`intake-field-employer-${index}-highlights`">
             <span class="field-label-compact">Highlights</span>
             <textarea
-              :id="`intake-field-employer-${index}-highlights`"
+              :id="`intake-field-${employerFieldId('highlights')}`"
               :value="arrayToLines(employer.highlights)"
               placeholder="One achievement per line"
               rows="3"
-              class="field"
-              @input="patch({ highlights: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+              :class="fieldClasses(employerFieldId('highlights'))"
+              @input="patchField('highlights', { highlights: linesToArray(($event.target as HTMLTextAreaElement).value) })"
             />
           </label>
 
@@ -358,21 +379,21 @@ function arrayToLines(values?: string[]) {
             <label class="block" :for="`intake-field-employer-${index}-unit-beds`">
               <span class="field-label-compact">Unit beds</span>
               <input
-                :id="`intake-field-employer-${index}-unit-beds`"
+                :id="`intake-field-${employerFieldId('unit-beds')}`"
                 :value="employer.unitBedCount || ''"
                 placeholder="e.g. 24-bed ICU"
-                class="field"
-                @input="patch({ unitBedCount: ($event.target as HTMLInputElement).value })"
+                :class="fieldClasses(employerFieldId('unit-beds'))"
+                @input="patchField('unit-beds', { unitBedCount: ($event.target as HTMLInputElement).value })"
               >
             </label>
             <label class="block" :for="`intake-field-employer-${index}-avg-patients`">
               <span class="field-label-compact">Average daily patients</span>
               <input
-                :id="`intake-field-employer-${index}-avg-patients`"
+                :id="`intake-field-${employerFieldId('avg-patients')}`"
                 :value="employer.avgDailyPatients || ''"
                 placeholder="e.g. 4–5 couplets"
-                class="field"
-                @input="patch({ avgDailyPatients: ($event.target as HTMLInputElement).value })"
+                :class="fieldClasses(employerFieldId('avg-patients'))"
+                @input="patchField('avg-patients', { avgDailyPatients: ($event.target as HTMLInputElement).value })"
               >
             </label>
             <label class="block" :for="`intake-field-employer-${index}-floated`">

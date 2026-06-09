@@ -1,5 +1,9 @@
+<script setup lang="ts">
+definePageMeta({ layout: 'intake' })
+</script>
+
 <template>
-  <div class="mx-auto max-w-md py-16 text-center">
+  <div class="py-10 text-center">
     <h1 class="text-2xl font-bold text-slate-900">Resume Rocket</h1>
     <p class="mt-4 text-slate-600">
       Use the intake link your recruiter sent you to upload and enrich your resume.

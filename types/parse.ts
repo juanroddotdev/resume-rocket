@@ -38,3 +38,15 @@ export interface ParsedResume {
   }>
   rawText?: string
 }
+
+/** Server-only parse QA payload stored under candidates.parsed_resume.audit — never returned to intake client. */
+export interface ParseEmployerAudit {
+  name: string
+  sourceSnippet?: string
+}
+
+export interface ParseAudit {
+  identifiedFacilitiesRaw?: string[]
+  suggestedEmployers?: ParseEmployerAudit[]
+  capturedAt: string
+}

@@ -70,31 +70,31 @@ function setExpiry(cert: string, value: string) {
           :value="expiryFor(cert)"
           type="text"
           placeholder="YYYY-MM or date"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-base"
+          class="field"
           @input="setExpiry(cert, ($event.target as HTMLInputElement).value)"
         >
       </div>
     </div>
 
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">License number</label>
+      <label class="field-label">License number</label>
       <input
         id="intake-field-license_number"
         :value="licenseNumber"
         type="text"
-        class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base"
+        class="field"
         @input="emit('update:licenseNumber', ($event.target as HTMLInputElement).value)"
       >
     </div>
     <div>
-      <label class="mb-1 block text-sm font-medium text-slate-700">License state</label>
+      <label class="field-label">License state</label>
       <input
         id="intake-field-license_state"
         :value="licenseState"
         type="text"
         maxlength="2"
         placeholder="e.g. CA"
-        class="w-full rounded-lg border border-slate-300 px-3 py-3 text-base uppercase"
+        class="field uppercase"
         @input="emit('update:licenseState', ($event.target as HTMLInputElement).value)"
       >
     </div>

@@ -35,6 +35,38 @@ export function isDuplicateEmployer(existing: EmployerEntry[], hospital: Hospita
   return existing.some(e => normalizeEmployerKey(e) === key)
 }
 
+export function isDuplicateEmployerEntry(
+  existing: EmployerEntry[],
+  entry: Pick<EmployerEntry, 'name' | 'city' | 'hospitalId'>,
+  options?: { excludeIndex?: number },
+): boolean {
+  if (entry.hospitalId) {
+    const duplicateId = existing.some(
+      (e, i) => i !== options?.excludeIndex && e.hospitalId === entry.hospitalId,
+    )
+    if (duplicateId) return true
+  }
+  const name = entry.name.trim()
+  if (!name) return false
+  const key = normalizeEmployerKey(entry)
+  return existing.some(
+    (e, i) => i !== options?.excludeIndex && normalizeEmployerKey(e) === key,
+  )
+}
+
+/** Free-text employer when facility is not in the hospitals database. */
+export function createManualEmployer(input: {
+  name: string
+  city?: string
+  state?: string
+}): EmployerEntry {
+  return {
+    name: input.name.trim(),
+    city: input.city?.trim() || undefined,
+    state: input.state?.trim() || undefined,
+  }
+}
+
 export function linkEmployerFromHospital(
   employer: EmployerEntry,
   hospital: HospitalRow | HospitalSuggestion,

@@ -2,7 +2,7 @@
 
 Repeatable pre-release smoke tests for Resume Rocket. Run on `main` before deploying or tagging a release.
 
-Related: [`MVP-PLAN.md`](MVP-PLAN.md), [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`DEPLOY.md`](DEPLOY.md), [`MANUAL-TEST-CHECKLIST.md`](MANUAL-TEST-CHECKLIST.md) (detailed UX QA).
+Related: [`MVP-PLAN.md`](MVP-PLAN.md), [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`DEPLOY.md`](DEPLOY.md), [`MANUAL-TEST-CHECKLIST.md`](MANUAL-TEST-CHECKLIST.md) (detailed UX QA), [`RELEASE-CHECKLIST-2026-06-07-09.md`](RELEASE-CHECKLIST-2026-06-07-09.md) (June 7–9 batch — 22 PRs).
 
 **Environment:** Local `npm run dev` with `.env` filled (Supabase, optional Gemini + Resend). Contract template at `server/assets/template.docx`.
 

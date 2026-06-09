@@ -1,4 +1,5 @@
 import type { ParsedResume } from '~/types/parse'
+import { callGeminiWithRetry } from '~/server/utils/geminiErrors'
 import {
   createGeminiClient,
   GEMINI_MODELS,
@@ -41,22 +42,24 @@ ${GEMINI_VMS_FIELD_GUIDE}`
 
   for (const modelName of GEMINI_MODELS) {
     try {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: [
-          {
-            inlineData: {
-              mimeType: mime === 'application/pdf' ? 'application/pdf' : mime,
-              data: buffer.toString('base64'),
+      const response = await callGeminiWithRetry(() =>
+        ai.models.generateContent({
+          model: modelName,
+          contents: [
+            {
+              inlineData: {
+                mimeType: mime === 'application/pdf' ? 'application/pdf' : mime,
+                data: buffer.toString('base64'),
+              },
             },
+            prompt,
+          ],
+          config: {
+            responseMimeType: 'application/json',
+            responseJsonSchema: resumeJsonSchema({ includeRawText: true }),
           },
-          prompt,
-        ],
-        config: {
-          responseMimeType: 'application/json',
-          responseJsonSchema: resumeJsonSchema({ includeRawText: true }),
-        },
-      })
+        }),
+      )
 
       const text = response.text
       if (!text) throw new Error('Empty Gemini response')

@@ -89,6 +89,7 @@ export default defineEventHandler(async (event) => {
   let parseError: string | null = null
   let geminiFailed = false
   let documentVision = false
+  let documentVisionAttempted = false
   let parsed: Awaited<ReturnType<typeof parseResumeWithGemini>> | null = null
   let rawText = ''
 
@@ -102,21 +103,28 @@ export default defineEventHandler(async (event) => {
           'This resume looks image-based. Add GEMINI_API_KEY for visual scanning, or continue manually.',
         )
       }
+      documentVisionAttempted = true
       documentVision = true
-      parsed = await parseResumeWithGeminiDocument(buffer, mime)
-      rawText = parsed.rawText || rawText
+      try {
+        parsed = await parseResumeWithGeminiDocument(buffer, mime)
+        rawText = parsed.rawText || rawText
+      } catch (e) {
+        geminiFailed = true
+        documentVision = false
+        parseError = userFacingGeminiError(e, 'vision')
+      }
     }
 
     if (!rawText.trim() && !parsed) {
-      throw new Error('No text extracted from document')
+      throw new Error(parseError || 'No text extracted from document')
     }
 
-    if (geminiReady && !documentVision) {
+    if (geminiReady && !documentVisionAttempted) {
       try {
         parsed = await parseResumeWithGemini(rawText)
       } catch (e) {
         geminiFailed = true
-        parseError = e instanceof Error ? e.message : 'AI parse failed'
+        parseError = userFacingGeminiError(e, 'text')
       }
     }
 

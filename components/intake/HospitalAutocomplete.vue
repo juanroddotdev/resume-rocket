@@ -2,6 +2,12 @@
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow } from '~/types/hospital'
 import { isDuplicateEmployer, linkEmployerFromHospital, createManualEmployer, isDuplicateEmployerEntry } from '~/utils/employerLink'
+import {
+  EMR_OTHER_OPTION,
+  EMR_PRESET_OPTIONS,
+  emrSystemFromFields,
+  resolveEmrFields,
+} from '~/utils/emrSystem'
 
 const props = defineProps<{
   employers: EmployerEntry[]
@@ -13,6 +19,36 @@ const emit = defineEmits<{
 
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const emr = defineModel<string>('emr', { default: '' })
+const emrSelection = ref('')
+const emrCustom = ref('')
+
+watch(
+  emr,
+  (value) => {
+    const resolved = resolveEmrFields(value)
+    emrSelection.value = resolved.selection
+    emrCustom.value = resolved.custom
+  },
+  { immediate: true },
+)
+
+function syncEmrModel() {
+  emr.value = emrSystemFromFields(emrSelection.value, emrCustom.value)
+}
+
+function onEmrSelectionChange(event: Event) {
+  emrSelection.value = (event.target as HTMLSelectElement).value
+  if (emrSelection.value !== EMR_OTHER_OPTION) {
+    emrCustom.value = ''
+  }
+  syncEmrModel()
+}
+
+function onEmrCustomInput(event: Event) {
+  emrCustom.value = (event.target as HTMLInputElement).value
+  syncEmrModel()
+}
+
 const duplicateMessage = ref<string | null>(null)
 const activeCardIndex = ref(0)
 const linkSearchRequested = ref<number | null>(null)
@@ -246,19 +282,41 @@ defineExpose({ openEmployerField })
       Add at least one hospital where you worked — search above or add manually.
     </p>
 
-    <div>
-      <label class="field-label">EMR platform</label>
+    <div class="space-y-2">
+      <label class="field-label" for="intake-field-emr_system">EMR platform</label>
       <select
         id="intake-field-emr_system"
-        v-model="emr"
+        :value="emrSelection"
         class="field"
+        @change="onEmrSelectionChange"
       >
         <option value="">Select…</option>
-        <option value="Epic">Epic</option>
-        <option value="Cerner">Cerner</option>
-        <option value="Meditech">Meditech</option>
-        <option value="Other">Other</option>
+        <option v-for="option in EMR_PRESET_OPTIONS" :key="option" :value="option">
+          {{ option }}
+        </option>
+        <option :value="EMR_OTHER_OPTION">Other</option>
       </select>
+      <label
+        v-if="emrSelection === EMR_OTHER_OPTION"
+        class="block"
+        for="intake-field-emr_system-other"
+      >
+        <span class="field-label-compact">Other EMR platform</span>
+        <input
+          id="intake-field-emr_system-other"
+          :value="emrCustom"
+          type="text"
+          placeholder="e.g. Allscripts, Athena, Medhost"
+          class="field"
+          @input="onEmrCustomInput"
+        >
+      </label>
+      <p
+        v-if="emrSelection === EMR_OTHER_OPTION && !emrCustom.trim()"
+        class="text-xs text-slate-500"
+      >
+        Enter the EMR name used at your facilities.
+      </p>
     </div>
   </div>
 </template>

@@ -54,27 +54,37 @@ function patchRow(index: number, partial: Partial<EducationEntry>) {
         <span class="text-xs font-medium text-slate-600">School {{ index + 1 }}</span>
         <button type="button" class="text-xs text-red-600" @click="removeRow(index)">Remove</button>
       </div>
-      <input
-        :id="`intake-field-education-${index}-degree`"
-        :value="row.degree || ''"
-        placeholder="Degree (e.g. BSN)"
-        class="field"
-        @input="patchRow(index, { degree: ($event.target as HTMLInputElement).value })"
-      >
-      <input
-        :id="`intake-field-education-${index}-school`"
-        :value="row.school || ''"
-        placeholder="School name"
-        class="field"
-        @input="patchRow(index, { school: ($event.target as HTMLInputElement).value })"
-      >
-      <input
-        :id="`intake-field-education-${index}-year`"
-        :value="row.graduationYear || ''"
-        placeholder="Graduation year"
-        class="field"
-        @input="patchRow(index, { graduationYear: ($event.target as HTMLInputElement).value })"
-      >
+      <label class="block" :for="`intake-field-education-${index}-degree`">
+        <span class="field-label-compact">Degree</span>
+        <input
+          :id="`intake-field-education-${index}-degree`"
+          :value="row.degree || ''"
+          placeholder="e.g. BSN"
+          class="field"
+          @input="patchRow(index, { degree: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
+      <label class="block" :for="`intake-field-education-${index}-school`">
+        <span class="field-label-compact">School</span>
+        <input
+          :id="`intake-field-education-${index}-school`"
+          :value="row.school || ''"
+          placeholder="School name"
+          class="field"
+          @input="patchRow(index, { school: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
+      <label class="block" :for="`intake-field-education-${index}-year`">
+        <span class="field-label-compact">Graduation year</span>
+        <input
+          :id="`intake-field-education-${index}-year`"
+          :value="row.graduationYear || ''"
+          placeholder="YYYY"
+          inputmode="numeric"
+          class="field"
+          @input="patchRow(index, { graduationYear: ($event.target as HTMLInputElement).value })"
+        >
+      </label>
     </div>
   </div>
 </template>

@@ -3,6 +3,8 @@ const yearsNursingExperience = defineModel<string>('yearsNursingExperience', { d
 const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { default: '' })
 const averagePatientRatios = defineModel<string>('averagePatientRatios', { default: '' })
 const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquipment', { default: '' })
+
+const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
 </script>
 
 <template>
@@ -16,12 +18,18 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
         type="text"
         inputmode="numeric"
         placeholder="e.g. 8"
-        class="field"
+        :class="fieldClasses('years_nursing_experience')"
+        @input="clearParseHighlight('years_nursing_experience')"
       >
     </label>
     <label class="block">
       <span class="field-label-compact">Compact license status</span>
-      <select id="intake-field-compact_license_status" v-model="compactLicenseStatus" class="field">
+      <select
+        id="intake-field-compact_license_status"
+        v-model="compactLicenseStatus"
+        :class="fieldClasses('compact_license_status')"
+        @change="clearParseHighlight('compact_license_status')"
+      >
         <option value="">Select…</option>
         <option value="Yes">Yes — compact/multistate</option>
         <option value="No">No</option>
@@ -35,7 +43,8 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
         v-model="averagePatientRatios"
         type="text"
         placeholder="e.g. 1:4"
-        class="field"
+        :class="fieldClasses('average_patient_ratios')"
+        @input="clearParseHighlight('average_patient_ratios')"
       >
     </label>
     <label class="block">
@@ -45,7 +54,8 @@ const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquip
         v-model="specializedMedicalEquipment"
         type="text"
         placeholder="ECMO, CRRT…"
-        class="field"
+        :class="fieldClasses('specialized_medical_equipment')"
+        @input="clearParseHighlight('specialized_medical_equipment')"
       >
     </label>
   </div>

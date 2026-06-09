@@ -23,6 +23,17 @@ function patchRow(index: number, partial: Partial<EducationEntry>) {
   const next = props.modelValue.map((row, i) => (i === index ? { ...row, ...partial } : row))
   emit('update:modelValue', next)
 }
+
+const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
+
+function educationFieldId(index: number, suffix: string) {
+  return `education-${index}-${suffix}`
+}
+
+function patchEducationField(index: number, suffix: string, partial: Partial<EducationEntry>) {
+  clearParseHighlight(educationFieldId(index, suffix))
+  patchRow(index, partial)
+}
 </script>
 
 <template>
@@ -53,35 +64,35 @@ function patchRow(index: number, partial: Partial<EducationEntry>) {
       <div class="flex justify-end">
         <button type="button" class="text-xs text-red-600" @click="removeRow(index)">Remove</button>
       </div>
-      <label class="block" :for="`intake-field-education-${index}-degree`">
+      <label class="block" :for="`intake-field-${educationFieldId(index, 'degree')}`">
         <span class="field-label-compact">Degree</span>
         <input
-          :id="`intake-field-education-${index}-degree`"
+          :id="`intake-field-${educationFieldId(index, 'degree')}`"
           :value="row.degree || ''"
           placeholder="e.g. BSN"
-          class="field"
-          @input="patchRow(index, { degree: ($event.target as HTMLInputElement).value })"
+          :class="fieldClasses(educationFieldId(index, 'degree'))"
+          @input="patchEducationField(index, 'degree', { degree: ($event.target as HTMLInputElement).value })"
         >
       </label>
-      <label class="block" :for="`intake-field-education-${index}-school`">
+      <label class="block" :for="`intake-field-${educationFieldId(index, 'school')}`">
         <span class="field-label-compact">School</span>
         <input
-          :id="`intake-field-education-${index}-school`"
+          :id="`intake-field-${educationFieldId(index, 'school')}`"
           :value="row.school || ''"
           placeholder="School name"
-          class="field"
-          @input="patchRow(index, { school: ($event.target as HTMLInputElement).value })"
+          :class="fieldClasses(educationFieldId(index, 'school'))"
+          @input="patchEducationField(index, 'school', { school: ($event.target as HTMLInputElement).value })"
         >
       </label>
-      <label class="block" :for="`intake-field-education-${index}-year`">
+      <label class="block" :for="`intake-field-${educationFieldId(index, 'year')}`">
         <span class="field-label-compact">Graduation year</span>
         <input
-          :id="`intake-field-education-${index}-year`"
+          :id="`intake-field-${educationFieldId(index, 'year')}`"
           :value="row.graduationYear || ''"
           placeholder="YYYY"
           inputmode="numeric"
-          class="field"
-          @input="patchRow(index, { graduationYear: ($event.target as HTMLInputElement).value })"
+          :class="fieldClasses(educationFieldId(index, 'year'))"
+          @input="patchEducationField(index, 'year', { graduationYear: ($event.target as HTMLInputElement).value })"
         >
       </label>
     </div>

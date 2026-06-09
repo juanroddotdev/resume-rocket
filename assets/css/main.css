@@ -20,6 +20,14 @@ body {
     @apply focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30;
   }
 
+  .field-prefilled {
+    @apply border-brand-600/25 bg-brand-50/80;
+  }
+
+  .metric-tile-db-sourced {
+    @apply bg-brand-50/90 ring-1 ring-brand-600/15;
+  }
+
   .employer-deck {
     @apply space-y-0;
   }
@@ -52,4 +60,11 @@ select.field:-webkit-autofill:focus {
   box-shadow: 0 0 0 1000px #fff inset;
   -webkit-text-fill-color: theme('colors.slate.900');
   transition: background-color 5000s ease-in-out 0s;
+}
+
+input.field.field-prefilled:-webkit-autofill,
+textarea.field.field-prefilled:-webkit-autofill,
+select.field.field-prefilled:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px theme('colors.brand.50') inset;
+  box-shadow: 0 0 0 1000px theme('colors.brand.50') inset;
 }

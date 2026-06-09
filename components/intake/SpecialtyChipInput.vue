@@ -12,9 +12,18 @@ const emit = defineEmits<{
 
 const draft = ref('')
 
+const { fieldClasses, clearParseHighlight, isParseHighlighted } = useIntakePrefillHighlight()
+
+const specialtiesFieldId = computed(() => props.fieldId || 'specialties')
+
+function clearSpecialtiesHighlight() {
+  clearParseHighlight(specialtiesFieldId.value)
+}
+
 function addChip() {
   const value = draft.value.trim()
   if (!value) return
+  clearSpecialtiesHighlight()
   const next = [...props.modelValue]
   if (!next.some(s => s.toLowerCase() === value.toLowerCase())) {
     next.push(value)
@@ -31,6 +40,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function removeChip(index: number) {
+  clearSpecialtiesHighlight()
   const next = [...props.modelValue]
   next.splice(index, 1)
   emit('update:modelValue', next)
@@ -38,7 +48,9 @@ function removeChip(index: number) {
 </script>
 
 <template>
-  <div>
+  <div
+    :class="isParseHighlighted(specialtiesFieldId) ? 'rounded-lg bg-brand-50/50 p-2 ring-1 ring-brand-600/20' : null"
+  >
     <label v-if="label" class="field-label">{{ label }}</label>
     <div class="flex gap-2">
       <input
@@ -46,8 +58,9 @@ function removeChip(index: number) {
         v-model="draft"
         type="text"
         :placeholder="placeholder || 'Add specialty and press Enter'"
-        class="field min-w-0 flex-1"
+        :class="fieldClasses(specialtiesFieldId, 'min-w-0 flex-1')"
         @keydown="onKeydown"
+        @input="clearSpecialtiesHighlight"
       >
       <button type="button" class="rounded-lg border px-3 py-2 text-sm" @click="addChip">
         Add

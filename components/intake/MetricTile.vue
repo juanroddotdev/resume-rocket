@@ -3,11 +3,15 @@ defineProps<{
   label: string
   value: string | number
   suffix?: string
+  fromDatabase?: boolean
 }>()
 </script>
 
 <template>
-  <div class="rounded-xl bg-slate-50 p-2.5">
+  <div
+    class="rounded-xl bg-slate-50 p-2.5"
+    :class="fromDatabase ? 'metric-tile-db-sourced' : null"
+  >
     <p class="text-xs uppercase tracking-wide text-slate-500">
       {{ label }}
     </p>

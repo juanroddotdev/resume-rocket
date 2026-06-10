@@ -29,6 +29,7 @@ export interface CandidateRow {
   resume_storage_path: string | null
   resume_original_filename?: string | null
   parse_error?: string | null
+  parse_outcome?: import('~/types/parse').ParseOutcome | null
   confirmation_sent_at?: string | null
   created_at: string
   updated_at: string

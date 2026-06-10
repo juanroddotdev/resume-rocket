@@ -13,6 +13,9 @@ export default defineNuxtConfig({
     supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     parseRateLimitMax: Number(process.env.PARSE_RATE_LIMIT_MAX || 8),
     parseRateLimitWindowMs: Number(process.env.PARSE_RATE_LIMIT_WINDOW_MS || 900_000),
+    enableParseAuditUi:
+      process.env.ENABLE_PARSE_AUDIT_UI === 'true'
+      || (process.env.ENABLE_PARSE_AUDIT_UI !== 'false' && process.env.NODE_ENV !== 'production'),
     public: {
       // .env.development / .env.production set NUXT_PUBLIC_SITE_URL per mode
       siteUrl:

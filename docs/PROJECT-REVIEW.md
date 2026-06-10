@@ -3,18 +3,19 @@
 This document is a practical review of the current codebase: where it is strong today, where risks are likely to appear, and what to prioritize when moving beyond MVP.
 
 Related references:
-- `docs/MVP-PLAN.md` (product scope and flow)
-- `docs/VMS-FULL-COVERAGE-PLAN.md` (next steps: full template coverage via parse + wizard)
-- `docs/PROJECT-REVIEW.md` (this file)
+- `docs/README.md` (doc index)
+- `docs/TODO.md` (active backlog)
+- `docs/MVP-PLAN.md` (historical product scope)
+- `docs/VMS-FULL-COVERAGE-PLAN.md` (VMS expansion status — complete)
+- `docs/VMS-FIELD-MANIFEST.md` (authoritative template tags)
 - `.cursor/rules/mvp-scope-guard.mdc`
 - `.cursor/rules/parse-pipeline-contract.mdc`
-- `.cursor/rules/phase-labeling.mdc`
 
 ---
 
 ## 1) Current Assessment
 
-Resume Rocket is a focused, pragmatic MVP. It uses Nuxt 3 + Supabase + Gemini to deliver a complete intake-to-DOCX workflow with invite gating, autosave, parse fallback paths, and recruiter visibility.
+Resume Rocket delivers a complete invite-gated intake → parse → wizard → gap review → DOCX workflow with full VMS contract template coverage (37/37 tags mapped).
 
 The implementation is disciplined for MVP:
 - domain rules are encoded in `.cursor/rules/*`
@@ -50,18 +51,15 @@ This is not an "enterprise ATS" yet, but it is a strong, shippable foundation.
 ## 3) Risks and Technical Debt
 
 ### JSONB shape drift in candidate fields
-`credentials` and `employers` are JSONB. This is fast for MVP, but schema drift can break downstream consumers (notably DOCX mapping) as field names evolve.
 
-**Why it matters:** data is accepted flexibly now, but template builders and UI code assume specific keys.
-
-**Pragmatic next step:** add strict normalization/parsing on read/write boundaries (for example, centralized Zod parsing in server utils) before introducing more fields.
+**Mitigated:** `server/utils/normalizeCandidate.ts` applied on parse, PATCH, and DOCX paths (#11). Re-run `node scripts/test-normalize-candidate.mjs` after schema changes.
 
 ### `docxtemplater` template fragility
 Word run-splitting can silently break tags. This is a known operational hazard when non-technical edits happen in `template.docx`.
 
 **Why it matters:** failures are often discovered late (at candidate export time).
 
-**Pragmatic next step:** keep current approach for MVP, but enforce template safety checks and maintain a known-good tag inventory.
+**Pragmatic next step:** run `node scripts/inventory-template-tags.mjs` after every `template.docx` edit.
 
 ### Admin auth helper performance scope
 `requireAdminSession` currently creates a Supabase client per protected server-route call.
@@ -74,12 +72,13 @@ Word run-splitting can silently break tags. This is a known operational hazard w
 
 ## 4) Deferred by Design (Intentional MVP Trade-offs)
 
-The following are intentionally deferred and already documented in the scope guard:
-- rate limiting on parse endpoints
+The following are intentionally deferred and documented in the scope guard:
 - virus scanning on uploads
 - camera capture and duplicate detection
 - candidate self-serve auth accounts
 - recruiter notes and deeper multi-tenant features
+
+**Shipped since original MVP defer list:** `/api/parse` rate limiting (#13), full VMS template coverage, parse outcome logging (#12).
 
 This is not a gap in execution; it is a scope decision aligned to `docs/MVP-PLAN.md` and `.cursor/rules/mvp-scope-guard.mdc`.
 
@@ -87,117 +86,48 @@ This is not a gap in execution; it is a scope decision aligned to `docs/MVP-PLAN
 
 ## 5) Recommended Priority Order
 
-When resuming this work, prioritize in this order:
+Updated June 2026 — VMS expansion complete. See [`TODO.md`](./TODO.md).
 
-1. **Phase A VMS mapping completeness**
-   - Expand `docxBuilder` mappings for high-value template tags already collected by intake.
-   - Keep Phase A/B/C boundaries explicit per `phase-labeling.mdc`.
-
-2. **JSONB normalization hardening**
-   - Add strict parsing/normalization for `employers` and `credentials` on server boundaries.
-   - Prevent future key-shape drift from breaking exports.
-
-3. **Basic parse endpoint guardrails**
-   - Add low-complexity rate limiting to `/api/parse` before heavier controls.
-
-4. **Operational visibility**
-   - Add structured error/event logs for parse failure categories and DOCX render failures.
-   - Track rates of `parse_failed`, `partial_parse`, and `document_scan`.
-
-5. **Optional performance cleanup**
-   - Revisit admin session helper/client creation only if latency warrants it.
-
-6. **Multi-tenancy model**
-   - Introduce tenant/agency boundaries only when customer model requires it.
+1. **Release sign-off** — run [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) on target env; manual 3-profile DOCX verification
+2. **Test automation (#14–#15)** — [Test automation plan](./TODO.md#test-automation-plan): fixture PDF regression, API integration, optional Playwright E2E
+3. **Step 4 document preview** — largest remaining candidate-facing feature (optional product bet)
+4. **Admin polish** — open intake from table, invite success banner
+5. **Optional performance cleanup** — admin session helper only if latency warrants it
+6. **Multi-tenancy** — only when customer model requires it
 
 ---
 
-## 6) Additional Items Worth Including
+## 6) Testing and release (current state)
 
-If this file is meant to guide active implementation later, add:
+- **Automated (CI):** `npm run test` + `npm run build` — unit tests, docx/normalize/gemini-map smokes ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml))
+- **Manual:** [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) happy path + failure paths; [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) for deep UX
+- **Expand:** [TODO.md — Test automation plan](./TODO.md#test-automation-plan)
+- **After dependency upgrades:** `.cursor/rules/dependency-upgrades.mdc`, `npm run build`, parse smoke scripts
 
-- **Testing strategy snapshot**
-  - what is currently covered manually
-  - first automated tests to add (parse route contract, DOCX generation smoke, invite gating)
-
-- **Operational checklist**
-  - "what to verify after dependency upgrades"
-  - "what to smoke test before release"
-
-- **Known limitations section**
-  - template tags intentionally blank today
-  - assumptions about recruiter workflow and single-tenant admin visibility
-
-- **Definition of done for next milestone**
-  - 3-5 concrete acceptance criteria so resuming work is faster.
+**Known limitations:** single-tenant admin visibility; no candidate auth; subjective Gemini quality requires manual sample review when tuning prompts.
 
 ---
 
-## 7) Near-Term Execution Plan (2 Weeks)
+## 7) Hardening sprint (June 2026) — status
 
-Use this as a practical sprint starter when resuming work.
+Original two-week plan from this file. **Most items shipped.**
 
-### Week 1: Stabilize Core Data and Output
+| Ticket | Status | Notes |
+| --- | --- | --- |
+| Phase A template mapping | **Done** | [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md) |
+| JSONB normalization (#11) | **Done** | `normalizeCandidate.ts` |
+| Parse outcome visibility (#12) | **Done** | `parseOutcomeLog.ts` (#45) |
+| Parse rate limiting (#13) | **Done** | `parseRateLimit.ts` |
+| Automated regression (#14) | **Partial** | 13 unit test files + script smokes; expand per TODO |
+| Release checklist (#15) | **Partial** | [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md); sign-off table empty |
 
-1. **Ticket: Phase A template mapping pass**
-   - Review `server/utils/docxBuilder.ts` against current `template.docx` tags.
-   - Map highest-value existing intake fields first (identity, license, specialties, recent employers, credentials).
-   - Document any intentionally unmapped tags as known gaps.
-   - **Done when:** top-priority tags populate in downloaded DOCX for at least 3 representative candidates.
-
-2. **Ticket: JSONB normalization utilities**
-   - Add server-side normalization/parsing helpers for `employers` and `credentials`.
-   - Ensure inconsistent key shapes do not break DOCX mapping or UI rendering.
-   - Apply in route handlers where candidate rows are read/written.
-   - **Done when:** legacy/new key variants produce stable, identical DOCX output.
-
-3. **Ticket: Parse outcome visibility baseline**
-   - Add structured logging/events around `parse_failed`, `partial_parse`, and `document_scan`.
-   - Capture enough context to classify failure mode without logging resume text.
-   - **Done when:** parse outcomes can be summarized from logs for a test day run.
-
-### Week 2: Guardrails and Regression Safety
-
-4. **Ticket: Lightweight `/api/parse` rate limiting**
-   - Add a minimal per-token (or per-IP + token) limiter for parse attempts.
-   - Return user-friendly error/retry guidance when limit is exceeded.
-   - Keep implementation simple and reversible.
-   - **Done when:** repeated rapid parse calls are throttled and UX remains clear.
-
-5. **Ticket: First automated regression tests**
-   - Add focused tests for:
-     - invite-gated route behavior
-     - parse contract shape (`parse_failed`, `partial_parse`, `document_scan`)
-     - DOCX generation smoke path
-   - Keep test suite small, deterministic, and CI-friendly.
-   - **Done when:** CI can catch regressions in intake gating, parse output contract, and export generation.
-
-6. **Ticket: Release checklist hardening**
-   - Promote manual checks in `docs/MVP-PLAN.md` and `.cursor/rules/manual-test-script.mdc` into a reusable pre-release checklist.
-   - Include one happy path and one failure-path smoke test.
-   - **Done when:** releases follow a repeatable checklist with explicit pass/fail evidence.
-
-### Suggested Ownership and Sequence
-
-- **Sequence:** 1 -> 2 -> 3 -> 4 -> 5 -> 6
-- **Single owner mode:** run sequentially to reduce context switching.
-- **Pair mode:** split by lane:
-  - lane A: template/data normalization (1, 2)
-  - lane B: reliability/testing (3, 4, 5, 6)
-
-### Exit Criteria for This Plan
-
-Treat this two-week plan as successful when all are true:
-- DOCX output quality is measurably better for existing captured fields.
-- Parse behavior is observable and failure modes are classifiable.
-- Abuse controls exist on parse endpoint.
-- Core intake -> parse -> DOCX path has baseline automated regression coverage.
+Historical execution details: [`archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md`](./archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md).
 
 ---
 
-## 8) GitHub Issue Checklists (copy-paste)
+## 8) GitHub Issue Checklists (historical)
 
-Use the blocks below in GitHub Issues or as PR bodies. Create one **Epic** issue plus six child issues, or a single tracking issue with all checkboxes.
+Copy-paste blocks for epic #16 child issues. **Status:** #10–#13 done; #14–#15 partial — see [§7](#7-hardening-sprint-june-2026--status) and [`TODO.md`](./TODO.md).
 
 ### Epic (tracking issue)
 

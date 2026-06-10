@@ -14,7 +14,7 @@ alwaysApply: false
 4. **Normalize** persisted JSONB via `normalizeCandidate` helpers (employers, credentials, education) before DB write.
 5. Persist manifest fields on candidate row; return `fields_found`, `parse_failed`, `partial_parse`, `document_scan`.
 
-Field groups in `fields_found` should align with `docs/VMS-FIELD-MANIFEST.md` once created. Expand `resumeJsonSchema()` in `geminiShared.ts` for Phase C — do not return raw `parsed_resume` to client.
+Field groups in `fields_found` should align with `docs/VMS-FIELD-MANIFEST.md`. Do not return raw `parsed_resume` to client.
 
 See `multimodal-resume-parsing.mdc` for Canva/image PDF requirements.
 

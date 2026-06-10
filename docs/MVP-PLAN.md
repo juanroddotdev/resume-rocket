@@ -4,27 +4,29 @@ overview: Scaffold Nuxt 3 + Supabase MVP with hybrid candidate access (admin-iss
 todos:
   - id: scaffold-nuxt
     content: Create ~/resume-rocket with Nuxt 3, Tailwind, @nuxtjs/supabase, Resend (or SMTP), runtime deps
-    status: in_progress
+    status: completed
   - id: supabase-migration
     content: candidates + intake_invites tables, Storage bucket, RLS, moddatetime trigger
-    status: pending
+    status: completed
   - id: server-routes
     content: invites CRUD/validate, parse, candidates PATCH, generate-docx, send-confirmation email
-    status: pending
+    status: completed
   - id: types-composables
     content: useCandidateForm + useIntakeInvite (token scope, autosave, localStorage)
-    status: pending
+    status: completed
   - id: intake-ui
     content: pages/intake/[token].vue wizard; index landing; invite-gated API calls
-    status: pending
+    status: completed
   - id: admin-ui
     content: admin auth, CandidatesTable, CreateInvitePanel (copy link + optional email)
-    status: pending
+    status: completed
   - id: env-readme
     content: .env.example (APP_URL, RESEND_API_KEY), template.docx, README invite flow
-    status: pending
+    status: completed
 isProject: false
 ---
+
+> **Historical initialization spec** — MVP and VMS expansion are shipped. Active backlog: [TODO.md](./TODO.md). Doc index: [README.md](./README.md).
 
 # Resume Rocket Platform — MVP Initialization Plan
 

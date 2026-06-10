@@ -7,18 +7,18 @@ alwaysApply: true
 
 Active sprint epic: **#16** — [Two-week hardening sprint](https://github.com/juanroddotdev/resume-rocket/issues/16)
 
-VMS expansion plan: `docs/VMS-FULL-COVERAGE-PLAN.md`
+Status doc: `docs/VMS-FULL-COVERAGE-PLAN.md` · Active backlog: `docs/TODO.md`
 
 Child issues:
 
-| Issue | Scope |
-|-------|--------|
-| #10 | Phase A VMS template mapping |
-| #11 | JSONB normalization |
-| #12 | Parse outcome visibility |
-| #13 | `/api/parse` rate limiting |
-| #14 | Automated regression tests |
-| #15 | Release checklist |
+| Issue | Scope | Status |
+|-------|--------|--------|
+| #10 | Phase A VMS template mapping | **Done** |
+| #11 | JSONB normalization | **Done** |
+| #12 | Parse outcome visibility | **Done** |
+| #13 | `/api/parse` rate limiting | **Done** |
+| #14 | Automated regression tests | **Partial** — see TODO test automation |
+| #15 | Release checklist | **Partial** — doc exists; expand automation |
 
 ## VMS expansion PR mapping
 
@@ -33,7 +33,7 @@ Child issues:
 | 8 | Parse logging | `Closes #12` |
 | 9 | Rate limit + CI + release checklist | `Closes #13`, `#14`, `#15` as applicable |
 
-Source checklists: `docs/PROJECT-REVIEW.md` §7–§8.
+Source checklists: `docs/PROJECT-REVIEW.md` §7, `docs/RELEASE-CHECKLIST.md`, `docs/TODO.md` (test automation).
 
 ## When committing or opening a PR
 

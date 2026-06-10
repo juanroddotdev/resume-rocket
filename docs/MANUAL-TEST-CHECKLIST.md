@@ -1,10 +1,10 @@
 # Manual test checklist
 
-Copy-paste QA for intake and admin UX. Use after merging a batch of intake/hospital PRs or before a release.
+Copy-paste QA for intake and admin UX. Run **after CI is green** (`npm run test` + build) and for deeper UX passes before release.
 
-**Related:** [`RELEASE-CHECKLIST.md`](RELEASE-CHECKLIST.md) (shorter pre-release smoke) · [`MVP-PLAN.md`](MVP-PLAN.md) · [`HOSPITAL-PARSE-UX-PLAN.md`](HOSPITAL-PARSE-UX-PLAN.md)
+**Related:** [`README.md`](./README.md) (doc index) · [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) (shorter pre-release smoke) · [`TODO.md`](./TODO.md) (backlog)
 
-**Scope covered:** PRs [#32](https://github.com/juanroddotdev/resume-rocket/pull/32)–[#40](https://github.com/juanroddotdev/resume-rocket/pull/40) — Render/template, wizard polish, parse clarity, hospital match + linking, Gemini prompts, candidate feel, draft/reorder/license gate.
+**Scope:** Intake wizard, hospital linking, admin hub — through June 2026 polish batch ([archive/RELEASE-CHECKLIST-2026-06-07-09.md](./archive/RELEASE-CHECKLIST-2026-06-07-09.md)). Employer deck plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
 
 ---
 
@@ -115,7 +115,7 @@ Run once end-to-end as baseline:
 - [ ] “Change facility” → can relink without duplicate row
 - [ ] Add same hospital twice via search → duplicate blocked
 
-### Step 2 — employer card deck ([EMPLOYER-CARD-DECK-PLAN.md](./EMPLOYER-CARD-DECK-PLAN.md))
+### Step 2 — employer card deck ([archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md))
 
 - [ ] 3+ employers (parse or manual) → stacked headers visible; only one card expanded at a time
 - [ ] Header shows hospital name, role, and dates on every card

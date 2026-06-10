@@ -154,5 +154,5 @@ DELETE FROM hospitals WHERE source_id IS NULL;
 
 ## Related
 
-- [HOSPITAL-PARSE-UX-PLAN.md](./HOSPITAL-PARSE-UX-PLAN.md) — employer linking + parse suggestions (next code work)
+- [archive/HOSPITAL-PARSE-UX-PLAN.md](./archive/HOSPITAL-PARSE-UX-PLAN.md) — employer linking + parse suggestions (shipped #37–#38); optional `pg_trgm` tuning in [TODO.md](./TODO.md)
 - [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) — post-seed smoke items

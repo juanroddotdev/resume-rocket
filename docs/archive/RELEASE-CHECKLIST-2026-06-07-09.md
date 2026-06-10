@@ -1,10 +1,12 @@
+> **Archived** — Point-in-time batch record (June 7–9, 2026). Ongoing pre-release: [RELEASE-CHECKLIST.md](../RELEASE-CHECKLIST.md). Doc index: [README.md](../README.md).
+
 # Release checklist — June 7–9 batch
 
 Pre-release verification for work merged **June 7–9, 2026** on `main` (through PR [#57](https://github.com/juanroddotdev/resume-rocket/pull/57), commit `f7b4070`).
 
-**Use with:** [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) (core smoke) · [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) (deeper UX QA) · [`DEPLOY.md`](./DEPLOY.md)
+**Use with:** [`RELEASE-CHECKLIST.md`](../RELEASE-CHECKLIST.md) (core smoke) · [`MANUAL-TEST-CHECKLIST.md`](../MANUAL-TEST-CHECKLIST.md) (deeper UX QA) · [`DEPLOY.md`](../DEPLOY.md)
 
-**Environment:** Local `npm run dev` or staging Render URL; `.env` with Supabase; optional `GEMINI_API_KEY`, `RESEND_API_KEY`; hospitals seeded per [`HOSPITAL-DATA.md`](./HOSPITAL-DATA.md).
+**Environment:** Local `npm run dev` or staging Render URL; `.env` with Supabase; optional `GEMINI_API_KEY`, `RESEND_API_KEY`; hospitals seeded per [`HOSPITAL-DATA.md`](../HOSPITAL-DATA.md).
 
 ---
 
@@ -63,7 +65,7 @@ Pre-release verification for work merged **June 7–9, 2026** on `main` (through
 
 | PR | Summary |
 |----|---------|
-| [#41](https://github.com/juanroddotdev/resume-rocket/pull/41) | Added [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) |
+| [#41](https://github.com/juanroddotdev/resume-rocket/pull/41) | Added [`MANUAL-TEST-CHECKLIST.md`](../MANUAL-TEST-CHECKLIST.md) |
 
 ---
 

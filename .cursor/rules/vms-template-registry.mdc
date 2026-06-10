@@ -8,7 +8,7 @@ alwaysApply: false
 
 Template file: `server/assets/template.docx` (tracked in git). Tags use docxtemplater syntax.
 
-Execution plan: `docs/VMS-FULL-COVERAGE-PLAN.md`. Tag inventory: `docs/VMS-FIELD-MANIFEST.md` (authoritative once created). Mapped tags today: `docs/VMS-TEMPLATE-REGISTRY.md`.
+Status + hardening: `docs/VMS-FULL-COVERAGE-PLAN.md`. Tag inventory: `docs/VMS-FIELD-MANIFEST.md` (authoritative). Mapping summary: `docs/VMS-TEMPLATE-REGISTRY.md`.
 
 When adding a VMS field, update **all** that apply:
 
@@ -18,7 +18,7 @@ When adding a VMS field, update **all** that apply:
 4. `resumeJsonSchema()` + prompts in `server/utils/geminiShared.ts` (Phase C parse)
 5. `types/parse.ts` → `parse.post.ts` persistence → `applyParseResult()` in `useCandidateForm.ts`
 6. Intake UI + `candidates` schema/migration + `server/utils/schemas.ts` (Phase B)
-7. `server/utils/normalizeCandidate.ts` on read/write boundaries (after #11)
+7. `server/utils/normalizeCandidate.ts` on read/write boundaries
 
 Unmapped template tags render blank — document known gaps in PR description until wired.
 

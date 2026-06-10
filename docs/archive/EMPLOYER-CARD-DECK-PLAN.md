@@ -1,10 +1,12 @@
+> **Archived** — Work described here is shipped (PR #47). Active backlog: [TODO.md](.../TODO.md). Doc index: [README.md](../README.md).
+
 # Employer card deck (Step 2 accordion)
 
-**Status:** Implemented — pending manual test + PR merge.
+**Status:** Shipped — PR [#47](https://github.com/juanroddotdev/resume-rocket/pull/47).
 
 **Epic:** Part of [#16](https://github.com/juanroddotdev/resume-rocket/issues/16) (hardening sprint).
 
-**Related:** [VMS full coverage plan](./VMS-FULL-COVERAGE-PLAN.md) (wizard length / collapsible employer cards), [mobile-first intake](../.cursor/rules/mobile-first-intake.mdc), [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) §D Step 2.
+**Related:** [VMS full coverage plan](../VMS-FULL-COVERAGE-PLAN.md) (wizard length / collapsible employer cards), [mobile-first intake](../.cursor/rules/mobile-first-intake.mdc), [MANUAL-TEST-CHECKLIST.md](../MANUAL-TEST-CHECKLIST.md) §D Step 2.
 
 **Scope:** Intake wizard Step 2 — Employment mapping UI only. No parse, DOCX, or schema changes.
 
@@ -276,14 +278,14 @@ Ensure `await nextTick()` (×2 if step changed) before `focusIntakeField` — al
 
 ### Docs / tracking
 
-- [x] Link from [TODO.md](./TODO.md) Step 2 employer cards section (priority order + Related plans header)
-- [x] Update [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) Step 2 with deck behaviors
+- [x] Link from [TODO.md](../TODO.md) Step 2 employer cards section (priority order + Related plans header)
+- [x] Update [MANUAL-TEST-CHECKLIST.md](../MANUAL-TEST-CHECKLIST.md) Step 2 with deck behaviors
 
 ---
 
 ## Test plan
 
-### Manual ([MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) §D)
+### Manual ([MANUAL-TEST-CHECKLIST.md](../MANUAL-TEST-CHECKLIST.md) §D)
 
 - [ ] Parse resume with 3+ employers → Step 2 shows stacked headers; only first (or last added) expanded
 - [ ] Tap header → previous card collapses, target expands with smooth animation
@@ -312,4 +314,4 @@ Ensure `await nextTick()` (×2 if step changed) before `focusIntakeField` — al
 
 **Issue:** `Part of #16` — UX hardening; no child issue required unless you open one for tracking.
 
-**Size:** One concern per PR; avoid bundling with MetricTile or education repeater work in [TODO.md](./TODO.md).
+**Size:** One concern per PR; avoid bundling with MetricTile or education repeater work in [TODO.md](../TODO.md).

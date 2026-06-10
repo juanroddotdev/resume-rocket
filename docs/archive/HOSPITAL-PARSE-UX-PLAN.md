@@ -1,12 +1,14 @@
+> **Archived** — Work described here is shipped. Active backlog: [TODO.md](../TODO.md). Doc index: [README.md](../README.md).
+
 # Hospital grounding and employer reconciliation
 
-**Status:** Data loaded — app UX items tracked in [TODO.md](./TODO.md) and below.
+**Status:** Shipped — PRs #37–#38; optional deferrals in [TODO.md](../TODO.md).
 
 **Epic:** Part of [#16](https://github.com/juanroddotdev/resume-rocket/issues/16) (hardening sprint).
 
-**Prerequisite:** Import facility data via [`docs/HOSPITAL-DATA.md`](./HOSPITAL-DATA.md) and [`scripts/seed_hospitals.py`](../scripts/seed_hospitals.py) (`--fetch` for CMS + HIFLD hybrid). PR 2–3 autocomplete and matching are only useful once `hospitals` has real rows beyond the dev seed.
+**Prerequisite:** Import facility data via [`HOSPITAL-DATA.md`](../HOSPITAL-DATA.md) and [`scripts/seed_hospitals.py`](../scripts/seed_hospitals.py) (`--fetch` for CMS + HIFLD hybrid). PR 2–3 autocomplete and matching are only useful once `hospitals` has real rows beyond the dev seed.
 
-**Related:** [VMS full coverage plan](./VMS-FULL-COVERAGE-PLAN.md), [VMS field manifest](./VMS-FIELD-MANIFEST.md) (employer beds/trauma/teaching = hospital DB, not Gemini).
+**Related:** [VMS full coverage plan](../VMS-FULL-COVERAGE-PLAN.md), [VMS field manifest](../VMS-FIELD-MANIFEST.md) (employer beds/trauma/teaching = hospital DB, not Gemini).
 
 ---
 

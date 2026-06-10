@@ -10,6 +10,7 @@ import type { HospitalSuggestion } from '~/types/hospital'
 import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
 import type { FinalizePhase } from '~/utils/intakeProcessing'
 import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
+import type { ParseMeta } from '~/types/parse'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -101,12 +102,6 @@ function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput
 
 function isEmptyString(value: string | null | undefined): boolean {
   return !value?.trim()
-}
-
-export type ParseMeta = {
-  document_scan?: boolean
-  partial_parse?: boolean
-  fields_found?: number
 }
 
 function defaultParseMeta(): ParseMeta | null {

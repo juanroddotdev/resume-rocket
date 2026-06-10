@@ -60,6 +60,13 @@ export interface ParseOutcome {
   parse_failed: boolean
 }
 
+/** Client-side parse banner state (intake wizard + admin builder). */
+export type ParseMeta = {
+  document_scan?: boolean
+  partial_parse?: boolean
+  fields_found?: number
+}
+
 export interface ParseAuditViewEmployer {
   name: string
   sourceSnippet?: string

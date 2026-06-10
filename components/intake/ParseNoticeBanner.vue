@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ParseMeta } from '~/composables/useCandidateForm'
+import type { ParseMeta } from '~/types/parse'
 
 const props = defineProps<{
   meta: ParseMeta | null

@@ -11,6 +11,7 @@ import {
 
 const props = defineProps<{
   employers: EmployerEntry[]
+  deckMode?: 'single' | 'multi'
 }>()
 
 const emit = defineEmits<{
@@ -58,6 +59,7 @@ const manualName = ref('')
 const manualCity = ref('')
 const manualState = ref('')
 const manualError = ref<string | null>(null)
+const isMultiDeck = computed(() => props.deckMode === 'multi')
 
 watch(
   () => props.employers.length,
@@ -263,13 +265,14 @@ defineExpose({ openEmployerField })
       </div>
     </div>
 
-    <ul v-if="employers.length" class="employer-deck">
+    <ul v-if="employers.length" class="employer-deck" :class="isMultiDeck ? 'space-y-3' : ''">
       <EmployerCard
         v-for="(employer, index) in employers"
         :key="`${employer.hospitalId || employer.name}-${index}`"
         :employer="employer"
         :index="index"
-        :expanded="activeCardIndex === index"
+        :layout="isMultiDeck ? 'panel' : 'deck'"
+        :expanded="isMultiDeck ? true : activeCardIndex === index"
         :can-move-up="index > 0"
         :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"

@@ -13,6 +13,12 @@ const props = defineProps<{
   disabled?: boolean
   /** When true, confirm before starting a new parse (wizard already has data). */
   hasExistingData?: boolean
+  /** Override parse endpoint (admin builder). */
+  parseUrl?: string
+  /** Extra headers for parse request (admin bearer auth). */
+  authHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
+  /** Admin-facing copy tweaks */
+  variant?: 'intake' | 'admin'
 }>()
 
 const { intakeHeaders } = useIntakeInvite()
@@ -126,9 +132,12 @@ async function handleFile(file: File) {
   if (props.candidateId) formData.append('candidateId', props.candidateId)
 
   try {
-    const result = await $fetch<Record<string, unknown>>('/api/parse', {
+    const extraHeaders = typeof props.authHeaders === 'function'
+      ? await props.authHeaders()
+      : (props.authHeaders ?? intakeHeaders())
+    const result = await $fetch<Record<string, unknown>>(props.parseUrl || '/api/parse', {
       method: 'POST',
-      headers: intakeHeaders(),
+      headers: extraHeaders,
       body: formData,
     })
 
@@ -200,7 +209,8 @@ function onInput(e: Event) {
 <template>
   <div class="space-y-4">
     <p class="text-xs text-slate-500">
-      PDF or Word (.docx), max 10MB. Data is used for placement only and is not sold.
+      PDF or Word (.docx), max 10MB.
+      {{ props.variant === 'admin' ? ' Upload the resume the candidate emailed you.' : ' Data is used for placement only and is not sold.' }}
     </p>
     <div
       class="rounded-xl border-2 border-dashed px-4 py-6 text-center transition"

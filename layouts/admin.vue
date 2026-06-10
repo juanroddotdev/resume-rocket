@@ -4,7 +4,7 @@
       <div class="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
         <NuxtLink to="/" class="text-lg font-semibold text-brand-700">Resume Rocket</NuxtLink>
         <nav class="flex gap-4 text-sm">
-          <NuxtLink to="/admin" class="font-medium text-brand-700">Admin</NuxtLink>
+          <AdminNavMenu />
         </nav>
       </div>
     </header>

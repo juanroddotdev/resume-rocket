@@ -50,3 +50,30 @@ export interface ParseAudit {
   suggestedEmployers?: ParseEmployerAudit[]
   capturedAt: string
 }
+
+/** Server-only parse flags stored under candidates.parsed_resume.outcome — never returned to intake client. */
+export interface ParseOutcome {
+  fields_found: number
+  partial_parse: boolean
+  document_scan: boolean
+  gemini_failed: boolean
+  parse_failed: boolean
+}
+
+export interface ParseAuditViewEmployer {
+  name: string
+  sourceSnippet?: string
+  inWizard: boolean
+  missingSnippet: boolean
+}
+
+export interface ParseAuditViewResponse {
+  candidateId: string
+  firstName: string | null
+  lastName: string | null
+  parseError: string | null
+  outcome: ParseOutcome | null
+  audit: ParseAudit | null
+  employers: ParseAuditViewEmployer[]
+  facilitiesWithoutEmployer: string[]
+}

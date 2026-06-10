@@ -1,12 +1,16 @@
-import type { ParseAudit, ParsedResume } from '~/types/parse'
+import type { ParseAudit, ParseOutcome, ParsedResume } from '~/types/parse'
 
 const MAX_BYTES = 10 * 1024 * 1024
 
-function buildParsedResumeBlob(rawText: string | undefined, audit: ParseAudit | null) {
-  if (!rawText) return null
+function buildParsedResumeBlob(
+  rawText: string | undefined,
+  audit: ParseAudit | null,
+  outcome: ParseOutcome,
+) {
   return {
-    raw: rawText,
+    ...(rawText ? { raw: rawText } : {}),
     ...(audit ? { audit } : {}),
+    outcome,
   }
 }
 
@@ -158,11 +162,23 @@ export default defineEventHandler(async (event) => {
     education: parsed?.education,
   })
 
+  const apiFields = parsedResumeToApiFields(parsed)
+  const fieldsFound =
+    countParsedFields(apiFields) + countDetectedCredentials(parsed?.detectedCredentials)
+
+  const parseOutcome: ParseOutcome = {
+    fields_found: fieldsFound,
+    partial_parse: geminiFailed && hasFields,
+    document_scan: documentVision,
+    gemini_failed: geminiFailed,
+    parse_failed: parseFailed,
+  }
+
   const updatePayload: Record<string, unknown> = {
     resume_storage_path: storagePath,
     resume_original_filename: filePart.filename,
     parse_error: parseFailed ? parseError : geminiFailed ? parseError : null,
-    parsed_resume: buildParsedResumeBlob(parsed?.rawText, parseAudit),
+    parsed_resume: buildParsedResumeBlob(parsed?.rawText, parseAudit, parseOutcome),
   }
 
   if (parsed && hasFields) {
@@ -191,10 +207,6 @@ export default defineEventHandler(async (event) => {
     .update(updatePayload)
     .eq('id', resolvedCandidateId)
 
-  const apiFields = parsedResumeToApiFields(parsed)
-  const fieldsFound =
-    countParsedFields(apiFields) + countDetectedCredentials(parsed?.detectedCredentials)
-
   const suggestedEmployers = apiFields.suggested_employers?.length
     ? await attachEmployerHospitalSuggestions(apiFields.suggested_employers)
     : []
@@ -204,8 +216,8 @@ export default defineEventHandler(async (event) => {
     mime,
     charCount: rawText.length,
     parseFailed,
-    partialParse: geminiFailed && hasFields,
-    documentScan: documentVision,
+    partialParse: parseOutcome.partial_parse,
+    documentScan: parseOutcome.document_scan,
     geminiFailed,
     fieldsFound,
     parseErrorKind: classifyParseError(parseFailed || geminiFailed ? parseError : null),
@@ -215,8 +227,8 @@ export default defineEventHandler(async (event) => {
     candidateId: resolvedCandidateId,
     parse_failed: parseFailed,
     parse_error: parseFailed ? parseError : null,
-    partial_parse: geminiFailed && hasFields,
-    document_scan: documentVision,
+    partial_parse: parseOutcome.partial_parse,
+    document_scan: parseOutcome.document_scan,
     fields_found: fieldsFound,
     detected_credentials: parsed?.detectedCredentials || [],
     ...apiFields,

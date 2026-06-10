@@ -1,0 +1,40 @@
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "phone": "(512) 555-0100",
+  "license_number": "RN123456",
+  "license_state": "TX",
+  "identified_facilities_raw": [
+    "Metro General Hospital",
+    "Regional Medical Center"
+  ],
+  "suggested_employers": [
+    {
+      "name": "Metro General Hospital",
+      "role": "ICU Registered Nurse",
+      "city": "Austin",
+      "state": "TX",
+      "start_date": "Jan 2020",
+      "end_date": "Present",
+      "unit_bed_count": "24",
+      "source_snippet": "Metro General Hospital — Austin, TX ICU Registered Nurse | Jan 2020 – Present"
+    },
+    {
+      "name": "Regional Medical Center",
+      "role": "Travel RN — Med/Surg",
+      "city": "Dallas",
+      "state": "TX",
+      "start_date": "Jun 2017",
+      "end_date": "Dec 2019",
+      "source_snippet": "Regional Medical Center — Dallas, TX Travel RN — Med/Surg | Jun 2017 – Dec 2019"
+    }
+  ],
+  "education": [
+    {
+      "degree": "BSN",
+      "school": "University of Texas",
+      "graduation_year": "2017"
+    }
+  ]
+}

@@ -2,11 +2,22 @@
 
 Repeatable pre-release smoke tests for Resume Rocket. Run on `main` before deploying or tagging a release.
 
-Related: [`MVP-PLAN.md`](MVP-PLAN.md), [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md), [`PROJECT-REVIEW.md`](PROJECT-REVIEW.md), [`DEPLOY.md`](DEPLOY.md), [`MANUAL-TEST-CHECKLIST.md`](MANUAL-TEST-CHECKLIST.md) (detailed UX QA), [`RELEASE-CHECKLIST-2026-06-07-09.md`](RELEASE-CHECKLIST-2026-06-07-09.md) (June 7–9 batch — 22 PRs).
+Related: [`README.md`](./README.md) (doc index) · [`TODO.md`](./TODO.md) · [`VMS-FULL-COVERAGE-PLAN.md`](./VMS-FULL-COVERAGE-PLAN.md) (status) · [`DEPLOY.md`](./DEPLOY.md) · [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) (detailed UX QA) · [`archive/RELEASE-CHECKLIST-2026-06-07-09.md`](./archive/RELEASE-CHECKLIST-2026-06-07-09.md) (June 7–9 batch record)
 
 **Environment:** Local `npm run dev` with `.env` filled (Supabase, optional Gemini + Resend). Contract template at `server/assets/template.docx`.
 
-**Automated (run first):**
+### Automated vs manual
+
+| Automated in CI (every PR) | Still manual |
+| --- | --- |
+| `npm run test` — unit tests + docx/normalize/gemini-map script smokes | Browser happy path (admin → intake → download) |
+| `npm run build` | Open DOCX in Word after template edits |
+| | Resend email inbox check |
+| | Production URL + Supabase project sanity |
+
+Expand automation: [TODO.md — Test automation plan](./TODO.md#test-automation-plan).
+
+**Automated (run first locally or trust CI on `main`):**
 
 ```bash
 npm run test

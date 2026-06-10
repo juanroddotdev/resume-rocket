@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Phase labeling
 
-When expanding VMS template or intake fields, label work explicitly:
+When expanding VMS template or intake fields **after the June 2026 expansion**, label work explicitly:
 
 | Phase | Goal |
 |-------|------|
@@ -13,11 +13,11 @@ When expanding VMS template or intake fields, label work explicitly:
 | **B** | Add intake UI + DB + PATCH for fields not yet collected |
 | **C** | Enrich via Gemini parse + resume text for snapshot/experience blocks |
 
-Do not add template tags without a data source plan (see `docs/VMS-FIELD-MANIFEST.md` once created).
+Do not add template tags without a data source plan (see `docs/VMS-FIELD-MANIFEST.md`).
 
 **Ordering (flexible):**
 - **A** follows once a data source exists (DB, parse, or wizard).
 - **B** and **C** may interleave: Phase C (Gemini schema) can ship before Phase B wizard UI when parse prefills and wizard collects gaps manually (gap review).
 - Prefer completing docxBuilder wiring (A) in the same PR or immediately after the data source lands.
 
-State which phase a PR covers in title or description. Follow PR sequence in `docs/VMS-FULL-COVERAGE-PLAN.md`.
+State which phase a PR covers in title or description. Historical PR sequence: `docs/archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md`.

@@ -6,8 +6,11 @@ alwaysApply: true
 # MVP scope guard
 
 Source of truth:
-- `docs/MVP-PLAN.md` — original MVP scope and flow
-- `docs/VMS-FULL-COVERAGE-PLAN.md` — active VMS template expansion (Phase A/B/C + hardening track)
+- `docs/README.md` — doc index
+- `docs/TODO.md` — active backlog
+- `docs/MVP-PLAN.md` — historical MVP scope
+- `docs/VMS-FULL-COVERAGE-PLAN.md` — VMS expansion **complete**; hardening status only
+- `docs/VMS-FIELD-MANIFEST.md` — authoritative template tags
 
 **Defer unless explicitly requested:**
 
@@ -16,8 +19,8 @@ Source of truth:
 - Virus scan, camera capture, duplicate detection
 - Recruiter notes, candidate self-serve login
 
-**Exception — in scope via epic #16 / VMS plan:** `/api/parse` rate limiting (issue #13).
+**Shipped (epic #16):** full VMS template coverage, `/api/parse` rate limiting (#13), parse outcome logging (#12), JSONB normalization (#11).
 
-**In scope:** invite-gated intake, parse + wizard, hospital search, DOCX export, admin hub, confirmation email (Resend), full VMS template coverage per `docs/VMS-FULL-COVERAGE-PLAN.md`.
+**In scope:** invite-gated intake, parse + wizard + gap review, hospital search, DOCX export, admin hub, confirmation email (Resend).
 
-If a request expands scope beyond the VMS plan, call it out and propose phased delivery (see `phase-labeling.mdc`).
+If a request expands scope beyond TODO backlog, call it out and propose phased delivery (see `phase-labeling.mdc`).

@@ -2,9 +2,11 @@
 
 Living task list for Resume Rocket. Epic context: [#16 hardening sprint](https://github.com/juanroddotdev/resume-rocket/issues/16).
 
-**Related plans:** [MVP-PLAN.md](./MVP-PLAN.md) · [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) · [EMPLOYER-CARD-DECK-PLAN.md](./EMPLOYER-CARD-DECK-PLAN.md) · [HOSPITAL-PARSE-UX-PLAN.md](./HOSPITAL-PARSE-UX-PLAN.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md)
+**Doc index:** [README.md](./README.md) · **VMS status:** [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) (expansion complete)
 
-**Quick nav:** [What's next](#whats-next) · [Done recently](#done-recently) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports)
+**Related:** [MVP-PLAN.md](./MVP-PLAN.md) (historical spec) · [VMS-FIELD-MANIFEST.md](./VMS-FIELD-MANIFEST.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) · **Archived plans:** [archive/](./archive/)
+
+**Quick nav:** [What's next](#whats-next) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports)
 
 One concern per PR when implementing. Check items off when merged (optionally add PR number inline).
 
@@ -12,15 +14,16 @@ One concern per PR when implementing. Check items off when merged (optionally ad
 
 ## What's next
 
-Prioritized remaining work (code audit 2026-06-09). Most prefill/labeling/deck items are **done**; backlog is mostly polish, highlight restore, Step 4 preview, and admin table UX.
+Prioritized remaining work (updated 2026-06-09). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, Step 4 preview, and admin polish.
 
 | Priority | Track | Open items |
 | --- | --- | --- |
-| **A** | Intake polish | Inline save indicator, wizard footers, parse banner polish, replace-resume button styling |
-| **B** | Draft resume UX | Restore parse/DB field highlights when resuming a saved draft (today cleared on `bootstrapInvite`) |
-| **C** | Step 4 | Document preview before download (largest new feature) |
-| **D** | Admin hub | Submitted date layout, filter empty copy, invite success banner, table/DOCX label polish |
-| **E** | Optional | Unit `MetricTile`s, EMR Other validation, fixture-PDF parse regression, storage upload filenames |
+| **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
+| **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
+| **A** | Intake polish | Ratio copy disambiguation, optional validity icons; several Step 1 polish items already shipped |
+| **B** | Step 4 | Document preview before download (largest new feature) |
+| **C** | Admin hub | Open intake from table, invite success banner |
+| **D** | Optional | Unit `MetricTile`s, EMR Other validation, storage upload filenames |
 | **Defer** | — | Multi-license `licenses[]`, `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
 ---
@@ -33,6 +36,102 @@ Prioritized remaining work (code audit 2026-06-09). Most prefill/labeling/deck i
 - [x] **Parse audit Phase A** — `source_snippet`, `identified_facilities_raw` in [`geminiShared.ts`](../server/utils/geminiShared.ts); audit stripped from client ([`parseResponse.test.mjs`](../tests/parseResponse.test.mjs)); persisted under `parsed_resume.audit` in [`parse.post.ts`](../server/api/parse.post.ts)
 - [x] **DOCX download filenames** — `Last_First_VMS-Resume.docx` via [`resumeDownloadFilename.ts`](../utils/resumeDownloadFilename.ts) on intake, admin, and email-link paths ([`generate-docx.post.ts`](../server/api/generate-docx.post.ts))
 - [x] **Intake draft/resume flow doc** — [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md)
+- [x] **Restore parse/DB highlights on draft resume** (#60) — `prefillHighlights` in localStorage + `restoreDbMetricsFromEmployers()` on bootstrap
+- [x] **June 7–9 intake polish batch** — 22 PRs; see [archive/RELEASE-CHECKLIST-2026-06-07-09.md](./archive/RELEASE-CHECKLIST-2026-06-07-09.md)
+
+---
+
+## Test automation plan
+
+**Goal:** Automate most of [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) and [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) so pre-release work is `npm run test` + a short manual pass, not a full browser checklist every time.
+
+**Issue:** Part of epic [#16](https://github.com/juanroddotdev/resume-rocket/issues/16); targets [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) (automated regression tests).
+
+### Today (automated in CI)
+
+| Layer | What runs | Covers |
+| --- | --- | --- |
+| **Unit** | `tests/*.test.mjs` (13 files) | docxBuilder, parse response/audit strip, rate limit, gap-review utils, invite token header, EMR, highlights, wizard step URL |
+| **Script smoke** | `test-normalize-candidate.mjs`, `test-docx-mapping.mjs`, `test-gemini-parse-map.mjs` | JSONB normalization, full template fixture → DOCX bytes, Gemini JSON → API field map |
+| **Build** | `npm run build` | Nuxt compiles |
+
+**Gap:** No browser E2E, no live Supabase/Gemini in CI, no fixture PDF parse regression, no API integration chain (invite → parse → PATCH → DOCX). Release checklist happy path + failure UX is still **manual**.
+
+### What should stay manual (even after automation)
+
+- Open downloaded DOCX in Word and eyeball layout after **template.docx** edits
+- Resend confirmation email in a real inbox (optional integration)
+- Production config sanity (`NUXT_PUBLIC_SITE_URL`, correct Supabase project, seeded hospitals in prod)
+- Subjective Gemini parse quality on new resume samples (tuning, not regression)
+
+---
+
+### Phase 1 — Expand script + unit coverage (no secrets, every PR)
+
+Lowest cost; run entirely in GitHub Actions today. One concern per PR.
+
+- [ ] **`inventory-template-tags.mjs` in CI** — fail if contract tags missing from `docxBuilder`; add to `npm run test` or CI step
+- [ ] **Fixture PDF regression (offline)** — synthetic PDFs in `tests/fixtures/` (no real PHI); extract text via `extractText`; optional **recorded Gemini JSON** fixtures so CI never calls the API; assert audit `source_snippet` overlaps extracted text; multi-employer fixture asserts `identified_facilities_raw` (extends [Parse audit Phase B](#backlog--phase-b-regression-scripts))
+- [ ] **`vmsGapReview` contract tests** — required-field list matches [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md) Required rows; `goToField` step/id pairs stable
+- [ ] **Parse route unit tests (mocked)** — `parse.post` handler with stubbed Supabase/Gemini/storage: MIME rejection, invite missing → 401, rate limit → 429, `partial_parse` / `document_scan` flags, audit stripped from client body
+- [ ] **DOCX content assertions** — unzip generated buffer in `test-docx-mapping.mjs`; spot-check key tags present in `word/document.xml` (not just “non-empty buffer”)
+- [ ] **`npm run test:release` script** — single entry: unit + all script smokes + inventory; document in RELEASE-CHECKLIST “Automated” section
+
+**Done when:** CI catches template/docx/gap-review/parse-contract regressions without a browser.
+
+---
+
+### Phase 2 — API integration tests (Supabase test project)
+
+Hit real Nitro handlers against a **dedicated test Supabase project** (GitHub Actions secrets) or local `supabase start` in CI. No browser.
+
+- [ ] **Test env + CI secrets** — `SUPABASE_*`, service role, optional `GEMINI_API_KEY` gated job; document in `.env.example` as test-only
+- [ ] **Invite chain** — `POST /api/invites` (admin auth) → `GET /api/invites/validate` → create candidate → `PATCH` wizard payload → `POST /api/generate-docx` → assert 200 + DOCX content-type
+- [ ] **Invite gating** — candidate routes without `x-intake-token` → 401; wrong token → 403
+- [ ] **Parse integration (optional Gemini job)** — upload small fixture PDF with real key; separate workflow `workflow_dispatch` or nightly to avoid cost/flake on every PR
+- [ ] **Hospital search smoke** — `GET /api/hospitals/search?q=…` returns rows when test DB seeded (minimal fixture hospitals or seed subset)
+
+**Maps to release checklist:** Happy path API portions; VMS docx-mapping rows; security invite scope.
+
+**Done when:** One integration test proves intake data round-trips to DOCX without manual upload UI.
+
+---
+
+### Phase 3 — Browser E2E (Playwright)
+
+Automate the **browser** sections of RELEASE-CHECKLIST. Heavier maintenance — add after Phase 1–2 stabilize contracts.
+
+- [ ] **Playwright setup** — `@playwright/test`, config against `npm run preview` or staging URL; store admin auth in setup project
+- [ ] **Smoke: intake happy path** — open invite URL → dev prefill or fixture upload → Steps 1–4 → gap review clear → download triggered (assert response / filename)
+- [ ] **Smoke: failure paths** — invalid token message; parse error shows **Continue manually**; Step 2 blocks with zero employers
+- [ ] **Smoke: admin** — sign in → create invite → candidate row appears after intake completes
+- [ ] **CI strategy** — run E2E on `main` + nightly, or on PRs with `e2e` label, to limit flake/time
+
+**Maps to release checklist:** Most “Happy path” and “Failure paths” browser bullets.
+
+**Done when:** Routine releases skip manual wizard click-through unless template or major UI changed.
+
+---
+
+### Phase 4 — Release docs + shrinking manual scope
+
+- [ ] **RELEASE-CHECKLIST matrix** — tag each row Automated (CI) / Manual / Optional; link to test file or spec name
+- [ ] **MANUAL-TEST-CHECKLIST trim** — move covered items to “verify only on template/UI releases”
+- [ ] **Pre-deploy GitHub Action (optional)** — workflow on release tag: `test:release` + integration + E2E against staging
+
+---
+
+### Suggested PR sequence
+
+| PR | Scope | Closes / links |
+| --- | --- | --- |
+| 1 | Inventory script in CI + `test:release` npm script | Part of #14 |
+| 2 | Fixture PDF + recorded parse JSON regression | Parse audit Phase B |
+| 3 | Parse route mocked unit tests + vmsGapReview tests | Part of #14 |
+| 4 | DOCX XML content assertions | Part of #14 |
+| 5 | Supabase integration test project + invite → DOCX chain | Part of #14 |
+| 6 | Playwright happy-path smoke | Part of #14 |
+| 7 | Playwright failure paths + RELEASE-CHECKLIST matrix | Part of #14, #15 |
 
 ---
 
@@ -64,11 +163,11 @@ Prioritized remaining work (code audit 2026-06-09). Most prefill/labeling/deck i
 
 - [x] **Reorder employer cards** — Move up / Move down on [`EmployerCard.vue`](../components/intake/EmployerCard.vue); order = [`docxBuilder`](../server/utils/docxBuilder.ts) `{#professional_experiences}`; autosave via PATCH
 - [x] **Show linked facility metrics** — read-only chips: beds, trauma, teaching when `hospitalId` set
-- [x] **Soft link-facility reminder** when `!hospitalId` — non-blocking; see [HOSPITAL-PARSE-UX-PLAN](./HOSPITAL-PARSE-UX-PLAN.md)
+- [x] **Soft link-facility reminder** when `!hospitalId` — non-blocking; see [archive/HOSPITAL-PARSE-UX-PLAN.md](./archive/HOSPITAL-PARSE-UX-PLAN.md)
 - [x] **Stronger empty employer CTA** — “Add at least one hospital where you worked”
 - [x] **Compact form labels** — role, start/end, employment type, scope, acuity, highlights; optional unit fields when expanded
 - [x] **MetricTile on linked facility row** — Hospital beds / Trauma level / Teaching hospital
-- [x] **Stacked employer card deck** — single-open accordion, `activeCardIndex`, gap-review `goToField` opens correct card; [EMPLOYER-CARD-DECK-PLAN.md](./EMPLOYER-CARD-DECK-PLAN.md)
+- [x] **Stacked employer card deck** — single-open accordion (#47); [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md)
 
 #### Draft & recovery
 
@@ -110,7 +209,10 @@ Prioritized remaining work (code audit 2026-06-09). Most prefill/labeling/deck i
 #### Step 1 — visual polish (partial)
 
 - [x] **Focus rings on all `.field` inputs** — via shared intake field styles
-- [x] **Replace resume entry point** — text link on Step 1 back to upload (re-upload confirm stays in [`FileDropZone`](../components/intake/FileDropZone.vue))
+- [x] **Replace resume entry point** — outline button on Step 1 (re-upload confirm in [`FileDropZone`](../components/intake/FileDropZone.vue))
+- [x] **Inline save indicator** — [`IntakeSaveStatus.vue`](../components/intake/IntakeSaveStatus.vue)
+- [x] **Wizard footer separation** + **Parse notice banner polish** — steps 1–3 footers; [`ParseNoticeBanner.vue`](../components/intake/ParseNoticeBanner.vue)
+- [x] **Restore parse/DB highlights on draft resume** (#60)
 
 ---
 
@@ -131,28 +233,17 @@ Two patterns — don’t mix them on the same control:
 
 #### Prefill & manual entry (remaining)
 
-- [ ] **Restore parse/DB highlights on draft resume** — today `bootstrapInvite()` calls `clearAllPrefillHighlights()`; linked employers don’t re-`markEmployerDbMetrics` after server/local restore. Persist highlight field ids in `localStorage` or re-derive from `parseMeta` + `hospitalId` on employers
 - [ ] **“Other” selects — validation** — EMR Other shows helper when blank but does not block Next; audit whether any future select needs hard empty/error when Other + no text
-
-**Test:** Parse-heavy resume → highlights after leaving and returning to same link; link CMS hospital → DB metric tint returns on restore
 
 #### Step 1 — visual polish (remaining)
 
-Candidate-facing layout and feedback. Autosave debounce: 800ms in [`useCandidateForm.ts`](../composables/useCandidateForm.ts).
-
-- [ ] **Inline save indicator (no layout flicker)** — fixed-width status beside step indicator: spinner → check + “Saved” (~2s fade); reserve space; keep error + Retry visible ([`pages/intake/[token].vue`](../pages/intake/[token].vue))
-- [ ] **“Replace resume” as secondary action** — upgrade Step 1 text link to outline button + icon below [`ParseNoticeBanner`](../components/intake/ParseNoticeBanner.vue)
-- [ ] **Wizard footer separation** — `border-t border-slate-100 mt-6 pt-4` on steps 1–3 Back/Next rows; match review panel back control
-- [ ] **Parse notice banner polish** — icon + flex layout on [`ParseNoticeBanner.vue`](../components/intake/ParseNoticeBanner.vue); refine hierarchy and title line
 - [ ] **Optional: app-owned field validity icons** — only if product wants explicit checks; **do not** mirror browser autofill checkmarks
 
-**Suggested PR split:** save indicator · replace resume + footer + banner polish · validity icons (if scoped)
-
-**Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) §D (Steps 1–3) + no layout shift on autosave while typing
+**Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) §D (Steps 1–3)
 
 #### Step 2 — employer cards (remaining)
 
-Plan: [EMPLOYER-CARD-DECK-PLAN.md](./EMPLOYER-CARD-DECK-PLAN.md). Deck shipped — optional follow-ups only.
+Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
 
 - [ ] **MetricTile for optional unit stats** — Unit beds, Avg daily patients as tiles in expanded deck body (today: labeled text inputs)
 - [ ] **Optional section grouping** — light subheads (“Role & dates”, “Clinical”) only if manual test with 5+ employers still needs scan structure; may drop
@@ -179,17 +270,15 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 - [x] **Parse status in table** — status + icon if `parse_error` (not full audit UI)
 - [x] **Loading skeleton** for candidates table
 - [x] **Admin intake preview (client / admin toggle)** — [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue); admin **Download draft packet** without changing candidate status
+- [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
+- [x] **Filter-specific empty copy** — search vs drafts vs empty table
+- [x] **Table row action clarity** — `hover:bg-slate-50`; **Download DOCX** label
 
 ### Backlog
 
 - [ ] **“Open intake” from candidates table** — deep link recruiter to `/intake/{token}` for a row (needs invite token on candidate or lookup)
-- [ ] **Submitted column date layout** — split date + time or `whitespace-nowrap` in [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue); avoid locale string wrapping
-- [ ] **Filter-specific empty copy** — distinguish search no-match vs “Show drafts” off when all rows are drafts
 - [ ] **Invite success feedback (stronger)** — prominent banner or “Intake link created and copied” (today: inline “Copied!” + readonly URL)
-- [ ] **Table row action clarity** — subtle `hover:bg-slate-50`; clearer DOCX label (not `⬇ DOCX` alone); **no** row caret / whole-row `cursor-pointer`
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass
-
-**Suggested PR split:** date layout + filter empty copy · invite banner · table hover + DOCX label · open intake link
 
 **Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) admin section
 
@@ -210,6 +299,8 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 
 ### Backlog — Phase B (regression scripts)
 
+See also [Test automation plan — Phase 1](#phase-1--expand-script--unit-coverage-no-secrets-every-pr).
+
 - [x] **Unit tests for audit mapping** — [`parseAudit.test.mjs`](../tests/parseAudit.test.mjs), [`test-gemini-parse-map.mjs`](../scripts/test-gemini-parse-map.mjs) smoke
 - [ ] **Fixture PDF regression** — PDFs in `tests/fixtures/`; assert `source_snippet` overlaps `rawText` (fuzzy); assert `identified_facilities_raw` on multi-job fixtures ([`test-pdf-vision.mjs`](../scripts/test-pdf-vision.mjs) is manual smoke today)
 - [ ] **Optional: dev-only last-parse JSON dump** to `data/` (gitignored)
@@ -226,7 +317,7 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 
 ## Hospital parse UX
 
-From [HOSPITAL-PARSE-UX-PLAN.md](./HOSPITAL-PARSE-UX-PLAN.md). Data prerequisite is **done**. Core PRs 2–4 + prefill/manual-hospital/EMR Other are **done**.
+**Status:** Core work **complete** (PRs #37–#38, manual hospital, EMR Other). Historical plan: [archive/HOSPITAL-PARSE-UX-PLAN.md](./archive/HOSPITAL-PARSE-UX-PLAN.md).
 
 ### Done
 
@@ -238,13 +329,23 @@ From [HOSPITAL-PARSE-UX-PLAN.md](./HOSPITAL-PARSE-UX-PLAN.md). Data prerequisite
 
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
 - [ ] **PR 5 (optional)** — Multi-license `licenses[]` if resumes often list several active licenses
-- [ ] **Highlight restore on draft resume** — see [Prefill & manual entry (remaining)](#prefill--manual-entry-remaining)
 
 ---
 
 ## Hardening / VMS
 
-See [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) and GitHub issues #10–#15. Parse audit Phase B belongs here; defer Phase C unless actively tuning prompts.
+VMS expansion Steps 0–5 **complete** — see [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md). Remaining hardening + test automation below.
+
+| Issue | Scope | Status |
+| --- | --- | --- |
+| [#10](https://github.com/juanroddotdev/resume-rocket/issues/10) | Template inventory | **Done** — manifest + `inventory-template-tags.mjs` |
+| [#11](https://github.com/juanroddotdev/resume-rocket/issues/11) | JSONB normalization | **Done** — `normalizeCandidate.ts` |
+| [#12](https://github.com/juanroddotdev/resume-rocket/issues/12) | Parse outcome visibility | **Done** — `parseOutcomeLog.ts` (#45) |
+| [#13](https://github.com/juanroddotdev/resume-rocket/issues/13) | Parse rate limiting | **Done** — `parseRateLimit.ts` |
+| [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) | CI regression tests | **Partial** — [Test automation plan](#test-automation-plan) |
+| [#15](https://github.com/juanroddotdev/resume-rocket/issues/15) | Release checklist | **Partial** — doc exists; sign-off + automation in progress |
+
+Parse audit Phase B (fixture PDF regression) → [Test automation plan — Phase 1](#phase-1--expand-script--unit-coverage-no-secrets-every-pr). Defer parse debug UI (Phase C) unless actively tuning prompts.
 
 ### Files & exports
 
@@ -257,4 +358,4 @@ See [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) and GitHub issues #
 
 - Check items off when merged (or link PR number in the line).
 - Keep **one concern per PR** per [git-pr-workflow](../.cursor/rules/git-pr-workflow.mdc).
-- Pre-release: [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md)
+- Pre-release: [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md); grow automation per [Test automation plan](#test-automation-plan)

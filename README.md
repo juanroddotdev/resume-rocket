@@ -44,7 +44,7 @@ Staging/production on Render: [`docs/DEPLOY.md`](docs/DEPLOY.md) and [`render.ya
 
 ## Plan / scope
 
-See [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md) for full architecture and test plan. For VMS template expansion (Phase B/C), see [`docs/VMS-FULL-COVERAGE-PLAN.md`](docs/VMS-FULL-COVERAGE-PLAN.md). Backlog: [`docs/TODO.md`](docs/TODO.md). Pre-release smoke: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md).
+Doc index: [`docs/README.md`](docs/README.md). **VMS template expansion is complete** — see [`docs/VMS-FULL-COVERAGE-PLAN.md`](docs/VMS-FULL-COVERAGE-PLAN.md) (status) and [`docs/VMS-FIELD-MANIFEST.md`](docs/VMS-FIELD-MANIFEST.md) (tags). Active backlog: [`docs/TODO.md`](docs/TODO.md). Pre-release: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md). Historical MVP spec: [`docs/MVP-PLAN.md`](docs/MVP-PLAN.md).
 
 ## Admin setup
 

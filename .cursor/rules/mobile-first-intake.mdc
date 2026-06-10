@@ -11,11 +11,7 @@ alwaysApply: false
 - Step 0: format hint + privacy line; staged parse spinner labels.
 - Show save status chip (Saving… / Saved) on all editable steps (not success).
 - Required fields validated before Next; native inputs with clear placeholders.
-
-**VMS expansion (see `docs/VMS-FULL-COVERAGE-PLAN.md`):**
-- Step 2: specialties chip input; per-employer cards with role, dates, employment type; collapsible clinical detail (ratios, acuity, highlights, etc.).
-- Step 3+: education repeater; years of experience, compact license, cert expiry dates when checked.
-- **Gap review** before finalize: inline inputs for empty required template tags; block submit with clear message + recovery action.
-- Empty states: explain why a section is empty and what to add (see `empty-error-states.mdc`).
+- **Gap review** (Step 4): block submit when required VMS tags empty; recovery links to wizard fields (`empty-error-states.mdc`).
+- Wizard includes specialties, employer cards (accordion deck), education repeater, clinical summary, credentials with optional expiry.
 
 Match existing Tailwind patterns (`brand-600`, `field` class on intake page).

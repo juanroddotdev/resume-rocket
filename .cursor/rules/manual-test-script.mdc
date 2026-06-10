@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Manual test script
 
-PR test plans should reference relevant items from `docs/MVP-PLAN.md` and, for VMS work, `docs/VMS-FULL-COVERAGE-PLAN.md`.
+PR test plans should reference [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md), [`docs/MANUAL-TEST-CHECKLIST.md`](docs/MANUAL-TEST-CHECKLIST.md), and [`docs/TODO.md`](docs/TODO.md) for scope-specific items.
 
 ## Core MVP (every intake/DOCX PR)
 
@@ -20,7 +20,7 @@ PR test plans should reference relevant items from `docs/MVP-PLAN.md` and, for V
 
 - [ ] Parse prefill populates new field groups (`fields_found` reflects manifest groups)
 - [ ] Partial parse shows review hint; manual path still completes
-- [ ] Gap review blocks submit when required template tags are empty (once implemented)
+- [ ] Gap review blocks submit when required template tags are empty
 - [ ] DOCX download: contract template sections populated (test parse-heavy + manual-heavy profiles)
 - [ ] `node scripts/test-docx-mapping.mjs` passes
 - [ ] After template changes: `node scripts/inventory-template-tags.mjs` reports no unmapped tags

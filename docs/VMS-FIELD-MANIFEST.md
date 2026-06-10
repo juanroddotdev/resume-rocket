@@ -143,11 +143,9 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 
 ## Next implementation steps
 
-1. ~~**Step 1** — JSONB normalization (`#11`)~~
-2. ~~**Step 2** — DB columns + `education` JSONB + extended `employers` shape~~
-3. ~~**Step 3** — Gemini schema for all parse rows~~
-4. ~~**Step 4** — Wizard UI + gap review for Required rows~~
-5. ~~**Step 5** — Replace placeholders with real values in docxBuilder~~
-6. **Step 6** — Hardening sprint (#12–#15) — parse logging, rate limits, CI, release checklist
+Steps 0–5 of the VMS expansion are **complete**. Remaining work:
 
-See [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md).
+1. **Hardening (#14–#15)** — [Test automation plan](./TODO.md#test-automation-plan) in TODO.md
+2. **Release sign-off** — manual 3-profile DOCX verification on [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md)
+
+Status summary: [`VMS-FULL-COVERAGE-PLAN.md`](./VMS-FULL-COVERAGE-PLAN.md). Historical build plan: [`archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md`](./archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md).

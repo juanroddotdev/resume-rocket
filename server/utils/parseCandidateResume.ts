@@ -114,6 +114,7 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
     employers: parsed?.employers,
     credentials: credentialsInputFromParsed(parsed),
     education: parsed?.education,
+    licenses: parsed?.licenses,
   })
 
   const apiFields = parsedResumeToApiFields(parsed)
@@ -143,6 +144,7 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
       phone: parsed.phone,
       license_number: parsed.licenseNumber,
       license_state: parsed.licenseState,
+      ...(normalizedJsonb.licenses?.length ? { licenses: normalizedJsonb.licenses } : {}),
       specialties: parsed.specialties,
       years_nursing_experience: parsed.yearsNursingExperience,
       compact_license_status: parsed.compactLicenseStatus,

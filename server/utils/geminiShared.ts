@@ -6,6 +6,7 @@ import {
   normalizeGraduationYear,
   splitLegacyGraduationValue,
 } from '../../utils/educationGraduation.ts'
+import { normalizeLicense } from '../../utils/licenseRows.ts'
 
 export const GEMINI_PLACEHOLDER_KEYS = new Set([
   'your-gemini-api-key',
@@ -23,9 +24,9 @@ export const PARSE_AUDIT_SNIPPET_MAX_CHARS = 200
 /** Shared field guide for text + vision Gemini parse prompts (Phase C / VMS manifest). */
 export const GEMINI_VMS_FIELD_GUIDE = `Extract all fields you can find. Use empty strings, empty arrays, or omit keys when not present. Do not invent data.
 
-Identity: first_name, last_name, email, phone, license_number, license_state
-- license_number: active RN license when multiple appear; omit if not stated
-- license_state: 2-letter US state abbreviation when stated
+Identity: first_name, last_name, email, phone, license_number, license_state, licenses[]
+- licenses[]: all active RN licenses when stated — each with state (2-letter US), number, optional expiry (MM/YYYY)
+- license_number / license_state: primary active RN license when multiple appear (first or most prominent)
 
 Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_experience, compact_license_status (Yes/No/N/A when stated), average_patient_ratios, specialized_medical_equipment
 - years_nursing_experience: total years of nursing experience as written (e.g. "8", "12+"); nursing roles only — do not count unrelated work history
@@ -105,6 +106,12 @@ export type GeminiEmployerJson = {
   source_snippet?: string
 }
 
+export type GeminiLicenseJson = {
+  state?: string
+  number?: string
+  expiry?: string
+}
+
 export type GeminiResumeJson = {
   raw_resume_text?: string
   first_name?: string
@@ -113,6 +120,7 @@ export type GeminiResumeJson = {
   phone?: string
   license_number?: string
   license_state?: string
+  licenses?: GeminiLicenseJson[]
   specialties?: string[]
   years_nursing_experience?: string
   compact_license_status?: string
@@ -137,6 +145,17 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
     phone: { type: Type.STRING },
     license_number: { type: Type.STRING },
     license_state: { type: Type.STRING },
+    licenses: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          state: { type: Type.STRING },
+          number: { type: Type.STRING },
+          expiry: { type: Type.STRING },
+        },
+      },
+    },
     specialties: stringArraySchema,
     years_nursing_experience: { type: Type.STRING },
     compact_license_status: { type: Type.STRING },
@@ -253,6 +272,14 @@ function mapGeminiEducation(ed: GeminiEducationJson) {
   }
 }
 
+function mapGeminiLicense(license: GeminiLicenseJson) {
+  return normalizeLicense({
+    state: license.state,
+    number: license.number,
+    expiry: license.expiry,
+  })
+}
+
 function mapGeminiEmployer(e: GeminiEmployerJson) {
   if (!e.name?.trim()) return null
   const highlights = e.highlights?.filter(Boolean)
@@ -295,6 +322,9 @@ export function mapGeminiResumeJson(
     .filter(c => c.name)
 
   const detectedFromCerts = certificationDetails?.map(c => c.name)
+  const licenses = parsed.licenses
+    ?.map(mapGeminiLicense)
+    .filter((row): row is NonNullable<ReturnType<typeof mapGeminiLicense>> => row !== null)
 
   return {
     resume: {
@@ -302,8 +332,9 @@ export function mapGeminiResumeJson(
       lastName: parsed.last_name?.trim() || undefined,
       email: parsed.email?.trim() || undefined,
       phone: parsed.phone?.trim() || undefined,
-      licenseNumber: parsed.license_number?.trim() || undefined,
-      licenseState: parsed.license_state?.trim() || undefined,
+      licenseNumber: parsed.license_number?.trim() || licenses?.[0]?.number || undefined,
+      licenseState: parsed.license_state?.trim() || licenses?.[0]?.state || undefined,
+      licenses: licenses?.length ? licenses : undefined,
       specialties: parsed.specialties?.map(s => s.trim()).filter(Boolean),
       yearsNursingExperience: parsed.years_nursing_experience?.trim() || undefined,
       compactLicenseStatus: parsed.compact_license_status?.trim() || undefined,

@@ -14,16 +14,16 @@ One concern per PR when implementing. Check items off when merged (optionally ad
 
 ## What's next
 
-Prioritized remaining work (updated 2026-06-09). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, Step 4 preview, and admin polish.
+Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, Step 4 preview, and admin polish.
 
 | Priority | Track | Open items |
 | --- | --- | --- |
 | **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
-| **A** | Intake polish | Ratio copy disambiguation, optional validity icons; several Step 1 polish items already shipped |
+| **A** | Intake polish | Optional validity icons; multi-license rows (deferred) |
 | **B** | Step 4 | Document preview + admin per-employment layout (eventual — not built yet) |
-| **C** | Admin hub | Open intake from table, invite success banner |
-| **D** | Optional | Unit `MetricTile`s, EMR Other validation, storage upload filenames |
+| **C** | Admin hub | Candidates **list view** (separate dashboard mode — see [Recruiter admin UX](#recruiter-admin-ux)); open intake from table |
+| **D** | Optional | EMR Other validation, storage upload filenames |
 | **Defer** | — | Multi-license `licenses[]`, `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
 ---
@@ -38,6 +38,7 @@ Prioritized remaining work (updated 2026-06-09). VMS template + wizard core is *
 - [x] **Intake draft/resume flow doc** — [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md)
 - [x] **Restore parse/DB highlights on draft resume** (#60) — `prefillHighlights` in localStorage + `restoreDbMetricsFromEmployers()` on bootstrap
 - [x] **June 7–9 intake polish batch** — 22 PRs; see [archive/RELEASE-CHECKLIST-2026-06-07-09.md](./archive/RELEASE-CHECKLIST-2026-06-07-09.md)
+- [x] **June 13 intake field batch** — credential MM/YYYY (#68), unit MetricTiles (#69), employer subheads (#70), charge/preceptor (#71), trauma/teaching unlinked (#72), education graduation month+year (#73); admin builder (#63) + hub layout (#67)
 
 ---
 
@@ -233,11 +234,11 @@ Two patterns — don’t mix them on the same control:
 
 #### Prefill & manual entry (remaining)
 
-- [ ] **Education graduation month + year** — [`EducationRepeater.vue`](../components/intake/EducationRepeater.vue) (intake + admin builder): collect **month and year** (not year-only); store on `education[]` JSONB (e.g. `graduationMonth` + `graduationYear` or single `MM/YYYY`); map to DOCX for download ([`docxBuilder.ts`](../server/utils/docxBuilder.ts) → `education_graduation_year` today is year-only — confirm contract template tag format or add `education_graduation_month` in [`template.docx`](../server/assets/template.docx) + [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md)); gap review, parse/Gemini, normalizeCandidate
-- [ ] **Multi-license rows (State · License · expiration)** — replace separate license fields in [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) with repeatable **one-line rows**: **State** | **License #** | **Expiration** (MM/YYYY — see credential expiry todo); **+ Add license** for multiple active licenses; intake + admin builder; new `licenses[]` JSONB (e.g. `{ state, number, expiry? }`); map to `{#active_licenses_list}` and `rn_license_state_and_expiry` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts) (today: single `license_state` + `license_number`, no license expiry); PATCH schema, gap review, parse prefill; migrate or fallback from legacy columns
+- [x] **Education graduation month + year** (#73) — [`EducationRepeater.vue`](../components/intake/EducationRepeater.vue): month select + year; `graduationMonth` on `education[]` JSONB; DOCX `education_graduation_year` as MM/YYYY when month known; gap review, parse/Gemini, normalizeCandidate
+- [ ] **Multi-license rows (State · License · expiration)** — replace separate license fields in [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) with repeatable **one-line rows**: **State** | **License #** | **Expiration** (MM/YYYY); **+ Add license** for multiple active licenses; intake + admin builder; new `licenses[]` JSONB (e.g. `{ state, number, expiry? }`); map to `{#active_licenses_list}` and `rn_license_state_and_expiry` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts) (today: single `license_state` + `license_number`, no license expiry); PATCH schema, gap review, parse prefill; migrate or fallback from legacy columns
   - **Include compact license status in this block** — move Yes/No/N/A compact select from [`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue) into the license section (not under “Clinical summary”)
   - **Remove average patient ratios from this area** — drop career-wide **Average patient ratios** from under compact license in clinical summary ([`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue)); per-employer ratios stay on employer cards; decide whether to remove `average_patient_ratios` from wizard/gap review/DOCX or relocate elsewhere
-- [ ] **Credential expiry format MM/YYYY** — [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) (intake + admin builder): expiration inputs use **MM/YYYY** (not `YYYY-MM` / free text); placeholder + validation/normalize on PATCH; align DOCX output for `BLS_certification_expiration_date`, `ACLS_certification_expiration_date`, `PALS_certification_expiration_date` ([`docxBuilder.ts`](../server/utils/docxBuilder.ts)); update parse prompt in [`geminiShared.ts`](../server/utils/geminiShared.ts) if Gemini still targets `YYYY-MM`; optional normalize legacy stored values
+- [x] **Credential expiry format MM/YYYY** (#68) — [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue): MM/YYYY input + normalize on PATCH; DOCX BLS/ACLS/PALS expiry; Gemini prompt aligned
 - [ ] **“Other” selects — validation** — EMR Other shows helper when blank but does not block Next; audit whether any future select needs hard empty/error when Other + no text
 
 #### Step 1 — visual polish (remaining)
@@ -250,18 +251,13 @@ Two patterns — don’t mix them on the same control:
 
 Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
 
-- [ ] **Employment type dropdown** — replace free-text on [`EmployerCard.vue`](../components/intake/EmployerCard.vue) with `<select>`: **Travel**, **Staff**, **PRN** (intake + admin builder); normalize parse values where possible; maps to `employers[].employmentType` → `experience_employment_type`
-  - **When PRN selected:** show companion field for average work time (e.g. hours per week / shifts per month — label TBD); new employer JSONB field; confirm DOCX mapping (no template tag today — may need manifest + `docxBuilder` or fold into an existing experience text field)
-- [ ] **Per-employer trauma + teaching inputs** — on [`EmployerCard.vue`](../components/intake/EmployerCard.vue) (intake + admin builder); maps to `employers[].traumaLevel` / `teachingStatus` → `experience_trauma_level` / `experience_is_teaching_facility` ([`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md))
-  - **Today:** trauma/teaching come from hospital DB when linked (read-only chips); unlinked/manual employers have no way to enter them
-  - **Pick when building (linked facility behavior):**
-    - **A — DB wins:** after link, trauma/teaching stay read-only; change only by unlinking or picking another hospital
-    - **B — Recruiter override:** prefill from DB on link, but fields stay editable to fix bad matches or gaps in seed data
-    - **C — Inputs only when unlinked:** show trauma/teaching inputs for manual hospitals only; linked cards keep read-only DB metrics
-- [ ] **Charge nurse + preceptor experience (per card)** — yes/no on each [`EmployerCard.vue`](../components/intake/EmployerCard.vue) (intake + admin builder); new employer JSONB fields (e.g. `chargeNurseExperience`, `preceptorExperience` booleans); today these often appear only in free-text `highlights[]` from parse — confirm DOCX mapping (no dedicated template tags in [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md) today; may append to highlights, add tags, or new experience fields in `docxBuilder`)
+- [x] **Employment type dropdown** (#67) — [`EmployerCard.vue`](../components/intake/EmployerCard.vue): Travel / Staff / PRN `<select>`; [`employmentType.ts`](../utils/employmentType.ts) normalize; maps to `experience_employment_type`
+  - [ ] **When PRN selected:** show companion field for average work time (e.g. hours per week / shifts per month — label TBD); new employer JSONB field; confirm DOCX mapping (no template tag today — may need manifest + `docxBuilder` or fold into an existing experience text field)
+- [x] **Per-employer trauma + teaching inputs** (#72, Option C) — trauma level + teaching Yes/No on **unlinked** employers only; linked cards keep read-only DB `MetricTile`s → `experience_trauma_level` / `experience_is_teaching_facility`
+- [x] **Charge nurse + preceptor experience (per card)** (#71) — yes/no on each [`EmployerCard.vue`](../components/intake/EmployerCard.vue); `chargeNurseExperience` / `preceptorExperience` on `employers[]` JSONB; appended to `experience_highlights` in DOCX
 - [ ] **EMR on each employment card (required)** — **not** a single Employment-section dropdown; each [`EmployerCard.vue`](../components/intake/EmployerCard.vue) gets its own EMR platform select (+ Other custom text per [`emrSystem.ts`](../utils/emrSystem.ts)); remove global `form.emr_system` / footer EMR block in intake + admin builder; store per row on `employers[]` (e.g. `emrSystem`); update [`docxBuilder.ts`](../server/utils/docxBuilder.ts) so each loop row uses that card’s EMR (`experience_emr_system`); PATCH schema, gap review (per employer), derive summary `emr_software_proficiencies` from union of card values
-- [ ] **MetricTile for optional unit stats** — Unit beds, Avg daily patients as tiles in expanded deck body (today: labeled text inputs)
-- [ ] **Optional section grouping** — light subheads (“Role & dates”, “Clinical”) only if manual test with 5+ employers still needs scan structure; may drop
+- [x] **MetricTile for optional unit stats** (#69) — Unit beds, Avg daily patients as editable `MetricTile`s in expanded deck body
+- [x] **Optional section grouping** (#70) — `<fieldset>` subheads “Role & dates” and “Clinical” on employer cards
 
 #### Step 4 — review & finish
 
@@ -279,6 +275,10 @@ Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DE
 
 MVP table action is DOCX download only — no candidate profile drill-down.
 
+**Dashboard product model:** The admin hub’s **primary purpose** is filling out the VMS packet in [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) (concierge / operator workflow). The sidebar candidate list + builder layout is the default home — **do not replace or demote the builder** with a full-width table.
+
+**Candidates table:** [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) should ship as a **separate dashboard view** (e.g. tab, toggle, or route segment like “Builder” vs “All candidates”) for scan/search/download-at-a-glance. Switching to list view must not remove quick path back to builder + selected candidate. Row actions: open in builder, download DOCX, copy/open intake link — not a standalone profile app.
+
 ### Done
 
 - [x] **Candidates table empty state** — “No candidates yet — create an intake link above” ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
@@ -286,13 +286,15 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 - [x] **Parse status in table** — status + icon if `parse_error` (not full audit UI)
 - [x] **Loading skeleton** for candidates table
 - [x] **Admin intake preview (client / admin toggle)** — [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue); admin **Download draft packet** without changing candidate status
-- [x] **Admin section builder (concierge)** — [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`useAdminCandidateWorkspace`](../composables/useAdminCandidateWorkspace.ts); upload/parse/PATCH via admin APIs; **Copy link** + **Mark submitted**; employer cards in panel layout
+- [x] **Admin section builder (concierge)** (#63) — [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`useAdminCandidateWorkspace`](../composables/useAdminCandidateWorkspace.ts); upload/parse/PATCH via admin APIs; **Copy link** + **Mark submitted**; employer cards in panel layout
+- [x] **Admin hub Day 1** (#67) — desktop sidebar layout (create link + candidate list beside builder); employment type dropdown; dismissible invite success banner on [`pages/admin.vue`](../pages/admin.vue)
 - [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
 - [x] **Filter-specific empty copy** — search vs drafts vs empty table
 - [x] **Table row action clarity** — `hover:bg-slate-50`; **Download DOCX** label
 
 ### Backlog
 
+- [ ] **Candidates table as alternate dashboard view** — add [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) as a **second view** on [`pages/admin.vue`](../pages/admin.vue) (not stacked above or instead of the builder); default landing stays builder + sidebar list; table view for full scan/filter/download; row **Open in builder** loads selected candidate and returns to builder view; **Open intake** + dismissible invite success banner when clipboard fails; empty/error states per [empty-error-states](../.cursor/rules/empty-error-states.mdc)
 - [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass
 

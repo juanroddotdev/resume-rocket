@@ -61,6 +61,35 @@ describe('mapCandidateToTemplateData', () => {
     ])
   })
 
+  it('maps per-employer EMR and union proficiencies', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['ICU'],
+      employers: [
+        { name: 'Metro Hospital', role: 'ICU RN', emrSystem: 'Epic' },
+        { name: 'Regional Medical', role: 'ER RN', emrSystem: 'Cerner' },
+      ],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
+    assert.equal(data.professional_experiences[1].experience_emr_system, 'Cerner')
+    assert.equal(data.emr_software_proficiencies, 'Epic, Cerner')
+  })
+
+  it('falls back to legacy global emr_system when employers lack per-card EMR', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      emr_system: 'Epic',
+      specialties: ['ICU'],
+      employers: [{ name: 'Metro Hospital', role: 'ICU RN' }],
+    })
+
+    assert.equal(data.emr_software_proficiencies, 'Epic')
+    assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
+  })
+
   it('maps manual trauma and teaching for unlinked employers', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

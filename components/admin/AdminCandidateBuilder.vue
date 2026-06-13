@@ -4,7 +4,7 @@ import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/u
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { ADMIN_SECTIONS, adminSectionForStep } from '~/utils/adminCandidateForm'
-import { isEmrComplete, resolveEmrFields } from '~/utils/emrSystem'
+import { allEmployersEmrComplete } from '~/utils/emrSystem'
 
 const props = defineProps<{
   candidate: CandidateRow
@@ -49,8 +49,7 @@ const skipAutosave = ref(true)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
-const emrFields = computed(() => resolveEmrFields(form.emr_system))
-const emrComplete = computed(() => isEmrComplete(emrFields.value.selection, emrFields.value.custom))
+const employersEmrComplete = computed(() => allEmployersEmrComplete(form.employers))
 
 const hasExistingFormData = computed(() =>
   Boolean(
@@ -348,13 +347,12 @@ watch(loading, (isLoading) => {
             />
             <HospitalAutocomplete
               ref="hospitalAutocompleteRef"
-              v-model:emr="form.emr_system"
               deck-mode="multi"
               :employers="form.employers"
               @update:employers="form.employers = $event"
             />
-            <p v-if="!emrComplete && form.employers.length" class="text-sm text-amber-800" role="status">
-              Select an EMR platform below. If you choose Other, enter the system name — it is required before download.
+            <p v-if="!employersEmrComplete && form.employers.length" class="text-sm text-amber-800" role="status">
+              Select an EMR platform on each employer card. If you choose Other, enter the system name — required before download.
             </p>
           </section>
 
@@ -364,12 +362,10 @@ watch(loading, (isLoading) => {
             <CredentialsChecklist
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
-              :license-number="form.license_number"
-              :license-state="form.license_state"
+              :licenses="form.licenses"
               :cert-keys="certKeys"
               @update:credentials="form.credentials = $event"
-              @update:license-number="form.license_number = $event"
-              @update:license-state="form.license_state = $event"
+              @update:licenses="form.licenses = $event"
             />
             <ClinicalSummaryFields
               v-model:years-nursing-experience="form.years_nursing_experience"

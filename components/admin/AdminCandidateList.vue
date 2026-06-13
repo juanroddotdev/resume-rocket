@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
+import { displayCandidateEmr } from '~/utils/emrSystem'
 
 const props = defineProps<{
   candidates: CandidateRow[]
@@ -24,7 +25,7 @@ const filtered = computed(() => {
   if (!q) return list
   return list.filter((c) => {
     const name = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase()
-    const emr = (c.emr_system || '').toLowerCase()
+    const emr = displayCandidateEmr(c).toLowerCase()
     const facility = (c.employers?.[0]?.name || '').toLowerCase()
     return name.includes(q) || emr.includes(q) || facility.includes(q)
   })

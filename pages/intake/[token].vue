@@ -2,7 +2,7 @@
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { hasIntakeDraftData, REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
-import { isEmrComplete, resolveEmrFields } from '~/utils/emrSystem'
+import { allEmployersEmrComplete } from '~/utils/emrSystem'
 import {
   type FinalizePhase,
   FINALIZE_PHASE_PROGRESS,
@@ -127,8 +127,7 @@ const saveStatusShowSavedIdle = computed(
   () => currentStep.value === 0 && Boolean(candidateId.value) && saveStatus.value === 'idle',
 )
 
-const emrFields = computed(() => resolveEmrFields(form.value.emr_system))
-const emrComplete = computed(() => isEmrComplete(emrFields.value.selection, emrFields.value.custom))
+const employersEmrComplete = computed(() => allEmployersEmrComplete(form.value.employers))
 
 const showSubmitOverlay = computed(() => submitting.value || submitPhase.value === 'success')
 
@@ -274,7 +273,7 @@ function canAdvanceStep1() {
 
 function canAdvanceStep2() {
   if (isAdminView.value) return true
-  return form.value.employers.length > 0 && emrComplete.value
+  return form.value.employers.length > 0 && employersEmrComplete.value
 }
 
 function canAdvanceStep3() {
@@ -526,7 +525,6 @@ async function onDownloadAgain() {
         />
         <HospitalAutocomplete
           ref="hospitalAutocompleteRef"
-          v-model:emr="form.emr_system"
           :employers="form.employers"
           @update:employers="form.employers = $event"
         />
@@ -537,10 +535,10 @@ async function onDownloadAgain() {
           Add at least one hospital where you worked before continuing.
         </p>
         <p
-          v-else-if="isClientView && form.employers.length && !emrComplete"
+          v-else-if="isClientView && form.employers.length && !employersEmrComplete"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
-          Select your EMR platform below. If you choose Other, enter the system name — it is required before continuing.
+          Select an EMR platform on each employer card. If you choose Other, enter the system name — required before continuing.
         </p>
         <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>

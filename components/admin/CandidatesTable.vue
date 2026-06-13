@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
+import { displayCandidateEmr } from '~/utils/emrSystem'
 
 const props = defineProps<{
   candidates: CandidateRow[]
@@ -27,7 +28,7 @@ const filtered = computed(() => {
   if (!q) return list
   return list.filter((c) => {
     const name = `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase()
-    const emr = (c.emr_system || '').toLowerCase()
+    const emr = displayCandidateEmr(c).toLowerCase()
     const facility = (c.employers?.[0]?.name || '').toLowerCase()
     return name.includes(q) || emr.includes(q) || facility.includes(q)
   })
@@ -164,7 +165,7 @@ function intakeLinkActive(c: CandidateRow) {
             </td>
             <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ formatSubmittedAt(c.updated_at) }}</td>
             <td class="max-w-xs px-4 py-3 text-slate-700">{{ primaryFacility(c) }}</td>
-            <td class="hidden px-4 py-3 md:table-cell">{{ c.emr_system || '—' }}</td>
+            <td class="hidden px-4 py-3 md:table-cell">{{ displayCandidateEmr(c) || '—' }}</td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-2">
                 <button

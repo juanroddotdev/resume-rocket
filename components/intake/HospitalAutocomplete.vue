@@ -2,12 +2,6 @@
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow } from '~/types/hospital'
 import { isDuplicateEmployer, linkEmployerFromHospital, createManualEmployer, isDuplicateEmployerEntry } from '~/utils/employerLink'
-import {
-  EMR_OTHER_OPTION,
-  EMR_PRESET_OPTIONS,
-  emrSystemFromFields,
-  resolveEmrFields,
-} from '~/utils/emrSystem'
 
 const props = defineProps<{
   employers: EmployerEntry[]
@@ -20,37 +14,6 @@ const emit = defineEmits<{
 
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const { markEmployerDbMetrics } = useIntakePrefillHighlight()
-const emr = defineModel<string>('emr', { default: '' })
-const emrSelection = ref('')
-const emrCustom = ref('')
-
-watch(
-  emr,
-  (value) => {
-    const resolved = resolveEmrFields(value)
-    emrSelection.value = resolved.selection
-    emrCustom.value = resolved.custom
-  },
-  { immediate: true },
-)
-
-function syncEmrModel() {
-  emr.value = emrSystemFromFields(emrSelection.value, emrCustom.value)
-}
-
-function onEmrSelectionChange(event: Event) {
-  emrSelection.value = (event.target as HTMLSelectElement).value
-  if (emrSelection.value !== EMR_OTHER_OPTION) {
-    emrCustom.value = ''
-  }
-  syncEmrModel()
-}
-
-function onEmrCustomInput(event: Event) {
-  emrCustom.value = (event.target as HTMLInputElement).value
-  syncEmrModel()
-}
-
 const duplicateMessage = ref<string | null>(null)
 const activeCardIndex = ref(0)
 const linkSearchRequested = ref<number | null>(null)
@@ -286,43 +249,5 @@ defineExpose({ openEmployerField })
     <p v-else class="text-xs text-amber-800">
       Add at least one hospital where you worked — search above or add manually.
     </p>
-
-    <div class="space-y-2">
-      <label class="field-label" for="intake-field-emr_system">EMR platform</label>
-      <select
-        id="intake-field-emr_system"
-        :value="emrSelection"
-        class="field"
-        @change="onEmrSelectionChange"
-      >
-        <option value="">Select…</option>
-        <option v-for="option in EMR_PRESET_OPTIONS" :key="option" :value="option">
-          {{ option }}
-        </option>
-        <option :value="EMR_OTHER_OPTION">Other</option>
-      </select>
-      <label
-        v-if="emrSelection === EMR_OTHER_OPTION"
-        class="block"
-        for="intake-field-emr_system-other"
-      >
-        <span class="field-label-compact">Other EMR platform</span>
-        <input
-          id="intake-field-emr_system-other"
-          :value="emrCustom"
-          type="text"
-          placeholder="e.g. Allscripts, Athena, Medhost"
-          class="field"
-          @input="onEmrCustomInput"
-        >
-      </label>
-      <p
-        v-if="emrSelection === EMR_OTHER_OPTION && !emrCustom.trim()"
-        class="text-xs text-amber-800"
-        role="status"
-      >
-        Enter the EMR name — required when Other is selected.
-      </p>
-    </div>
   </div>
 </template>

@@ -87,6 +87,8 @@ export interface EmployerEntry {
   chargeNurseExperience?: boolean
   /** Included in DOCX highlights when true */
   preceptorExperience?: boolean
+  /** VMS experience_emr_system — per-facility EMR platform */
+  emrSystem?: string
 }
 
 export interface CandidateDraftInput {

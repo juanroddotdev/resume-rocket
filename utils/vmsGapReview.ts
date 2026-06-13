@@ -1,5 +1,6 @@
 import type { CandidateDraftInput, EducationEntry, EmployerEntry } from '~/types/candidate'
 import { normalizeGraduationMonth } from '~/utils/educationGraduation'
+import { isStoredEmrComplete } from '~/utils/emrSystem'
 
 export interface MissingTemplateField {
   id: string
@@ -51,6 +52,9 @@ function employerMissing(employer: EmployerEntry, index: number): MissingTemplat
   if (!employer.highlights?.length || !employer.highlights.some(h => h.trim())) {
     missing.push({ id: `employer-${index}-highlights`, label: `${prefix}: at least one highlight`, step: 2 })
   }
+  if (!isStoredEmrComplete(employer.emrSystem)) {
+    missing.push({ id: `employer-${index}-emr`, label: `${prefix}: EMR platform`, step: 2 })
+  }
   return missing
 }
 
@@ -72,9 +76,6 @@ export function computeMissingTemplateFields(form: FormShape): MissingTemplateFi
 
   if (!form.specialties?.length || !hasText(form.specialties[0])) {
     missing.push({ id: 'specialties', label: 'Primary specialty / unit', step: 2 })
-  }
-  if (!hasText(form.emr_system)) {
-    missing.push({ id: 'emr_system', label: 'EMR platform', step: 2 })
   }
   if (!form.employers?.length) {
     missing.push({ id: 'employers', label: 'At least one employer / facility', step: 2 })

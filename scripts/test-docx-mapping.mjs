@@ -130,7 +130,7 @@ const checks = [
   ['total_years_nursing_experience', data.total_years_nursing_experience, '8'],
   ['compact_license_status', data.compact_license_status, 'Yes'],
   ['education[0].education_degree', data.education[0]?.education_degree, 'BSN'],
-  ['BLS expiry', data.BLS_certification_expiration_date, '2026-06-01'],
+  ['BLS expiry', data.BLS_certification_expiration_date, '06/2026'],
   ['experience_employment_type', exp0?.experience_employment_type, 'Staff'],
   ['experience_patient_scope', exp0?.experience_patient_scope, 'Adult ICU — critical care'],
   ['experience_highlights', exp0?.experience_highlights?.length, 2],

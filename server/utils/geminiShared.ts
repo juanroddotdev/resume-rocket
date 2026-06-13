@@ -30,7 +30,7 @@ Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_expe
 
 Education: education[] with degree, school, graduation_year
 
-Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (YYYY-MM or readable date)
+Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (MM/YYYY, e.g. 06/2026)
 - Split combined cert lines into one object per certification
 
 Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], source_snippet

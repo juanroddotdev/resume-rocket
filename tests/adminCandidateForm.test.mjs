@@ -36,11 +36,11 @@ describe('applyParseResultToForm', () => {
       last_name: 'Doe',
       emr_system: 'Epic',
       suggested_employers: [{ name: 'Metro Hospital', employer_hospital_suggestions: [] }],
-      credentials: { BLS: { active: true, expiry: '2026-01-01' } },
+      credentials: { BLS: { active: true, expiry: '2026-06-01' } },
     })
     assert.equal(form.first_name, 'Jane')
     assert.equal(form.emr_system, 'Epic')
     assert.equal(form.employers[0]?.name, 'Metro Hospital')
-    assert.equal(form.credentials.BLS?.expiry, '2026-01-01')
+    assert.equal(form.credentials.BLS?.expiry, '06/2026')
   })
 })

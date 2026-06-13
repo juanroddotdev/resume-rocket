@@ -3,6 +3,7 @@ import PizZip from 'pizzip'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
@@ -40,7 +41,7 @@ function certExpiry(
   if (!credentials) return ''
   const entry = credentials[key.toUpperCase()] ?? credentials[key]
   if (entry && typeof entry === 'object' && entry.expiry) {
-    return entry.expiry
+    return normalizeCredentialExpiry(entry.expiry) ?? entry.expiry
   }
   return ''
 }

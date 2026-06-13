@@ -8,7 +8,7 @@ const copied = ref(false)
 const error = ref<string | null>(null)
 
 const emit = defineEmits<{
-  created: []
+  created: [payload: { inviteId: string; url: string }]
 }>()
 
 async function createInvite() {
@@ -21,7 +21,7 @@ async function createInvite() {
       error.value = 'Sign in required'
       return
     }
-    const res = await $fetch<{ url: string; expires_at: string }>('/api/invites', {
+    const res = await $fetch<{ id: string; url: string; expires_at: string }>('/api/invites', {
       method: 'POST',
       headers: { Authorization: `Bearer ${session.access_token}` },
       body: {
@@ -37,7 +37,7 @@ async function createInvite() {
     } catch {
       copied.value = false
     }
-    emit('created')
+    emit('created', { inviteId: res.id, url: res.url })
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; message?: string }
     error.value = err.data?.statusMessage || err.message || 'Failed to create invite'
@@ -54,39 +54,32 @@ function selectUrlInput(e: FocusEvent) {
 <template>
   <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
     <h2 class="text-lg font-semibold text-slate-900">Create intake link</h2>
-    <p class="mt-1 text-sm text-slate-600">Send this link to a candidate (expires in 7 days).</p>
+    <p class="mt-1 text-sm text-slate-600">
+      Creates a candidate draft you can build here. Copy the link when you want the candidate to finish on their phone.
+    </p>
     <input
       v-model="email"
       type="email"
       placeholder="Candidate email (optional)"
       class="field mt-3"
     >
-    <div class="mt-3 flex flex-wrap gap-2">
+    <div class="mt-3">
       <button
         type="button"
-        class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         :disabled="loading"
         @click="createInvite"
       >
-        {{ loading ? 'Creating…' : 'Create intake link' }}
+        {{ loading ? 'Creating…' : 'Create link & start packet' }}
       </button>
-      <a
-        v-if="lastUrl"
-        :href="lastUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700"
-      >
-        Open link
-      </a>
     </div>
     <div
       v-if="lastUrl && copied"
       class="mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900"
       role="status"
     >
-      <p class="font-medium">Intake link created and copied</p>
-      <p class="mt-0.5 text-xs text-green-800">Send it to your candidate — it expires in 7 days.</p>
+      <p class="font-medium">Link created and copied</p>
+      <p class="mt-0.5 text-xs text-green-800">Builder opened for this packet — share the link when ready for candidate handoff.</p>
     </div>
     <div v-if="lastUrl" class="mt-3">
       <input
@@ -97,7 +90,7 @@ function selectUrlInput(e: FocusEvent) {
         aria-label="Intake link URL"
         @focus="selectUrlInput"
       >
-      <p v-if="!copied" class="mt-1 text-xs text-slate-500">Tap the link above to select and copy, then send it to your candidate.</p>
+      <p v-if="!copied" class="mt-1 text-xs text-slate-500">Select and copy to share with the candidate later.</p>
     </div>
     <p v-if="expiresAt" class="mt-1 text-xs text-slate-500">
       Expires {{ new Date(expiresAt).toLocaleString() }}

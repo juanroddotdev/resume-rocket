@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
   const url = `${config.public.siteUrl}/intake/${data.token}`
 
   return {
+    id: data.id,
     token: data.token,
     url,
     expires_at: data.expires_at,

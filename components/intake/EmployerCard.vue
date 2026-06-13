@@ -10,7 +10,11 @@ const props = defineProps<{
   canMoveUp?: boolean
   canMoveDown?: boolean
   requestLinkSearch?: boolean
+  layout?: 'deck' | 'panel'
 }>()
+
+const isPanel = computed(() => props.layout === 'panel')
+const isExpanded = computed(() => isPanel.value || props.expanded)
 
 const emit = defineEmits<{
   update: [value: EmployerEntry]
@@ -95,27 +99,28 @@ function arrayToLines(values?: string[]) {
     :id="`employer-deck-row-${index}`"
     class="employer-deck-row relative"
     :class="[
-      expanded ? 'z-30 py-8' : 'z-10 py-0',
-      index > 0 && !expanded ? '-mt-2' : 'mt-0',
+      isPanel ? 'py-3' : expanded ? 'z-30 py-8' : 'z-10 py-0',
+      !isPanel && index > 0 && !expanded ? '-mt-2' : 'mt-0',
     ]"
   >
     <div
       :id="`employer-card-${index}`"
       class="employer-card-surface overflow-hidden rounded-lg border bg-white"
       :class="[
-        expanded
+        isExpanded
           ? 'border-brand-200 border-l-4 border-l-brand-600 shadow-md'
           : 'border-slate-200 shadow-sm',
       ]"
     >
     <div class="flex items-start gap-1">
-      <button
+      <component
+        :is="isPanel ? 'div' : 'button'"
         :id="`employer-card-header-${index}`"
-        type="button"
+        :type="isPanel ? undefined : 'button'"
         class="min-w-0 flex-1 rounded-lg p-3 text-left"
-        :aria-expanded="expanded"
-        :aria-controls="`employer-panel-${index}`"
-        @click="emit('toggle')"
+        :aria-expanded="isPanel ? undefined : isExpanded"
+        :aria-controls="isPanel ? undefined : `employer-panel-${index}`"
+        @click="!isPanel && emit('toggle')"
       >
         <p class="font-medium" :class="nameIsMissing ? 'text-slate-500 italic' : 'text-slate-900'">
           {{ displayName }}
@@ -126,7 +131,7 @@ function arrayToLines(values?: string[]) {
         <p v-if="employer.city || employer.state" class="mt-0.5 text-xs text-slate-400">
           {{ [employer.city, employer.state].filter(Boolean).join(', ') }}
         </p>
-      </button>
+      </component>
       <div class="flex shrink-0 items-center gap-1 self-center pr-2">
         <button
           v-if="canMoveUp"
@@ -152,13 +157,13 @@ function arrayToLines(values?: string[]) {
 
     <div
       class="employer-card-panel grid"
-      :class="expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+      :class="isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
     >
       <div
         :id="`employer-panel-${index}`"
         class="min-h-0 overflow-hidden"
-        :aria-hidden="!expanded"
-        :class="!expanded && 'pointer-events-none'"
+        :aria-hidden="!isExpanded"
+        :class="!isExpanded && 'pointer-events-none'"
       >
         <div class="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">
           <template v-if="!isLinked">

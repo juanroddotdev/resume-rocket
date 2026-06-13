@@ -270,14 +270,14 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 - [x] **Parse status in table** — status + icon if `parse_error` (not full audit UI)
 - [x] **Loading skeleton** for candidates table
 - [x] **Admin intake preview (client / admin toggle)** — [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue); admin **Download draft packet** without changing candidate status
+- [x] **Admin section builder (concierge)** — [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`useAdminCandidateWorkspace`](../composables/useAdminCandidateWorkspace.ts); upload/parse/PATCH via admin APIs; **Copy link** + **Mark submitted**; employer cards in panel layout
 - [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
 - [x] **Filter-specific empty copy** — search vs drafts vs empty table
 - [x] **Table row action clarity** — `hover:bg-slate-50`; **Download DOCX** label
 
 ### Backlog
 
-- [ ] **“Open intake” from candidates table** — deep link recruiter to `/intake/{token}` for a row (needs invite token on candidate or lookup)
-- [ ] **Invite success feedback (stronger)** — prominent banner or “Intake link created and copied” (today: inline “Copied!” + readonly URL)
+- [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass
 
 **Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) admin section

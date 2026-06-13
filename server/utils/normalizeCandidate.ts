@@ -1,6 +1,7 @@
 import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
+import { normalizeTraumaLevel } from '../../utils/traumaLevel.ts'
 
 function optionalString(value: unknown): string | undefined {
   if (value == null) return undefined
@@ -42,7 +43,8 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   const state = optionalString(e.state)
   const hospitalId = optionalString(e.hospitalId ?? e.hospital_id)
   const beds = optionalNumber(e.beds)
-  const traumaLevel = optionalString(e.traumaLevel ?? e.trauma_level)
+  const traumaLevelRaw = optionalString(e.traumaLevel ?? e.trauma_level)
+  const traumaLevel = traumaLevelRaw ? normalizeTraumaLevel(traumaLevelRaw) : undefined
   const teachingStatus = optionalBool(e.teachingStatus ?? e.teaching_status)
   const employmentTypeRaw = optionalString(e.employmentType ?? e.employment_type)
   const unitBedCount = optionalString(e.unitBedCount ?? e.unit_bed_count)
@@ -70,7 +72,10 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (state) entry.state = state
   if (hospitalId) entry.hospitalId = hospitalId
   if (beds != null) entry.beds = beds
-  if (traumaLevel) entry.traumaLevel = traumaLevel
+  if (traumaLevelRaw) {
+    const normalized = normalizeTraumaLevel(traumaLevelRaw)
+    if (normalized) entry.traumaLevel = normalized
+  }
   if (teachingStatus != null) entry.teachingStatus = teachingStatus
   if (employmentTypeRaw) {
     const canonical = normalizeEmploymentType(employmentTypeRaw)

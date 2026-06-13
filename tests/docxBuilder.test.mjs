@@ -59,6 +59,28 @@ describe('mapCandidateToTemplateData', () => {
       'Preceptor experience',
     ])
   })
+
+  it('maps manual trauma and teaching for unlinked employers', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      emr_system: 'Epic',
+      specialties: ['Med-Surg'],
+      employers: [{
+        name: 'Summit Rural Health Clinic',
+        role: 'Staff RN',
+        city: 'Granville',
+        state: 'OH',
+        traumaLevel: 'III',
+        teachingStatus: false,
+      }],
+    })
+
+    const exp = data.professional_experiences[0]
+    assert.equal(exp.experience_trauma_level, 'III')
+    assert.equal(exp.experience_is_teaching_facility, 'No')
+    assert.match(data.facility_types_trauma_levels, /Level III Trauma/)
+  })
 })
 
 describe('buildResumeDocx smoke', () => {

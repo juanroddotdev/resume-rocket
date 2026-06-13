@@ -5,6 +5,7 @@ import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employ
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
 import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
+import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -141,6 +142,30 @@ function onClinicalFlagChange(
   }
   emit('update', next)
 }
+
+function onTeachingStatusChange(event: Event) {
+  clearParseHighlight(employerFieldId('teaching'))
+  const value = triStateBoolFromSelect((event.target as HTMLSelectElement).value)
+  const next = { ...props.employer }
+  if (value === undefined) {
+    delete next.teachingStatus
+  } else {
+    next.teachingStatus = value
+  }
+  emit('update', next)
+}
+
+function onTraumaLevelChange(event: Event) {
+  clearParseHighlight(employerFieldId('trauma'))
+  const raw = (event.target as HTMLSelectElement).value
+  const next = { ...props.employer }
+  if (!raw) {
+    delete next.traumaLevel
+  } else {
+    next.traumaLevel = normalizeTraumaLevel(raw)
+  }
+  emit('update', next)
+}
 </script>
 
 <template>
@@ -249,6 +274,38 @@ function onClinicalFlagChange(
                 >
               </label>
             </div>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <label class="block" :for="`intake-field-${employerFieldId('trauma')}`">
+                <span class="field-label-compact">Trauma level</span>
+                <select
+                  :id="`intake-field-${employerFieldId('trauma')}`"
+                  :value="employer.traumaLevel || ''"
+                  :class="fieldClasses(employerFieldId('trauma'))"
+                  @change="onTraumaLevelChange"
+                >
+                  <option value="">Select…</option>
+                  <option v-for="level in TRAUMA_LEVEL_OPTIONS" :key="level" :value="level">
+                    Level {{ level }}
+                  </option>
+                </select>
+              </label>
+              <label class="block" :for="`intake-field-${employerFieldId('teaching')}`">
+                <span class="field-label-compact">Teaching hospital</span>
+                <select
+                  :id="`intake-field-${employerFieldId('teaching')}`"
+                  :value="triStateBoolValue(employer.teachingStatus)"
+                  :class="fieldClasses(employerFieldId('teaching'))"
+                  @change="onTeachingStatusChange"
+                >
+                  <option value="">Select…</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+            </div>
+            <p class="text-xs text-slate-500">
+              For manual hospitals — link the facility below to pull trauma and teaching from the database instead.
+            </p>
           </template>
 
           <div v-if="isLinked" class="flex flex-wrap items-end gap-2">

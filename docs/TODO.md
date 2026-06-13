@@ -20,11 +20,11 @@ Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is *
 | --- | --- | --- |
 | **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
-| **A** | Intake polish | Optional validity icons; multi-license rows (deferred) |
+| **A** | Intake polish | Track A shipped (#76–#82) — see [Candidate intake UX](#candidate-intake-ux) |
 | **B** | Step 4 | Document preview + admin per-employment layout (eventual — not built yet) |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
-| **D** | Optional | EMR Other validation, storage upload filenames |
-| **Defer** | — | Multi-license `licenses[]`, `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
+| **D** | Optional | Storage upload filenames |
+| **Defer** | — | `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
 ---
 
@@ -235,15 +235,15 @@ Two patterns — don’t mix them on the same control:
 #### Prefill & manual entry (remaining)
 
 - [x] **Education graduation month + year** (#73) — [`EducationRepeater.vue`](../components/intake/EducationRepeater.vue): month select + year; `graduationMonth` on `education[]` JSONB; DOCX `education_graduation_year` as MM/YYYY when month known; gap review, parse/Gemini, normalizeCandidate
-- [ ] **Multi-license rows (State · License · expiration)** — replace separate license fields in [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) with repeatable **one-line rows**: **State** | **License #** | **Expiration** (MM/YYYY); **+ Add license** for multiple active licenses; intake + admin builder; new `licenses[]` JSONB (e.g. `{ state, number, expiry? }`); map to `{#active_licenses_list}` and `rn_license_state_and_expiry` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts) (today: single `license_state` + `license_number`, no license expiry); PATCH schema, gap review, parse prefill; migrate or fallback from legacy columns
-  - **Include compact license status in this block** — move Yes/No/N/A compact select from [`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue) into the license section (not under “Clinical summary”)
-  - **Remove average patient ratios from this area** — drop career-wide **Average patient ratios** from under compact license in clinical summary ([`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue)); per-employer ratios stay on employer cards; decide whether to remove `average_patient_ratios` from wizard/gap review/DOCX or relocate elsewhere
+- [x] **Multi-license rows (State · License · expiration)** — [`LicenseRepeater.vue`](../components/intake/LicenseRepeater.vue): repeatable rows in [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue); `licenses[]` JSONB + legacy scalar bridge; DOCX `{#active_licenses_list}` + `rn_license_state_and_expiry` with expiry; parse/Gemini `licenses[]`; gap review, intake + admin builder
+  - [x] **Include compact license status in this block** — moved to [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) RN license section
+  - [x] **Average patient ratios** — kept on Step 3 clinical summary (required); not removed per product decision
 - [x] **Credential expiry format MM/YYYY** (#68) — [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue): MM/YYYY input + normalize on PATCH; DOCX BLS/ACLS/PALS expiry; Gemini prompt aligned
-- [ ] **“Other” selects — validation** — EMR Other shows helper when blank but does not block Next; audit whether any future select needs hard empty/error when Other + no text
+- [x] **“Other” selects — validation** — per-card EMR on [`EmployerCard.vue`](../components/intake/EmployerCard.vue) blocks Other + empty custom via `isStoredEmrComplete` (step gate + gap review)
 
 #### Step 1 — visual polish (remaining)
 
-- [ ] **Optional: app-owned field validity icons** — only if product wants explicit checks; **do not** mirror browser autofill checkmarks
+- [x] **Optional: app-owned field validity icons** — [`FieldValidityIcon.vue`](../components/intake/FieldValidityIcon.vue) on Step 1 identity fields (touched + valid only); expand if product wants more
 
 **Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) §D (Steps 1–3)
 
@@ -252,10 +252,10 @@ Two patterns — don’t mix them on the same control:
 Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
 
 - [x] **Employment type dropdown** (#67) — [`EmployerCard.vue`](../components/intake/EmployerCard.vue): Travel / Staff / PRN `<select>`; [`employmentType.ts`](../utils/employmentType.ts) normalize; maps to `experience_employment_type`
-  - [ ] **When PRN selected:** show companion field for average work time (e.g. hours per week / shifts per month — label TBD); new employer JSONB field; confirm DOCX mapping (no template tag today — may need manifest + `docxBuilder` or fold into an existing experience text field)
+  - [x] **When PRN selected:** companion **Typical schedule** field on [`EmployerCard.vue`](../components/intake/EmployerCard.vue); `prnSchedule` on `employers[]` JSONB; appended to `experience_employment_type` in DOCX
 - [x] **Per-employer trauma + teaching inputs** (#72, Option C) — trauma level + teaching Yes/No on **unlinked** employers only; linked cards keep read-only DB `MetricTile`s → `experience_trauma_level` / `experience_is_teaching_facility`
 - [x] **Charge nurse + preceptor experience (per card)** (#71) — yes/no on each [`EmployerCard.vue`](../components/intake/EmployerCard.vue); `chargeNurseExperience` / `preceptorExperience` on `employers[]` JSONB; appended to `experience_highlights` in DOCX
-- [ ] **EMR on each employment card (required)** — **not** a single Employment-section dropdown; each [`EmployerCard.vue`](../components/intake/EmployerCard.vue) gets its own EMR platform select (+ Other custom text per [`emrSystem.ts`](../utils/emrSystem.ts)); remove global `form.emr_system` / footer EMR block in intake + admin builder; store per row on `employers[]` (e.g. `emrSystem`); update [`docxBuilder.ts`](../server/utils/docxBuilder.ts) so each loop row uses that card’s EMR (`experience_emr_system`); PATCH schema, gap review (per employer), derive summary `emr_software_proficiencies` from union of card values
+- [x] **EMR on each employment card (required)** — per-card EMR on [`EmployerCard.vue`](../components/intake/EmployerCard.vue); removed global footer in [`HospitalAutocomplete.vue`](../components/intake/HospitalAutocomplete.vue); `employers[].emrSystem`; DOCX per-row `experience_emr_system` + union `emr_software_proficiencies`; gap review per employer; legacy `emr_system` backfill on hydrate
 - [x] **MetricTile for optional unit stats** (#69) — Unit beds, Avg daily patients as editable `MetricTile`s in expanded deck body
 - [x] **Optional section grouping** (#70) — `<fieldset>` subheads “Role & dates” and “Clinical” on employer cards
 
@@ -347,7 +347,7 @@ See also [Test automation plan — Phase 1](#phase-1--expand-script--unit-covera
 
 - [ ] **Hospital data Google search helper** — small helper control on unlinked employer / facility link UI ([`EmployerCard.vue`](../components/intake/EmployerCard.vue), [`HospitalAutocomplete.vue`](../components/intake/HospitalAutocomplete.vue); intake + admin builder) that opens a new tab to Google with a prefilled query (employer name, city/state, e.g. “trauma level beds teaching hospital”) so recruiters can research metrics before linking or manual entry; no PHI in query beyond what’s already on the card
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
-- [ ] **PR 5 (optional)** — covered by [Multi-license rows](#prefill--manual-entry-remaining) in Candidate intake UX (superseded when that ships)
+- [x] **PR 5 (optional)** — multi-license parse + `licenses[]` JSONB (Track A #78–#80)
 
 ---
 

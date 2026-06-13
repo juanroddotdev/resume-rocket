@@ -140,7 +140,12 @@ function onEmrCustomInput(event: Event) {
 }
 
 function onEmploymentTypeChange(event: Event) {
-  patchField('type', { employmentType: (event.target as HTMLSelectElement).value })
+  const value = (event.target as HTMLSelectElement).value
+  const next: Partial<EmployerEntry> = { employmentType: value }
+  if (normalizeEmploymentType(value) !== 'PRN') {
+    next.prnSchedule = undefined
+  }
+  patchField('type', next)
 }
 
 function openFacilityGoogleSearch() {
@@ -478,6 +483,25 @@ function onTraumaLevelChange(event: Event) {
                 {{ option }}
               </option>
             </select>
+          </label>
+
+          <label
+            v-if="employmentTypeValue === 'PRN'"
+            class="block"
+            :for="`intake-field-${employerFieldId('prn-schedule')}`"
+          >
+            <span class="field-label-compact">Typical schedule</span>
+            <input
+              :id="`intake-field-${employerFieldId('prn-schedule')}`"
+              :value="employer.prnSchedule || ''"
+              type="text"
+              placeholder="e.g. 2 shifts/month, 24 hrs/week"
+              :class="fieldClasses(employerFieldId('prn-schedule'))"
+              @input="patchField('prn-schedule', { prnSchedule: ($event.target as HTMLInputElement).value })"
+            >
+            <span class="mt-1 block text-xs text-slate-500">
+              How often you typically work at this PRN assignment.
+            </span>
           </label>
           </fieldset>
 

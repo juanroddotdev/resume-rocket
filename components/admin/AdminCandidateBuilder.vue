@@ -30,6 +30,7 @@ const {
   certKeys,
   scheduleAutosave,
   onParsed,
+  flushAutosave,
   downloadDraftDocx,
   markSubmitted,
   scrollToSection,
@@ -42,6 +43,8 @@ const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => bo
 
 const actionError = ref<string | null>(null)
 const actionLoading = ref(false)
+const previewSaving = ref(false)
+const previewSaveError = ref<string | null>(null)
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const linkCopied = ref(false)
@@ -96,6 +99,24 @@ async function onDownloadDraft() {
     actionError.value = e instanceof Error ? e.message : 'Could not download DOCX.'
   } finally {
     actionLoading.value = false
+  }
+}
+
+async function onReviewPreview() {
+  previewSaveError.value = null
+  previewSaving.value = true
+  try {
+    await flushAutosave()
+  } catch {
+    previewSaveError.value = 'Could not save the latest draft.'
+  } finally {
+    previewSaving.value = false
+    await nextTick()
+    await nextTick()
+    document.getElementById('packet-preview-summary')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
   }
 }
 
@@ -382,7 +403,11 @@ watch(loading, (isLoading) => {
               :advisories="employerLinkAdvisories"
               :submitting="actionLoading"
               allow-incomplete-submit
+              :form="form"
+              :preview-loading="previewSaving"
+              :preview-save-error="previewSaveError"
               @go-to-field="({ step, fieldId }) => goToField(step, fieldId)"
+              @preview="onReviewPreview"
               @submit="onDownloadDraft"
               @back="scrollToSection('credentials')"
             />

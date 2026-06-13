@@ -38,12 +38,13 @@ Server normalizes on parse write, PATCH ingress, and DOCX read via `server/utils
 |-------|-----------------|
 | `employers[]` | camelCase keys: `traumaLevel`, `teachingStatus`, `startDate`, `hospitalId`, … |
 | `credentials` | `{ "BLS": { "active": true, "expiry?": "YYYY-MM-DD" } }` (booleans coerced on ingress) |
-| `education[]` | `{ degree?, school?, graduationYear? }` — column `candidates.education` JSONB |
+| `education[]` | `{ degree?, school?, graduationMonth?, graduationYear? }` — column `candidates.education` JSONB |
+| `licenses[]` | `{ state?, number?, expiry? }` — column `candidates.licenses` JSONB; legacy scalar fallback |
 | `years_nursing_experience` | `candidates.years_nursing_experience` TEXT |
 | `compact_license_status` | `candidates.compact_license_status` TEXT |
 | `average_patient_ratios` | `candidates.average_patient_ratios` TEXT |
 | `specialized_medical_equipment` | `candidates.specialized_medical_equipment` TEXT |
-| Extended `employers[]` | `employmentType`, `unitBedCount`, `patientScope`, `floatedUnits[]`, `equipmentProcedures[]`, `avgDailyPatients`, `patientAcuity`, `highlights[]` |
+| Extended `employers[]` | `employmentType`, `emrSystem`, `prnSchedule`, `unitBedCount`, `patientScope`, `floatedUnits[]`, `equipmentProcedures[]`, `avgDailyPatients`, `patientAcuity`, `highlights[]` |
 
 Verify: `node scripts/test-normalize-candidate.mjs`
 
@@ -66,8 +67,8 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
-| `{#active_licenses_list}{.}{/active_licenses_list}` | `license_state` + `license_number` | Yes | 3 — Credentials | Yes | Live |
-| `rn_license_state_and_expiry` | Same (formatted) | Yes | 3 — Credentials | Yes | Live |
+| `{#active_licenses_list}{.}{/active_licenses_list}` | `licenses[]` (fallback: `license_state` + `license_number`) | Yes | 3 — Credentials | Yes | Live |
+| `rn_license_state_and_expiry` | Primary `licenses[0]` formatted with expiry | Yes | 3 — Credentials | Yes | Live |
 | `compact_license_status` | `candidates.compact_license_status` | Yes | 3 — Credentials | Yes | Live |
 | `core_life_support_certifications` | `credentials` active keys | Partial | 3 — Credentials | Yes | Live |
 | `BLS_certification_expiration_date` | `credentials.BLS.expiry` | Yes | 3 — Credentials | Yes | Live |
@@ -89,7 +90,7 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | `average_patient_ratios` | `candidates.average_patient_ratios` | Yes | 3 — Summary | Yes | Live |
 | `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Yes | 3 — Summary | Yes | Live |
 | `facility_types_trauma_levels` | Derived from `employers[].traumaLevel` | Partial | 2 — Employment | No | Derived |
-| `emr_software_proficiencies` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
+| `emr_software_proficiencies` | Union of `employers[].emrSystem` (fallback: `candidates.emr_system`) | No | 2 — Employer card | Yes | Live |
 
 ---
 
@@ -117,7 +118,7 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 | `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 | Yes | Live |
 | `experience_employment_type` | `employers[].employmentType` | Yes | 2 — Employer card | Yes | Live |
 | `experience_unit_bed_count` | `employers[].unitBedCount` | Yes | 2 — Employer detail | No | Live |
-| `experience_emr_system` | `candidates.emr_system` | No | 2 — Employment | Yes | Live |
+| `experience_emr_system` | `employers[].emrSystem` (fallback: `candidates.emr_system`) | No | 2 — Employer card | Yes | Live |
 | `experience_is_teaching_facility` | `employers[].teachingStatus` | No (hospital DB) | 2 — Employment | No | Live |
 | `experience_patient_scope` | `employers[].patientScope` | Yes | 2 — Employer detail | Yes | Live |
 | `experience_average_daily_patients` | `employers[].avgDailyPatients` | Yes | 2 — Employer detail | No | Live |

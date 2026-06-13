@@ -8,11 +8,16 @@ const props = withDefaults(defineProps<{
   submitting: boolean
   allowIncompleteSubmit?: boolean
   form?: CandidateDraftInput
+  candidateId?: string
+  previewHeaders?: Record<string, string>
+  previewReloadToken?: number | string
   previewLoading?: boolean
   previewSaveError?: string | null
   active?: boolean
 }>(), {
   form: () => ({}),
+  previewHeaders: () => ({}),
+  previewReloadToken: 0,
   active: true,
 })
 
@@ -35,6 +40,8 @@ watch(
 const canPreview = computed(
   () => props.allowIncompleteSubmit || props.missing.length === 0,
 )
+
+const useDocxPreview = computed(() => Boolean(props.candidateId))
 
 function onPreviewClick() {
   emit('preview')
@@ -126,7 +133,12 @@ function onBackToEdit() {
     <template v-else>
       <h1 class="text-xl font-bold">Preview your packet</h1>
       <p class="text-sm text-slate-600">
-        Summary of your VMS packet — layout may differ slightly in Word.
+        <template v-if="useDocxPreview">
+          Review your VMS placement packet below. Download when it looks correct.
+        </template>
+        <template v-else>
+          Summary of your VMS packet — layout may differ slightly in Word.
+        </template>
       </p>
 
       <p
@@ -134,17 +146,26 @@ function onBackToEdit() {
         class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         role="status"
       >
-        {{ previewSaveError }} Preview shows your latest answers on this device.
+        {{ previewSaveError }}
+        <template v-if="useDocxPreview"> Preview uses your last saved draft.</template>
+        <template v-else> Preview shows your latest answers on this device.</template>
       </p>
 
       <div v-if="previewLoading" class="py-8 text-center text-sm text-slate-500" role="status">
-        Updating preview…
+        Saving your answers…
+      </div>
+      <div v-else-if="useDocxPreview" id="docx-preview-viewer">
+        <DocxPreviewViewer
+          :candidate-id="candidateId!"
+          :headers="previewHeaders"
+          :reload-token="previewReloadToken"
+        />
       </div>
       <PacketPreviewSummary v-else :form="form" />
 
       <div class="flex gap-2">
         <button type="button" class="flex-1 rounded-lg border py-3" @click="onBackToEdit">
-          Back to edit
+          Make changes
         </button>
         <button
           type="button"

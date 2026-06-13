@@ -19,6 +19,7 @@ const {
   inviteError,
   candidateId: inviteCandidateId,
   prefilledEmail,
+  intakeHeaders,
 } = useIntakeInvite()
 const {
   candidateId,
@@ -51,6 +52,7 @@ const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
 const previewSaving = ref(false)
 const previewSaveError = ref<string | null>(null)
+const previewReloadToken = ref(0)
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
 const adminDraftDownloadNotice = ref<string | null>(null)
@@ -390,6 +392,7 @@ async function onReviewPreview() {
     previewSaveError.value = 'Could not save your latest answers.'
   } finally {
     previewSaving.value = false
+    previewReloadToken.value += 1
   }
 }
 </script>
@@ -677,6 +680,9 @@ async function onReviewPreview() {
           :submitting="submitting"
           :allow-incomplete-submit="isAdminView"
           :form="form"
+          :candidate-id="candidateId ?? undefined"
+          :preview-headers="intakeHeaders()"
+          :preview-reload-token="previewReloadToken"
           :preview-loading="previewSaving"
           :preview-save-error="previewSaveError"
           :active="currentStep === 4"

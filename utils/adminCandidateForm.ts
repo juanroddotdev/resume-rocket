@@ -8,6 +8,7 @@ import type {
 import type { HospitalSuggestion } from '../types/hospital'
 import { employersForPatch, mapParsedEmployers } from './employerLink.ts'
 import { displayCredentialExpiry } from './credentialExpiry.ts'
+import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from './emrSystem.ts'
 
 export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'review'
 
@@ -68,6 +69,8 @@ function stripEmployerSuggestions(employers: EmployerEntry[]): EmployerEntry[] {
 }
 
 export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateForm>): CandidateDraftInput {
+  const employers = employersForPatch(form.employers)
+  const emrUnion = employerEmrProficienciesUnion(employers)
   return {
     first_name: form.first_name,
     last_name: form.last_name,
@@ -75,8 +78,8 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     phone: form.phone,
     license_number: form.license_number,
     license_state: form.license_state,
-    emr_system: form.emr_system,
-    employers: employersForPatch(form.employers),
+    emr_system: emrUnion || undefined,
+    employers,
     credentials: form.credentials,
     specialties: form.specialties,
     years_nursing_experience: form.years_nursing_experience || undefined,
@@ -115,6 +118,7 @@ export function applyAdminDraftToForm(
   form: ReturnType<typeof defaultCandidateForm>,
   row: AdminDraftResponse,
 ) {
+  const employers = backfillEmployerEmrSystems(stripEmployerSuggestions(row.employers ?? []), row.emr_system)
   Object.assign(form, {
     ...defaultCandidateForm(),
     first_name: row.first_name ?? '',
@@ -123,8 +127,8 @@ export function applyAdminDraftToForm(
     phone: row.phone ?? '',
     license_number: row.license_number ?? '',
     license_state: row.license_state ?? '',
-    emr_system: row.emr_system ?? '',
-    employers: stripEmployerSuggestions(row.employers ?? []),
+    emr_system: employerEmrProficienciesUnion(employers) || row.emr_system || '',
+    employers,
     credentials: normalizeStoredCredentials(row.credentials ?? {}),
     specialties: row.specialties ?? [],
     years_nursing_experience: row.years_nursing_experience ?? '',

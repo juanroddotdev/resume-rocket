@@ -5,6 +5,12 @@ import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employ
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
 import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
+import {
+  EMR_OTHER_OPTION,
+  EMR_PRESET_OPTIONS,
+  emrSystemFromFields,
+  resolveEmrFields,
+} from '~/utils/emrSystem'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
 
 const props = defineProps<{
@@ -117,6 +123,21 @@ function arrayToLines(values?: string[]) {
 const employmentTypeValue = computed(() => {
   return normalizeEmploymentType(props.employer.employmentType) || ''
 })
+
+const emrFields = computed(() => resolveEmrFields(props.employer.emrSystem))
+const emrSelection = computed(() => emrFields.value.selection)
+const emrCustom = computed(() => emrFields.value.custom)
+
+function onEmrSelectionChange(event: Event) {
+  const selection = (event.target as HTMLSelectElement).value
+  const custom = selection === EMR_OTHER_OPTION ? emrCustom.value : ''
+  patchField('emr', { emrSystem: emrSystemFromFields(selection, custom) })
+}
+
+function onEmrCustomInput(event: Event) {
+  const custom = (event.target as HTMLInputElement).value
+  patchField('emr-other', { emrSystem: emrSystemFromFields(EMR_OTHER_OPTION, custom) })
+}
 
 function onEmploymentTypeChange(event: Event) {
   patchField('type', { employmentType: (event.target as HTMLSelectElement).value })
@@ -464,6 +485,44 @@ function onTraumaLevelChange(event: Event) {
             <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Clinical
             </legend>
+
+          <label class="block" :for="`intake-field-${employerFieldId('emr')}`">
+            <span class="field-label-compact">EMR platform</span>
+            <select
+              :id="`intake-field-${employerFieldId('emr')}`"
+              :value="emrSelection"
+              :class="fieldClasses(employerFieldId('emr'))"
+              @change="onEmrSelectionChange"
+            >
+              <option value="">Select…</option>
+              <option v-for="option in EMR_PRESET_OPTIONS" :key="option" :value="option">
+                {{ option }}
+              </option>
+              <option :value="EMR_OTHER_OPTION">Other</option>
+            </select>
+          </label>
+          <label
+            v-if="emrSelection === EMR_OTHER_OPTION"
+            class="block"
+            :for="`intake-field-${employerFieldId('emr-other')}`"
+          >
+            <span class="field-label-compact">Other EMR platform</span>
+            <input
+              :id="`intake-field-${employerFieldId('emr-other')}`"
+              :value="emrCustom"
+              type="text"
+              placeholder="e.g. Allscripts, Athena, Medhost"
+              :class="fieldClasses(employerFieldId('emr-other'))"
+              @input="onEmrCustomInput"
+            >
+          </label>
+          <p
+            v-if="emrSelection === EMR_OTHER_OPTION && !emrCustom.trim()"
+            class="text-xs text-amber-800"
+            role="status"
+          >
+            Enter the EMR name — required when Other is selected.
+          </p>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">
             <span class="field-label-compact">Patient scope</span>

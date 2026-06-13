@@ -140,6 +140,7 @@ export function buildDevIntakeParsePayloadComplete(candidateId?: string | null):
         highlights: ['Charge nurse 18 months', 'Preceptor for new grads'],
         chargeNurseExperience: true,
         preceptorExperience: true,
+        emrSystem: 'Epic',
       },
       {
         name: 'General Hospital',
@@ -159,6 +160,7 @@ export function buildDevIntakeParsePayloadComplete(candidateId?: string | null):
         floatedUnits: ['ICU'],
         equipmentProcedures: ['IV therapy', 'Wound care'],
         highlights: ['Consistent patient satisfaction scores'],
+        emrSystem: 'Cerner',
       },
     ],
     fields_found: 42,

@@ -69,6 +69,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   const preceptorExperience = optionalBool(
     e.preceptorExperience ?? e.preceptor_experience,
   )
+  const emrSystem = optionalString(e.emrSystem ?? e.emr_system)
 
   if (role) entry.role = role
   if (startDate) entry.startDate = startDate
@@ -95,6 +96,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (highlights) entry.highlights = highlights
   if (chargeNurseExperience != null) entry.chargeNurseExperience = chargeNurseExperience
   if (preceptorExperience != null) entry.preceptorExperience = preceptorExperience
+  if (emrSystem) entry.emrSystem = emrSystem
 
   return entry
 }

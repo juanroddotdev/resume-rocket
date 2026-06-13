@@ -44,6 +44,8 @@ export const employerInputSchema = z.object({
   charge_nurse_experience: z.boolean().optional(),
   preceptorExperience: z.boolean().optional(),
   preceptor_experience: z.boolean().optional(),
+  emrSystem: z.string().optional(),
+  emr_system: z.string().optional(),
 })
 
 const credentialInputSchema = z.union([

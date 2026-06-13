@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
+import { employerEmrProficienciesUnion } from '../../utils/emrSystem.ts'
 import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
@@ -99,8 +100,8 @@ function mapEducation(education: EducationEntry[] | null | undefined) {
 
 function mapEmployerToExperience(
   employer: DocxEmployer,
-  emrSystem: string,
   primarySpecialty: string,
+  legacyEmrSystem: string,
 ) {
   const trauma = traumaLevel(employer)
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
@@ -119,7 +120,7 @@ function mapEmployerToExperience(
     experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',
     experience_trauma_level: trauma,
     experience_is_teaching_facility: teachingFacilityLabel(employer),
-    experience_emr_system: emrSystem,
+    experience_emr_system: employer.emrSystem || legacyEmrSystem || '',
     experience_patient_scope: employer.patientScope || '',
     experience_floated_units_list: employer.floatedUnits || [],
     experience_equipment_procedures_list: employer.equipmentProcedures || [],
@@ -131,7 +132,8 @@ function mapEmployerToExperience(
 
 export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const employers = candidate.employers || []
-  const emrSystem = candidate.emr_system || ''
+  const emrUnion = employerEmrProficienciesUnion(employers)
+  const emrProficiencies = emrUnion || candidate.emr_system || ''
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
   const activeCerts = activeCertKeys(credentials)
@@ -154,7 +156,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     clinical_specialties_list: specialties,
     average_patient_ratios: candidate.average_patient_ratios || '',
     specialized_medical_equipment: candidate.specialized_medical_equipment || '',
-    emr_software_proficiencies: emrSystem,
+    emr_software_proficiencies: emrProficiencies,
     core_life_support_certifications: activeCerts.join(', '),
 
     rn_license_state_and_expiry: formatLicenseStateAndExpiry(
@@ -169,7 +171,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     education: mapEducation(candidate.education),
 
     professional_experiences: employers.map(e =>
-      mapEmployerToExperience(e, emrSystem, primarySpecialty),
+      mapEmployerToExperience(e, primarySpecialty, candidate.emr_system || ''),
     ),
   }
 }

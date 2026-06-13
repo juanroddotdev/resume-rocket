@@ -12,6 +12,7 @@ import type { FinalizePhase } from '~/utils/intakeProcessing'
 import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
 import type { ParseMeta } from '~/types/parse'
 import { displayCredentialExpiry } from '~/utils/credentialExpiry'
+import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from '~/utils/emrSystem'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -82,6 +83,8 @@ function stripEmployerSuggestions(employers: EmployerEntry[]): EmployerEntry[] {
 }
 
 function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput {
+  const employers = employersForPatch(form.employers)
+  const emrUnion = employerEmrProficienciesUnion(employers)
   return {
     first_name: form.first_name,
     last_name: form.last_name,
@@ -89,8 +92,8 @@ function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput
     phone: form.phone,
     license_number: form.license_number,
     license_state: form.license_state,
-    emr_system: form.emr_system,
-    employers: employersForPatch(form.employers),
+    emr_system: emrUnion || undefined,
+    employers,
     credentials: form.credentials,
     specialties: form.specialties,
     years_nursing_experience: form.years_nursing_experience || undefined,
@@ -268,6 +271,10 @@ export function useCandidateForm() {
   }
 
   function applyServerDraft(row: ServerDraftResponse) {
+    const employers = backfillEmployerEmrSystems(
+      stripEmployerSuggestions(row.employers ?? []),
+      row.emr_system,
+    )
     form.value = {
       ...defaultForm(),
       first_name: row.first_name ?? '',
@@ -276,8 +283,8 @@ export function useCandidateForm() {
       phone: row.phone ?? '',
       license_number: row.license_number ?? '',
       license_state: row.license_state ?? '',
-      emr_system: row.emr_system ?? '',
-      employers: stripEmployerSuggestions(row.employers ?? []),
+      emr_system: employerEmrProficienciesUnion(employers) || row.emr_system || '',
+      employers,
       credentials: normalizeStoredCredentials(row.credentials ?? {}),
       specialties: row.specialties ?? [],
       years_nursing_experience: row.years_nursing_experience ?? '',
@@ -311,10 +318,15 @@ export function useCandidateForm() {
       license_state: isEmptyString(current.license_state)
         ? (row.license_state ?? '')
         : current.license_state,
-      emr_system: isEmptyString(current.emr_system) ? (row.emr_system ?? '') : current.emr_system,
+      emr_system: isEmptyString(current.emr_system)
+        ? (employerEmrProficienciesUnion(backfillEmployerEmrSystems(
+          stripEmployerSuggestions(row.employers ?? []),
+          row.emr_system,
+        )) || row.emr_system || '')
+        : current.emr_system,
       employers: current.employers.length
         ? current.employers
-        : stripEmployerSuggestions(row.employers ?? []),
+        : backfillEmployerEmrSystems(stripEmployerSuggestions(row.employers ?? []), row.emr_system),
       credentials: Object.keys(current.credentials).length
         ? current.credentials
         : normalizeStoredCredentials(row.credentials ?? {}),

@@ -14,14 +14,14 @@ One concern per PR when implementing. Check items off when merged (optionally ad
 
 ## What's next
 
-Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, Step 4 preview, and admin polish.
+Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, and admin polish.
 
 | Priority | Track | Open items |
 | --- | --- | --- |
 | **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
 | **A** | Intake polish | Track A shipped (#76–#82) — see [Candidate intake UX](#candidate-intake-ux) |
-| **B** | Step 4 | Document preview + admin per-employment layout (eventual — not built yet) |
+| **B** | Step 4 | HTML preview shipped (#84–#87); Phase 2 admin per-employment DOCX layout deferred |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
 | **D** | Optional | Storage upload filenames |
 | **Defer** | — | `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
@@ -261,12 +261,10 @@ Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DE
 
 #### Step 4 — review & finish
 
-**Eventual plan (not built yet)** — preview before download, then admin layout control in the same initiative.
+**Phase 1 shipped (#84–#87)** — HTML packet preview before download; Phase 2 admin DOCX layout control deferred.
 
-- [ ] **Document preview before download** — show filled contract template before final download; candidate confirms or goes back to edit
-  - **Today:** gap review is field checklist only; DOCX on submit with no preview ([`finalizeAndDownload`](../pages/intake/[token].vue), [`docxBuilder`](../server/utils/docxBuilder.ts))
-  - **Phase 1 — preview:** “Preview your packet” + **Download** / **Go back and edit**; pick implementation in PR — preview DOCX/PDF endpoint, in-browser HTML summary, or iframe PDF; must not log PHI in preview URLs; loading + retry; fallback to download-only if preview unavailable
-  - **Phase 2 — admin layout (concierge):** in the same preview experience ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue)), recruiter configures **flexible blocks / columns per employment row** — which fields show, order, grouping — to style each hospital’s section in the final DOCX (not one fixed row layout for every employer); layout config on `employers[]` or packet JSON + [`docxBuilder.ts`](../server/utils/docxBuilder.ts) / template strategy beyond today’s fixed `{#professional_experiences}` loop; admin-first unless product expands to candidates
+- [x] **Document preview before download (Phase 1 — HTML)** — two-step review: gap checklist → **Preview packet** → [`PacketPreviewSummary.vue`](../components/intake/PacketPreviewSummary.vue) via [`buildPacketPreviewSections()`](../utils/packetPreviewSections.ts); **Download** / **Back to edit** on [`IntakeReviewPanel.vue`](../components/intake/IntakeReviewPanel.vue); intake Step 4 + admin builder review; autosave flush on preview with local fallback message
+  - [ ] **Phase 2 — admin layout (concierge):** in the preview experience ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue)), recruiter configures **flexible blocks / columns per employment row** — which fields show, order, grouping — to style each hospital’s section in the final DOCX; layout config on `employers[]` or packet JSON + [`docxBuilder.ts`](../server/utils/docxBuilder.ts) / template strategy beyond today’s fixed `{#professional_experiences}` loop; admin-first unless product expands to candidates
 - [ ] **Review summary tiles (optional)** — gap review filled employer/clinical stats via `MetricTile`; pairs with document preview long-term
 
 ---

@@ -10,6 +10,11 @@ type ParsePrefillInput = {
   phone?: string
   license_number?: string
   license_state?: string
+  licenses?: Array<{
+    state?: string
+    number?: string
+    expiry?: string
+  }>
   specialties?: string[]
   years_nursing_experience?: string
   compact_license_status?: string
@@ -62,6 +67,11 @@ export function collectParsePrefillFieldIds(data: ParsePrefillInput): string[] {
   pushFieldId(ids, 'phone', data.phone)
   pushFieldId(ids, 'license_number', data.license_number)
   pushFieldId(ids, 'license_state', data.license_state)
+  data.licenses?.forEach((row, index) => {
+    pushFieldId(ids, `license-${index}-state`, row.state)
+    pushFieldId(ids, `license-${index}-number`, row.number)
+    pushFieldId(ids, `license-${index}-expiry`, row.expiry)
+  })
   pushFieldId(ids, 'specialties', data.specialties)
   pushFieldId(ids, 'years_nursing_experience', data.years_nursing_experience)
   pushFieldId(ids, 'compact_license_status', data.compact_license_status)

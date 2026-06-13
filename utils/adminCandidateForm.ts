@@ -4,11 +4,13 @@ import type {
   CredentialEntry,
   EducationEntry,
   EmployerEntry,
+  LicenseEntry,
 } from '../types/candidate'
 import type { HospitalSuggestion } from '../types/hospital'
 import { employersForPatch, mapParsedEmployers } from './employerLink.ts'
 import { displayCredentialExpiry } from './credentialExpiry.ts'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from './emrSystem.ts'
+import { legacyScalarsFromLicenses, resolveCandidateLicenses } from './licenseRows.ts'
 
 export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'review'
 
@@ -52,6 +54,7 @@ export function defaultCandidateForm() {
     phone: '',
     license_number: '',
     license_state: '',
+    licenses: [] as LicenseEntry[],
     emr_system: '',
     employers: [] as EmployerEntry[],
     credentials: {} as CredentialsMap,
@@ -71,13 +74,22 @@ function stripEmployerSuggestions(employers: EmployerEntry[]): EmployerEntry[] {
 export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateForm>): CandidateDraftInput {
   const employers = employersForPatch(form.employers)
   const emrUnion = employerEmrProficienciesUnion(employers)
+  const licenses = form.licenses.length
+    ? form.licenses
+    : resolveCandidateLicenses({
+      licenses: form.licenses,
+      license_state: form.license_state,
+      license_number: form.license_number,
+    })
+  const legacyScalars = legacyScalarsFromLicenses(licenses)
   return {
     first_name: form.first_name,
     last_name: form.last_name,
     email: form.email,
     phone: form.phone,
-    license_number: form.license_number,
-    license_state: form.license_state,
+    license_number: legacyScalars.license_number ?? form.license_number,
+    license_state: legacyScalars.license_state ?? form.license_state,
+    licenses: licenses.length ? licenses : undefined,
     emr_system: emrUnion || undefined,
     employers,
     credentials: form.credentials,
@@ -100,6 +112,7 @@ export type AdminDraftResponse = {
   phone?: string | null
   license_number?: string | null
   license_state?: string | null
+  licenses?: LicenseEntry[] | null
   emr_system?: string | null
   specialties?: string[] | null
   credentials?: CredentialsMap | null
@@ -119,14 +132,21 @@ export function applyAdminDraftToForm(
   row: AdminDraftResponse,
 ) {
   const employers = backfillEmployerEmrSystems(stripEmployerSuggestions(row.employers ?? []), row.emr_system)
+  const licenses = resolveCandidateLicenses({
+    licenses: row.licenses,
+    license_state: row.license_state,
+    license_number: row.license_number,
+  })
+  const legacyScalars = legacyScalarsFromLicenses(licenses)
   Object.assign(form, {
     ...defaultCandidateForm(),
     first_name: row.first_name ?? '',
     last_name: row.last_name ?? '',
     email: row.email ?? '',
     phone: row.phone ?? '',
-    license_number: row.license_number ?? '',
-    license_state: row.license_state ?? '',
+    license_number: legacyScalars.license_number ?? row.license_number ?? '',
+    license_state: legacyScalars.license_state ?? row.license_state ?? '',
+    licenses,
     emr_system: employerEmrProficienciesUnion(employers) || row.emr_system || '',
     employers,
     credentials: normalizeStoredCredentials(row.credentials ?? {}),
@@ -148,6 +168,7 @@ export function applyParseResultToForm(
     phone?: string
     license_number?: string
     license_state?: string
+    licenses?: LicenseEntry[]
     emr_system?: string
     specialties?: string[]
     years_nursing_experience?: string
@@ -164,8 +185,19 @@ export function applyParseResultToForm(
   if (data.last_name) form.last_name = data.last_name
   if (data.email) form.email = data.email
   if (data.phone) form.phone = data.phone
-  if (data.license_number) form.license_number = data.license_number
-  if (data.license_state) form.license_state = data.license_state
+  if (data.license_number || data.license_state) {
+    form.licenses = resolveCandidateLicenses({
+      licenses: data.licenses,
+      license_state: data.license_state,
+      license_number: data.license_number,
+    })
+    const legacyScalars = legacyScalarsFromLicenses(form.licenses)
+    form.license_number = legacyScalars.license_number ?? data.license_number ?? form.license_number
+    form.license_state = legacyScalars.license_state ?? data.license_state ?? form.license_state
+  } else if (data.licenses?.length) {
+    form.licenses = [...data.licenses]
+    Object.assign(form, legacyScalarsFromLicenses(form.licenses))
+  }
   if (data.emr_system) form.emr_system = data.emr_system
   if (data.specialties?.length) form.specialties = data.specialties
   if (data.years_nursing_experience) form.years_nursing_experience = data.years_nursing_experience

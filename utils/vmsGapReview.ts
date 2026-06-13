@@ -1,5 +1,6 @@
-import type { CandidateDraftInput, EducationEntry, EmployerEntry } from '~/types/candidate'
+import type { CandidateDraftInput, EducationEntry, EmployerEntry, LicenseEntry } from '~/types/candidate'
 import { normalizeGraduationMonth } from '~/utils/educationGraduation'
+import { hasCompleteLicense, resolveCandidateLicenses } from '~/utils/licenseRows'
 import { isStoredEmrComplete } from '~/utils/emrSystem'
 
 export interface MissingTemplateField {
@@ -22,6 +23,7 @@ type FormShape = CandidateDraftInput & {
   emr_system?: string
   employers?: EmployerEntry[]
   education?: EducationEntry[]
+  licenses?: LicenseEntry[]
 }
 
 function hasText(value?: string | null) {
@@ -85,12 +87,26 @@ export function computeMissingTemplateFields(form: FormShape): MissingTemplateFi
     }
   }
 
-  if (!hasText(form.license_number)) {
-    missing.push({ id: 'license_number', label: 'License number', step: 3 })
+  const licenses = resolveCandidateLicenses({
+    licenses: form.licenses,
+    license_state: form.license_state,
+    license_number: form.license_number,
+  })
+  if (!hasCompleteLicense(licenses)) {
+    if (!licenses.length) {
+      missing.push({ id: 'licenses', label: 'At least one RN license', step: 3 })
+    } else {
+      licenses.forEach((row, index) => {
+        if (!hasText(row.state)) {
+          missing.push({ id: `license-${index}-state`, label: `License ${index + 1}: state`, step: 3 })
+        }
+        if (!hasText(row.number)) {
+          missing.push({ id: `license-${index}-number`, label: `License ${index + 1}: license number`, step: 3 })
+        }
+      })
+    }
   }
-  if (!hasText(form.license_state)) {
-    missing.push({ id: 'license_state', label: 'License state', step: 3 })
-  }
+
   if (!hasText(form.years_nursing_experience)) {
     missing.push({ id: 'years_nursing_experience', label: 'Years of nursing experience', step: 3 })
   }

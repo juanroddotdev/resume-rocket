@@ -49,6 +49,8 @@ const submitProgress = ref(0)
 const confirmationEmailSent = ref(false)
 const redownloading = ref(false)
 const redownloadError = ref<string | null>(null)
+const previewSaving = ref(false)
+const previewSaveError = ref<string | null>(null)
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
 const adminDraftDownloadNotice = ref<string | null>(null)
@@ -378,6 +380,18 @@ async function onDownloadAgain() {
     redownloading.value = false
   }
 }
+
+async function onReviewPreview() {
+  previewSaveError.value = null
+  previewSaving.value = true
+  try {
+    await flushAutosave()
+  } catch {
+    previewSaveError.value = 'Could not save your latest answers.'
+  } finally {
+    previewSaving.value = false
+  }
+}
 </script>
 
 <template>
@@ -662,7 +676,12 @@ async function onDownloadAgain() {
           :advisories="employerLinkAdvisories"
           :submitting="submitting"
           :allow-incomplete-submit="isAdminView"
+          :form="form"
+          :preview-loading="previewSaving"
+          :preview-save-error="previewSaveError"
+          :active="currentStep === 4"
           @back="goToStep(3)"
+          @preview="onReviewPreview"
           @go-to-field="goToField"
           @submit="goSuccess"
         />

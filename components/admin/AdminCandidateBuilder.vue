@@ -80,6 +80,14 @@ const displayName = computed(() => {
   return name || 'Unnamed candidate'
 })
 
+const sidebarName = computed(() => {
+  if (loading.value) {
+    const name = `${props.candidate.first_name || ''} ${props.candidate.last_name || ''}`.trim()
+    return name || 'Unnamed candidate'
+  }
+  return displayName.value
+})
+
 async function onDownloadDraft() {
   actionError.value = null
   actionLoading.value = true
@@ -179,11 +187,18 @@ watch(loading, (isLoading) => {
 <template>
   <div class="flex min-h-[640px] flex-col rounded-xl border border-slate-200 bg-white shadow-sm lg:flex-row">
     <nav class="shrink-0 border-b border-slate-200 p-4 lg:w-52 lg:border-b-0 lg:border-r">
-      <p class="text-sm font-semibold text-slate-900">{{ displayName }}</p>
-      <p class="mt-0.5 text-xs capitalize text-slate-500">{{ candidate.status }}</p>
+      <template v-if="loading">
+        <p class="text-sm font-semibold text-slate-900">{{ sidebarName }}</p>
+        <div class="mt-2 h-3 w-16 animate-pulse rounded bg-slate-100" />
+      </template>
+      <template v-else>
+        <p class="text-sm font-semibold text-slate-900">{{ displayName }}</p>
+        <p class="mt-0.5 text-xs capitalize text-slate-500">{{ candidate.status }}</p>
+      </template>
       <ul class="mt-4 space-y-1">
         <li v-for="section in ADMIN_SECTIONS" :key="section.id">
           <button
+            v-if="!loading"
             type="button"
             class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition"
             :class="activeSection === section.id
@@ -199,14 +214,18 @@ watch(loading, (isLoading) => {
               {{ sectionMissingCounts[section.id] }}
             </span>
           </button>
+          <div
+            v-else
+            class="flex items-center justify-between rounded-lg px-3 py-2"
+          >
+            <div class="h-4 w-24 animate-pulse rounded bg-slate-100" />
+          </div>
         </li>
       </ul>
     </nav>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <div v-if="loading" class="flex flex-1 items-center justify-center p-8">
-        <p class="text-sm text-slate-600">Loading draft…</p>
-      </div>
+      <AdminCandidateBuilderSkeleton v-if="loading" />
 
       <div
         v-else-if="loadError"

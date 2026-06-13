@@ -246,7 +246,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                 Upload and complete the VMS packet in the builder on the right.
               </template>
               <template v-else>
-                Switch to Builder or use Open in builder on a row to complete the packet.
+                Select the candidate in the sidebar or use Open in builder on a table row.
               </template>
               <span v-if="inviteSuccess.copied"> Intake link copied for future candidate handoff.</span>
               <span v-else>Use Copy intake link in the builder footer when you want to share it.</span>
@@ -284,73 +284,15 @@ function openCandidateIntake(candidate: CandidateRow) {
         </button>
       </div>
 
-      <div class="relative min-h-[480px]">
-        <Transition name="admin-view" mode="out-in">
-          <div
-            v-if="adminView === 'builder'"
-            key="builder"
-            class="lg:grid lg:grid-cols-[minmax(300px,360px)_1fr] lg:items-start lg:gap-8"
-          >
-            <aside class="space-y-4 lg:sticky lg:top-8">
-              <CreateInvitePanel @created="onInviteCreated" />
-              <div>
-                <div class="mb-2 flex flex-wrap items-center gap-3">
-                  <input
-                    v-model="search"
-                    type="search"
-                    placeholder="Search…"
-                    class="field min-w-0 flex-1 text-sm"
-                  >
-                  <label class="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                    <input v-model="showAll" type="checkbox">
-                    Drafts
-                  </label>
-                </div>
-                <div
-                  v-if="candidatesError"
-                  class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-                >
-                  {{ candidatesError }}
-                  <button type="button" class="ml-1 underline" @click="loadCandidates()">Retry</button>
-                </div>
-                <AdminCandidateList
-                  v-else
-                  :candidates="candidates"
-                  :search="search"
-                  :show-all="showAll"
-                  :loading="loadingCandidates"
-                  :selected-id="selectedCandidate?.id ?? null"
-                  @select="selectCandidate"
-                />
-              </div>
-            </aside>
-
-            <section class="mt-8 lg:mt-0">
-              <AdminCandidateBuilder
-                v-if="selectedCandidate"
-                :candidate="selectedCandidate"
-                @reload="loadCandidates()"
-                @open-parse-qa="openParseQa"
-              />
-              <div
-                v-else
-                class="flex min-h-[480px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
-              >
-                <h2 class="text-lg font-semibold text-slate-900">Resume builder</h2>
-                <p class="mt-2 max-w-md text-sm text-slate-600">
-                  Create an intake link, then select a candidate on the left to upload their resume, parse, and complete the VMS packet here.
-                </p>
-              </div>
-            </section>
-          </div>
-
-          <div v-else key="table" class="space-y-4">
-            <CreateInvitePanel @created="onInviteCreated" />
-            <div class="flex flex-wrap items-center gap-3">
+      <div class="lg:grid lg:grid-cols-[minmax(300px,360px)_1fr] lg:items-start lg:gap-8">
+        <aside class="space-y-4 lg:sticky lg:top-8">
+          <CreateInvitePanel @created="onInviteCreated" />
+          <div>
+            <div class="mb-2 flex flex-wrap items-center gap-3">
               <input
                 v-model="search"
                 type="search"
-                placeholder="Search by name, facility, or EMR…"
+                placeholder="Search…"
                 class="field min-w-0 flex-1 text-sm"
               >
               <label class="flex items-center gap-1.5 text-xs whitespace-nowrap">
@@ -365,20 +307,53 @@ function openCandidateIntake(candidate: CandidateRow) {
               {{ candidatesError }}
               <button type="button" class="ml-1 underline" @click="loadCandidates()">Retry</button>
             </div>
-            <CandidatesTable
+            <AdminCandidateList
               v-else
               :candidates="candidates"
               :search="search"
               :show-all="showAll"
               :loading="loadingCandidates"
               :selected-id="selectedCandidate?.id ?? null"
-              @select="openInBuilder"
-              @download="downloadCandidateDocx"
-              @open-intake="openCandidateIntake"
-              @open-parse-qa="openParseQaForCandidate"
+              @select="selectCandidate"
             />
           </div>
-        </Transition>
+        </aside>
+
+        <section class="relative mt-8 min-h-[480px] lg:mt-0">
+          <Transition name="admin-view" mode="out-in">
+            <div v-if="adminView === 'builder'" key="builder">
+              <AdminCandidateBuilder
+                v-if="selectedCandidate"
+                :candidate="selectedCandidate"
+                @reload="loadCandidates()"
+                @open-parse-qa="openParseQa"
+              />
+              <div
+                v-else
+                class="flex min-h-[480px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center"
+              >
+                <h2 class="text-lg font-semibold text-slate-900">Resume builder</h2>
+                <p class="mt-2 max-w-md text-sm text-slate-600">
+                  Create an intake link, then select a candidate in the sidebar to upload their resume, parse, and complete the VMS packet here.
+                </p>
+              </div>
+            </div>
+
+            <div v-else key="table">
+              <CandidatesTable
+                :candidates="candidates"
+                :search="search"
+                :show-all="showAll"
+                :loading="loadingCandidates"
+                :selected-id="selectedCandidate?.id ?? null"
+                @select="openInBuilder"
+                @download="downloadCandidateDocx"
+                @open-intake="openCandidateIntake"
+                @open-parse-qa="openParseQaForCandidate"
+              />
+            </div>
+          </Transition>
+        </section>
       </div>
 
       <ParseQAPanel

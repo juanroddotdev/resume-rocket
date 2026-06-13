@@ -679,7 +679,6 @@ async function onReviewPreview() {
           :advisories="employerLinkAdvisories"
           :submitting="submitting"
           :allow-incomplete-submit="isAdminView"
-          :form="form"
           :candidate-id="candidateId ?? undefined"
           :preview-headers="intakeHeaders()"
           :preview-reload-token="previewReloadToken"

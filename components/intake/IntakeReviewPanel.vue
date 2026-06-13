@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { CandidateDraftInput } from '~/types/candidate'
 import type { EmployerLinkAdvisory, MissingTemplateField } from '~/utils/vmsGapReview'
 
 const props = withDefaults(defineProps<{
@@ -7,7 +6,6 @@ const props = withDefaults(defineProps<{
   advisories?: EmployerLinkAdvisory[]
   submitting: boolean
   allowIncompleteSubmit?: boolean
-  form?: CandidateDraftInput
   candidateId?: string
   previewHeaders?: Record<string, string>
   previewReloadToken?: number | string
@@ -15,7 +13,6 @@ const props = withDefaults(defineProps<{
   previewSaveError?: string | null
   active?: boolean
 }>(), {
-  form: () => ({}),
   previewHeaders: () => ({}),
   previewReloadToken: 0,
   active: true,
@@ -40,8 +37,6 @@ watch(
 const canPreview = computed(
   () => props.allowIncompleteSubmit || props.missing.length === 0,
 )
-
-const useDocxPreview = computed(() => Boolean(props.candidateId))
 
 function onPreviewClick() {
   emit('preview')
@@ -133,12 +128,7 @@ function onBackToEdit() {
     <template v-else>
       <h1 class="text-xl font-bold">Preview your packet</h1>
       <p class="text-sm text-slate-600">
-        <template v-if="useDocxPreview">
-          Review your VMS placement packet below. Download when it looks correct.
-        </template>
-        <template v-else>
-          Summary of your VMS packet — layout may differ slightly in Word.
-        </template>
+        Review your VMS placement packet below. Download when it looks correct.
       </p>
 
       <p
@@ -146,22 +136,28 @@ function onBackToEdit() {
         class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         role="status"
       >
-        {{ previewSaveError }}
-        <template v-if="useDocxPreview"> Preview uses your last saved draft.</template>
-        <template v-else> Preview shows your latest answers on this device.</template>
+        {{ previewSaveError }} Preview uses your last saved draft.
       </p>
 
       <div v-if="previewLoading" class="py-8 text-center text-sm text-slate-500" role="status">
         Saving your answers…
       </div>
-      <div v-else-if="useDocxPreview" id="docx-preview-viewer">
+      <div
+        v-else-if="!candidateId"
+        class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-950"
+        role="status"
+      >
+        <p class="font-medium">Preview is not ready yet</p>
+        <p class="mt-1">Your draft must be saved before we can generate the document. Go back and try again.</p>
+        <button type="button" class="mt-3 underline" @click="onBackToEdit">Make changes</button>
+      </div>
+      <div v-else id="docx-preview-viewer">
         <DocxPreviewViewer
-          :candidate-id="candidateId!"
+          :candidate-id="candidateId"
           :headers="previewHeaders"
           :reload-token="previewReloadToken"
         />
       </div>
-      <PacketPreviewSummary v-else :form="form" />
 
       <div class="flex gap-2">
         <button type="button" class="flex-1 rounded-lg border py-3" @click="onBackToEdit">
@@ -170,7 +166,7 @@ function onBackToEdit() {
         <button
           type="button"
           class="flex-1 rounded-lg bg-brand-600 py-3 font-bold text-white disabled:opacity-50"
-          :disabled="submitting || previewLoading"
+          :disabled="submitting || previewLoading || !candidateId"
           @click="emit('submit')"
         >
           {{

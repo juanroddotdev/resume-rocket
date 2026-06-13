@@ -10,7 +10,7 @@ Related: [`README.md`](./README.md) (doc index) · [`TODO.md`](./TODO.md) · [`V
 
 | Automated in CI (every PR) | Still manual |
 | --- | --- |
-| `npm run test` — unit tests + docx/normalize/gemini-map script smokes | Browser happy path (admin → intake → download) |
+| `npm run test:release` (or `npm run test`) — unit tests, docx/normalize/gemini-map script smokes, template tag inventory | Browser happy path (admin → intake → download) |
 | `npm run build` | Open DOCX in Word after template edits |
 | | Resend email inbox check |
 | | Production URL + Supabase project sanity |
@@ -20,7 +20,7 @@ Expand automation: [TODO.md — Test automation plan](./TODO.md#test-automation-
 **Automated (run first locally or trust CI on `main`):**
 
 ```bash
-npm run test
+npm run test:release
 npm run build
 ```
 

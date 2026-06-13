@@ -318,9 +318,10 @@ defineExpose({ openEmployerField })
       </label>
       <p
         v-if="emrSelection === EMR_OTHER_OPTION && !emrCustom.trim()"
-        class="text-xs text-slate-500"
+        class="text-xs text-amber-800"
+        role="status"
       >
-        Enter the EMR name used at your facilities.
+        Enter the EMR name — required when Other is selected.
       </p>
     </div>
   </div>

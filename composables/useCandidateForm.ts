@@ -369,6 +369,7 @@ export function useCandidateForm() {
     phone?: string
     license_number?: string
     license_state?: string
+    emr_system?: string
     specialties?: string[]
     years_nursing_experience?: string
     compact_license_status?: string
@@ -377,6 +378,7 @@ export function useCandidateForm() {
     education?: EducationEntry[]
     suggested_employers?: Array<EmployerEntry & { employer_hospital_suggestions?: HospitalSuggestion[] }>
     detected_credentials?: string[]
+    credentials?: CredentialsMap
     fields_found?: number
     partial_parse?: boolean
   }): number {
@@ -388,6 +390,7 @@ export function useCandidateForm() {
     if (data.phone) form.value.phone = data.phone
     if (data.license_number) form.value.license_number = data.license_number
     if (data.license_state) form.value.license_state = data.license_state
+    if (data.emr_system) form.value.emr_system = data.emr_system
     if (data.specialties?.length) form.value.specialties = data.specialties
     if (data.years_nursing_experience) {
       form.value.years_nursing_experience = data.years_nursing_experience
@@ -405,7 +408,9 @@ export function useCandidateForm() {
     if (data.suggested_employers?.length) {
       form.value.employers = mapParsedEmployers(data.suggested_employers)
     }
-    if (data.detected_credentials?.length) {
+    if (data.credentials && Object.keys(data.credentials).length) {
+      form.value.credentials = { ...data.credentials }
+    } else if (data.detected_credentials?.length) {
       for (const cert of data.detected_credentials) {
         form.value.credentials[cert.toUpperCase()] = { active: true }
       }

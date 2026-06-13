@@ -17,6 +17,14 @@ const candidatesError = ref<string | null>(null)
 const selectedCandidate = ref<CandidateRow | null>(null)
 const parseQaOpen = ref(false)
 
+type InviteSuccess = {
+  url: string
+  copied: boolean
+}
+
+const inviteSuccess = ref<InviteSuccess | null>(null)
+const inviteBannerCopyFeedback = ref(false)
+
 const parseQaCandidateName = computed(() => {
   if (!selectedCandidate.value) return 'Candidate'
   const name = `${selectedCandidate.value.first_name || ''} ${selectedCandidate.value.last_name || ''}`.trim()
@@ -62,10 +70,14 @@ watch(user, (u) => {
   else {
     candidates.value = []
     selectedCandidate.value = null
+    inviteSuccess.value = null
   }
 }, { immediate: true })
 
-async function onInviteCreated(payload: { inviteId: string }) {
+async function onInviteCreated(payload: { inviteId: string; url: string; copied: boolean }) {
+  inviteSuccess.value = { url: payload.url, copied: payload.copied }
+  inviteBannerCopyFeedback.value = false
+
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.access_token) return
   try {
@@ -77,6 +89,20 @@ async function onInviteCreated(payload: { inviteId: string }) {
     await loadCandidates(created.id)
   } catch {
     await loadCandidates()
+  }
+}
+
+function dismissInviteBanner() {
+  inviteSuccess.value = null
+}
+
+async function copyInviteUrl(url: string) {
+  inviteBannerCopyFeedback.value = false
+  try {
+    await navigator.clipboard.writeText(url)
+    inviteBannerCopyFeedback.value = true
+  } catch {
+    inviteBannerCopyFeedback.value = false
   }
 }
 
@@ -107,6 +133,37 @@ function openParseQa() {
     </div>
 
     <template v-else>
+      <div
+        v-if="inviteSuccess"
+        class="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900"
+        role="status"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="font-medium">Packet created — builder ready</p>
+            <p class="mt-0.5 text-xs text-green-800">
+              Upload and complete the VMS packet in the builder on the right.
+              <span v-if="inviteSuccess.copied"> Intake link copied for future candidate handoff.</span>
+              <span v-else>Use Copy intake link in the builder footer when you want to share it.</span>
+            </p>
+            <button
+              type="button"
+              class="mt-3 rounded-lg border border-green-300 bg-white px-3 py-1.5 text-xs font-medium text-green-900 hover:bg-green-100"
+              @click="copyInviteUrl(inviteSuccess.url)"
+            >
+              {{ inviteBannerCopyFeedback ? 'Copied!' : 'Copy intake link' }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 text-xs font-medium text-green-800 underline"
+            @click="dismissInviteBanner"
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
+
       <div class="lg:grid lg:grid-cols-[minmax(300px,360px)_1fr] lg:items-start lg:gap-8">
         <aside class="space-y-4 lg:sticky lg:top-8">
           <CreateInvitePanel @created="onInviteCreated" />
@@ -155,7 +212,7 @@ function openParseQa() {
           >
             <h2 class="text-lg font-semibold text-slate-900">Resume builder</h2>
             <p class="mt-2 max-w-md text-sm text-slate-600">
-              Create an intake link, then select a candidate to upload their resume, parse, and complete the VMS packet here.
+              Create an intake link, then select a candidate on the left to upload their resume, parse, and complete the VMS packet here.
             </p>
           </div>
         </section>

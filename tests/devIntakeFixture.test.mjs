@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { buildDevIntakeParsePayload } from '../utils/devIntakeFixture.ts'
+import {
+  buildDevIntakeParsePayload,
+  buildDevIntakeParsePayloadComplete,
+} from '../utils/devIntakeFixture.ts'
 
 describe('buildDevIntakeParsePayload', () => {
   it('returns partial identity and clinical data', () => {
@@ -17,6 +20,7 @@ describe('buildDevIntakeParsePayload', () => {
     const payload = buildDevIntakeParsePayload()
     assert.equal(payload.license_number, undefined)
     assert.equal(payload.license_state, undefined)
+    assert.equal(payload.emr_system, undefined)
     assert.equal(payload.compact_license_status, undefined)
     assert.equal(payload.average_patient_ratios, undefined)
     assert.equal(payload.specialized_medical_equipment, undefined)
@@ -31,5 +35,20 @@ describe('buildDevIntakeParsePayload', () => {
     assert.equal(first?.endDate, undefined)
     const suggestionId = first?.employer_hospital_suggestions?.[0]?.id
     assert.match(String(suggestionId), /^[0-9a-f-]{36}$/i)
+  })
+})
+
+describe('buildDevIntakeParsePayloadComplete', () => {
+  it('includes license, EMR, and full employer rows', () => {
+    const payload = buildDevIntakeParsePayloadComplete('complete-id')
+    assert.equal(payload.candidateId, 'complete-id')
+    assert.equal(payload.partial_parse, false)
+    assert.equal(payload.license_number, 'RN-123456')
+    assert.equal(payload.license_state, 'CA')
+    assert.equal(payload.emr_system, 'Epic')
+    assert.equal(payload.education?.[0]?.graduationYear, '2016')
+    assert.equal(payload.suggested_employers?.length, 2)
+    assert.equal(payload.suggested_employers?.[0]?.employmentType, 'Staff')
+    assert.ok(payload.credentials?.BLS?.expiry)
   })
 })

@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
+import { downloadResumeDocxFromApi } from '~/utils/downloadResumeDocxClient'
 
 const props = defineProps<{
   candidates: CandidateRow[]
   search: string
   showAll: boolean
   loading?: boolean
+  selectedId?: string | null
 }>()
 
 const emit = defineEmits<{
+  select: [candidate: CandidateRow]
   download: [candidate: CandidateRow]
   'open-parse-qa': [candidate: CandidateRow]
+  'open-intake': [candidate: CandidateRow]
 }>()
 
 const submittedStatuses = new Set(['submitted', 'confirmed'])
@@ -32,7 +36,7 @@ const filtered = computed(() => {
 
 const emptyMessage = computed(() => {
   if (!props.candidates.length) {
-    return 'No candidates yet. Create an intake link above, then open it to start the wizard.'
+    return 'No candidates yet. Create a packet above, then select a row to open the builder.'
   }
   const q = props.search.trim()
   if (q) {
@@ -89,6 +93,14 @@ function parseOutcomeChips(c: CandidateRow) {
   }
   return chips
 }
+
+function intakeLinkActive(c: CandidateRow) {
+  return c.status === 'draft' && Boolean(c.intake_url)
+}
+
+function onRowSelect(candidate: CandidateRow) {
+  emit('select', candidate)
+}
 </script>
 
 <template>
@@ -99,7 +111,7 @@ function parseOutcomeChips(c: CandidateRow) {
           <th class="px-4 py-3 font-medium">Name</th>
           <th class="px-4 py-3 font-medium">Status</th>
           <th class="hidden px-4 py-3 font-medium lg:table-cell">Parse</th>
-          <th class="px-4 py-3 font-medium">Submitted</th>
+          <th class="px-4 py-3 font-medium">Updated</th>
           <th class="px-4 py-3 font-medium">Facility</th>
           <th class="hidden px-4 py-3 font-medium md:table-cell">EMR</th>
           <th class="px-4 py-3 font-medium">Actions</th>
@@ -114,8 +126,22 @@ function parseOutcomeChips(c: CandidateRow) {
           </tr>
         </template>
         <template v-else>
-          <tr v-for="c in filtered" :key="c.id" class="border-b last:border-0 hover:bg-slate-50">
-            <td class="px-4 py-3 font-medium text-slate-900">{{ candidateDisplayName(c) }}</td>
+          <tr
+            v-for="c in filtered"
+            :key="c.id"
+            class="border-b last:border-0 hover:bg-slate-50"
+            :class="selectedId === c.id ? 'bg-brand-50 ring-1 ring-inset ring-brand-200' : ''"
+            :aria-selected="selectedId === c.id"
+          >
+            <td class="px-4 py-3 font-medium text-slate-900">
+              <button
+                type="button"
+                class="text-left font-medium text-slate-900 hover:text-brand-800"
+                @click="onRowSelect(c)"
+              >
+                {{ candidateDisplayName(c) }}
+              </button>
+            </td>
             <td class="px-4 py-3">
               <span class="inline-flex flex-wrap items-center gap-1.5 capitalize">
                 {{ c.status }}
@@ -152,6 +178,15 @@ function parseOutcomeChips(c: CandidateRow) {
             <td class="hidden px-4 py-3 md:table-cell">{{ c.emr_system || '—' }}</td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-2">
+                <button
+                  v-if="intakeLinkActive(c)"
+                  type="button"
+                  class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  title="Open candidate intake link in a new tab"
+                  @click="emit('open-intake', c)"
+                >
+                  Preview link
+                </button>
                 <button
                   type="button"
                   class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"

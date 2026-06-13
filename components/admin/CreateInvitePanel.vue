@@ -8,7 +8,7 @@ const copied = ref(false)
 const error = ref<string | null>(null)
 
 const emit = defineEmits<{
-  created: [payload: { inviteId: string; url: string }]
+  created: [payload: { inviteId: string; url: string; copied: boolean }]
 }>()
 
 async function createInvite() {
@@ -37,7 +37,7 @@ async function createInvite() {
     } catch {
       copied.value = false
     }
-    emit('created', { inviteId: res.id, url: res.url })
+    emit('created', { inviteId: res.id, url: res.url, copied: copied.value })
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; message?: string }
     error.value = err.data?.statusMessage || err.message || 'Failed to create invite'

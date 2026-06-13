@@ -2,6 +2,7 @@
 import type { CandidateRow } from '~/types/candidate'
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
+import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { ADMIN_SECTIONS, adminSectionForStep } from '~/utils/adminCandidateForm'
 import { isEmrComplete, resolveEmrFields } from '~/utils/emrSystem'
 
@@ -41,13 +42,25 @@ const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => bo
 
 const actionError = ref<string | null>(null)
 const actionLoading = ref(false)
+const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const linkCopied = ref(false)
 const skipAutosave = ref(true)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
-const emrComplete = computed(() => isEmrComplete(resolveEmrFields(form.emr_system)))
+const emrFields = computed(() => resolveEmrFields(form.emr_system))
+const emrComplete = computed(() => isEmrComplete(emrFields.value.selection, emrFields.value.custom))
+
+const hasExistingFormData = computed(() =>
+  Boolean(
+    form.first_name?.trim()
+    || form.last_name?.trim()
+    || form.email?.trim()
+    || form.employers.length
+    || form.education.length,
+  ),
+)
 
 const sectionMissingCounts = computed(() => {
   const counts: Record<string, number> = {}
@@ -122,6 +135,29 @@ function onParsedResult(data: Record<string, unknown>) {
   onParsed(data)
   markParsePrefillFromApi(data as Parameters<typeof markParsePrefillFromApi>[0])
   emit('reload')
+}
+
+async function onDevFixture(mode: 'partial' | 'complete') {
+  if (!import.meta.dev || !isEditable.value) return
+  if (hasExistingFormData.value && !confirm(REPLACE_RESUME_CONFIRM)) return
+
+  devPrefilling.value = true
+  actionError.value = null
+  try {
+    const {
+      buildDevIntakeParsePayload,
+      buildDevIntakeParsePayloadComplete,
+    } = await import('~/utils/devIntakeFixture')
+    const payload = mode === 'complete'
+      ? buildDevIntakeParsePayloadComplete(props.candidate.id)
+      : buildDevIntakeParsePayload(props.candidate.id)
+    onParsedResult(payload as Record<string, unknown>)
+    scrollToSection('identity')
+  } catch (e: unknown) {
+    actionError.value = e instanceof Error ? e.message : 'Could not load dev fixture.'
+  } finally {
+    devPrefilling.value = false
+  }
 }
 
 watch(form, () => {
@@ -209,9 +245,16 @@ watch(loading, (isLoading) => {
               :candidate-id="candidate.id"
               :parse-url="parseUrl"
               :auth-headers="authHeaders"
-              :has-existing-data="Boolean(form.first_name || form.employers.length)"
+              :has-existing-data="hasExistingFormData"
+              :disabled="devPrefilling"
               @parsed="onParsedResult"
               @manual="onManualContinue"
+            />
+            <DevParseFixturePanel
+              v-if="isEditable"
+              context="admin"
+              :disabled="devPrefilling"
+              @prefill="onDevFixture"
             />
             <p v-else class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Download DOCX from the footer if needed.
@@ -291,8 +334,8 @@ watch(loading, (isLoading) => {
               :employers="form.employers"
               @update:employers="form.employers = $event"
             />
-            <p v-if="!emrComplete && form.employers.length" class="text-sm text-amber-800">
-              Select an EMR platform below, or choose Other and enter the system name.
+            <p v-if="!emrComplete && form.employers.length" class="text-sm text-amber-800" role="status">
+              Select an EMR platform below. If you choose Other, enter the system name — it is required before download.
             </p>
           </section>
 

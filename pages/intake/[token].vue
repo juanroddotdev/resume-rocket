@@ -247,15 +247,21 @@ async function onManual() {
   await goToStep(1)
 }
 
-async function onDevPrefill() {
+async function onDevPrefill(mode: 'partial' | 'complete') {
   if (!import.meta.dev) return
   if (hasDraftData.value && !confirm(REPLACE_RESUME_CONFIRM)) return
 
   devPrefilling.value = true
   try {
-    const { buildDevIntakeParsePayload } = await import('~/utils/devIntakeFixture')
+    const {
+      buildDevIntakeParsePayload,
+      buildDevIntakeParsePayloadComplete,
+    } = await import('~/utils/devIntakeFixture')
     if (!candidateId.value) await ensureDraft()
-    await onParsed(buildDevIntakeParsePayload(candidateId.value) as Record<string, unknown>)
+    const payload = mode === 'complete'
+      ? buildDevIntakeParsePayloadComplete(candidateId.value)
+      : buildDevIntakeParsePayload(candidateId.value)
+    await onParsed(payload as Record<string, unknown>)
   } finally {
     devPrefilling.value = false
   }
@@ -426,7 +432,7 @@ async function onDownloadAgain() {
           @parsed="onParsed"
           @manual="onManual"
         />
-        <DevPrefillButton
+        <DevParseFixturePanel
           :disabled="devPrefilling"
           @prefill="onDevPrefill"
         />
@@ -534,7 +540,7 @@ async function onDownloadAgain() {
           v-else-if="isClientView && form.employers.length && !emrComplete"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
-          Select your EMR platform below. If you choose Other, enter the system name.
+          Select your EMR platform below. If you choose Other, enter the system name — it is required before continuing.
         </p>
         <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>

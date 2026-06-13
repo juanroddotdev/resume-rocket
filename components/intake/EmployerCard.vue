@@ -2,6 +2,8 @@
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
 import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employerLink'
+import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
+import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -91,6 +93,19 @@ function linesToArray(value: string): string[] {
 
 function arrayToLines(values?: string[]) {
   return values?.join('\n') || ''
+}
+
+const employmentTypeValue = computed(() => {
+  return normalizeEmploymentType(props.employer.employmentType) || ''
+})
+
+function onEmploymentTypeChange(event: Event) {
+  patchField('type', { employmentType: (event.target as HTMLSelectElement).value })
+}
+
+function openFacilityGoogleSearch() {
+  if (!import.meta.client) return
+  window.open(facilityGoogleSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
 }
 </script>
 
@@ -230,6 +245,13 @@ function arrayToLines(values?: string[]) {
             <p class="text-xs text-slate-600">
               Link facility for bed count &amp; trauma (recommended)
             </p>
+            <button
+              type="button"
+              class="text-xs text-slate-600 underline hover:text-brand-700"
+              @click="openFacilityGoogleSearch"
+            >
+              Search hospital info on Google
+            </button>
 
             <div v-if="employer.hospitalSuggestions?.length" class="space-y-1">
               <p class="text-xs font-medium text-slate-700">Suggested matches</p>
@@ -328,13 +350,17 @@ function arrayToLines(values?: string[]) {
 
           <label class="block" :for="`intake-field-employer-${index}-type`">
             <span class="field-label-compact">Employment type</span>
-            <input
+            <select
               :id="`intake-field-${employerFieldId('type')}`"
-              :value="employer.employmentType || ''"
-              placeholder="Travel, Staff, PRN…"
+              :value="employmentTypeValue"
               :class="fieldClasses(employerFieldId('type'))"
-              @input="patchField('type', { employmentType: ($event.target as HTMLInputElement).value })"
+              @change="onEmploymentTypeChange"
             >
+              <option value="">Select…</option>
+              <option v-for="option in EMPLOYMENT_TYPE_OPTIONS" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
           </label>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">

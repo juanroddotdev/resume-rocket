@@ -11,6 +11,7 @@ import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
 import type { FinalizePhase } from '~/utils/intakeProcessing'
 import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
 import type { ParseMeta } from '~/types/parse'
+import { displayCredentialExpiry } from '~/utils/credentialExpiry'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
@@ -45,7 +46,7 @@ function normalizeStoredCredentials(raw: unknown): CredentialsMap {
     } else if (value && typeof value === 'object' && 'active' in (value as CredentialEntry)) {
       const entry = value as CredentialEntry
       out[key.toUpperCase()] = entry.active || entry.expiry
-        ? { active: entry.active ?? true, expiry: entry.expiry }
+        ? { active: entry.active ?? true, expiry: displayCredentialExpiry(entry.expiry) || undefined }
         : { active: true }
     }
   }
@@ -409,7 +410,7 @@ export function useCandidateForm() {
       form.value.employers = mapParsedEmployers(data.suggested_employers)
     }
     if (data.credentials && Object.keys(data.credentials).length) {
-      form.value.credentials = { ...data.credentials }
+      form.value.credentials = normalizeStoredCredentials(data.credentials)
     } else if (data.detected_credentials?.length) {
       for (const cert of data.detected_credentials) {
         form.value.credentials[cert.toUpperCase()] = { active: true }

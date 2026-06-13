@@ -1,4 +1,5 @@
 import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 
 function optionalString(value: unknown): string | undefined {
@@ -92,7 +93,8 @@ export function normalizeCredentialValue(raw: unknown): CredentialEntry | null {
   if (typeof raw === 'object') {
     const o = raw as Record<string, unknown>
     const active = optionalBool(o.active ?? o.enabled) ?? false
-    const expiry = optionalString(o.expiry ?? o.expiration ?? o.expirationDate)
+    const expiryRaw = optionalString(o.expiry ?? o.expiration ?? o.expirationDate)
+    const expiry = expiryRaw ? normalizeCredentialExpiry(expiryRaw) : undefined
     if (!active && !expiry) return null
     return expiry ? { active, expiry } : { active }
   }
@@ -154,7 +156,7 @@ export function credentialExpiryDisplay(
   const entry = credentials[key]
   if (typeof entry === 'object' && entry !== null && 'expiry' in entry) {
     const expiry = (entry as CredentialEntry).expiry
-    if (expiry) return expiry
+    if (expiry) return normalizeCredentialExpiry(expiry) ?? expiry
   }
   return isCredentialActive(credentials, key) ? 'Current' : ''
 }

@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import type { CredentialsMap } from '~/types/candidate'
+import {
+  CREDENTIAL_EXPIRY_PLACEHOLDER,
+  displayCredentialExpiry,
+  formatCredentialExpiryInput,
+  isCompleteCredentialExpiry,
+} from '~/utils/credentialExpiry'
 
 const props = defineProps<{
   credentials: CredentialsMap
@@ -16,6 +22,8 @@ const emit = defineEmits<{
 
 const { fieldClasses, clearParseHighlight, isParseHighlighted } = useIntakePrefillHighlight()
 
+const expiryErrors = ref<Record<string, string>>({})
+
 function isActive(cert: string) {
   return props.credentials[cert]?.active === true
 }
@@ -25,6 +33,7 @@ function toggle(cert: string) {
   const next = { ...props.credentials }
   if (isActive(cert)) {
     delete next[cert]
+    delete expiryErrors.value[cert]
   } else {
     next[cert] = { active: true }
   }
@@ -32,15 +41,36 @@ function toggle(cert: string) {
 }
 
 function expiryFor(cert: string) {
-  return props.credentials[cert]?.expiry || ''
+  return displayCredentialExpiry(props.credentials[cert]?.expiry)
 }
 
 function setExpiry(cert: string, value: string) {
   if (!isActive(cert)) return
   clearParseHighlight(`credential-${cert}`)
+  const formatted = formatCredentialExpiryInput(value)
   const next = { ...props.credentials }
-  next[cert] = { active: true, expiry: value.trim() || undefined }
+  next[cert] = { active: true, expiry: formatted || undefined }
   emit('update:credentials', next)
+
+  if (!formatted || isCompleteCredentialExpiry(formatted)) {
+    delete expiryErrors.value[cert]
+  }
+}
+
+function validateExpiry(cert: string) {
+  const value = expiryFor(cert)
+  if (!value) {
+    delete expiryErrors.value[cert]
+    return
+  }
+  if (!isCompleteCredentialExpiry(value)) {
+    expiryErrors.value = {
+      ...expiryErrors.value,
+      [cert]: `Use ${CREDENTIAL_EXPIRY_PLACEHOLDER} (e.g. 06/2026).`,
+    }
+    return
+  }
+  delete expiryErrors.value[cert]
 }
 </script>
 
@@ -70,16 +100,27 @@ function setExpiry(cert: string, value: string) {
       <div
         v-for="cert in certKeys.filter(isActive)"
         :key="`exp-${cert}`"
-        class="grid grid-cols-[4rem_1fr] items-center gap-2"
+        class="grid grid-cols-[4rem_1fr] items-start gap-2"
       >
-        <span class="text-sm text-slate-600">{{ cert }}</span>
-        <input
-          :value="expiryFor(cert)"
-          type="text"
-          placeholder="YYYY-MM or date"
-          class="field"
-          @input="setExpiry(cert, ($event.target as HTMLInputElement).value)"
-        >
+        <span class="pt-2 text-sm text-slate-600">{{ cert }}</span>
+        <div>
+          <input
+            :value="expiryFor(cert)"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            :placeholder="CREDENTIAL_EXPIRY_PLACEHOLDER"
+            :aria-label="`${cert} expiration date`"
+            :aria-invalid="Boolean(expiryErrors[cert])"
+            maxlength="7"
+            class="field"
+            @input="setExpiry(cert, ($event.target as HTMLInputElement).value)"
+            @blur="validateExpiry(cert)"
+          >
+          <p v-if="expiryErrors[cert]" class="mt-1 text-xs text-amber-800" role="status">
+            {{ expiryErrors[cert] }}
+          </p>
+        </div>
       </div>
     </div>
 

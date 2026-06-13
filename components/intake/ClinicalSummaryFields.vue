@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const yearsNursingExperience = defineModel<string>('yearsNursingExperience', { default: '' })
-const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { default: '' })
 const averagePatientRatios = defineModel<string>('averagePatientRatios', { default: '' })
 const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquipment', { default: '' })
 
@@ -21,20 +20,6 @@ const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
         :class="fieldClasses('years_nursing_experience')"
         @input="clearParseHighlight('years_nursing_experience')"
       >
-    </label>
-    <label class="block">
-      <span class="field-label-compact">Compact license status</span>
-      <select
-        id="intake-field-compact_license_status"
-        v-model="compactLicenseStatus"
-        :class="fieldClasses('compact_license_status')"
-        @change="clearParseHighlight('compact_license_status')"
-      >
-        <option value="">Select…</option>
-        <option value="Yes">Yes — compact/multistate</option>
-        <option value="No">No</option>
-        <option value="N/A">N/A</option>
-      </select>
     </label>
     <label class="block">
       <span class="field-label-compact">Average patient ratios (career-wide)</span>

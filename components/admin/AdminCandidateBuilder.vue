@@ -362,6 +362,7 @@ watch(loading, (isLoading) => {
           <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
             <h2 class="text-lg font-semibold text-slate-900">Credentials & clinical</h2>
             <CredentialsChecklist
+              v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
               :license-number="form.license_number"
               :license-state="form.license_state"
@@ -372,7 +373,6 @@ watch(loading, (isLoading) => {
             />
             <ClinicalSummaryFields
               v-model:years-nursing-experience="form.years_nursing_experience"
-              v-model:compact-license-status="form.compact_license_status"
               v-model:average-patient-ratios="form.average_patient_ratios"
               v-model:specialized-medical-equipment="form.specialized_medical_equipment"
             />

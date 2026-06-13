@@ -560,6 +560,7 @@ async function onDownloadAgain() {
         <h1 class="text-xl font-bold">Credentials & education</h1>
         <ParseNoticeBanner :meta="parseMeta" />
         <CredentialsChecklist
+          v-model:compact-license-status="form.compact_license_status"
           :credentials="form.credentials"
           :license-number="form.license_number"
           :license-state="form.license_state"
@@ -570,7 +571,6 @@ async function onDownloadAgain() {
         />
         <ClinicalSummaryFields
           v-model:years-nursing-experience="form.years_nursing_experience"
-          v-model:compact-license-status="form.compact_license_status"
           v-model:average-patient-ratios="form.average_patient_ratios"
           v-model:specialized-medical-equipment="form.specialized_medical_equipment"
         />

@@ -7,6 +7,8 @@ import {
   isCompleteCredentialExpiry,
 } from '~/utils/credentialExpiry'
 
+const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { default: '' })
+
 const props = defineProps<{
   credentials: CredentialsMap
   licenseNumber: string
@@ -124,7 +126,23 @@ function validateExpiry(cert: string) {
       </div>
     </div>
 
-    <div>
+    <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p class="text-sm font-medium text-slate-800">RN license</p>
+      <label class="block">
+        <span class="field-label-compact">Compact license status</span>
+        <select
+          id="intake-field-compact_license_status"
+          v-model="compactLicenseStatus"
+          :class="fieldClasses('compact_license_status')"
+          @change="clearParseHighlight('compact_license_status')"
+        >
+          <option value="">Select…</option>
+          <option value="Yes">Yes — compact/multistate</option>
+          <option value="No">No</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </label>
+      <div>
       <label class="field-label">License number</label>
       <input
         id="intake-field-license_number"
@@ -145,6 +163,7 @@ function validateExpiry(cert: string) {
         :class="fieldClasses('license_state', 'uppercase')"
         @input="clearParseHighlight('license_state'); emit('update:licenseState', ($event.target as HTMLInputElement).value)"
       >
+    </div>
     </div>
   </div>
 </template>

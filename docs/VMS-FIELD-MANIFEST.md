@@ -68,7 +68,7 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 |--------------|----------------|----------------|-------------|----------|--------|
 | `{#active_licenses_list}{.}{/active_licenses_list}` | `license_state` + `license_number` | Yes | 3 — Credentials | Yes | Live |
 | `rn_license_state_and_expiry` | Same (formatted) | Yes | 3 — Credentials | Yes | Live |
-| `compact_license_status` | `candidates.compact_license_status` | Yes | 3 — Summary | Yes | Live |
+| `compact_license_status` | `candidates.compact_license_status` | Yes | 3 — Credentials | Yes | Live |
 | `core_life_support_certifications` | `credentials` active keys | Partial | 3 — Credentials | Yes | Live |
 | `BLS_certification_expiration_date` | `credentials.BLS.expiry` | Yes | 3 — Credentials | Yes | Live |
 | `ACLS_certification_expiration_date` | `credentials.ACLS.expiry` | Yes | 3 — Credentials | Yes | Live |

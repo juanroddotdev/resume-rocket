@@ -110,10 +110,14 @@ const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form
 const hasDraftData = computed(() => hasIntakeDraftData(form.value, candidateId.value))
 
 const step3LicenseMissing = computed(() =>
-  missingFields.value.filter(f => f.step === 3 && (f.id === 'license_number' || f.id === 'license_state')),
+  missingFields.value.filter(f =>
+    f.step === 3 && (f.id === 'licenses' || f.id.startsWith('license-')),
+  ),
 )
 const step3OtherMissing = computed(() =>
-  missingFields.value.filter(f => f.step === 3 && f.id !== 'license_number' && f.id !== 'license_state'),
+  missingFields.value.filter(f =>
+    f.step === 3 && f.id !== 'licenses' && !f.id.startsWith('license-'),
+  ),
 )
 
 const showSaveStatus = computed(() => {
@@ -560,12 +564,10 @@ async function onDownloadAgain() {
         <CredentialsChecklist
           v-model:compact-license-status="form.compact_license_status"
           :credentials="form.credentials"
-          :license-number="form.license_number"
-          :license-state="form.license_state"
+          :licenses="form.licenses"
           :cert-keys="certKeys"
           @update:credentials="form.credentials = $event"
-          @update:license-number="form.license_number = $event"
-          @update:license-state="form.license_state = $event"
+          @update:licenses="form.licenses = $event"
         />
         <ClinicalSummaryFields
           v-model:years-nursing-experience="form.years_nursing_experience"

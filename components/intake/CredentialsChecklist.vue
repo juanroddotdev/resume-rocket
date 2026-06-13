@@ -11,15 +11,13 @@ const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { defau
 
 const props = defineProps<{
   credentials: CredentialsMap
-  licenseNumber: string
-  licenseState: string
+  licenses: import('~/types/candidate').LicenseEntry[]
   certKeys: readonly string[]
 }>()
 
 const emit = defineEmits<{
   'update:credentials': [value: CredentialsMap]
-  'update:licenseNumber': [value: string]
-  'update:licenseState': [value: string]
+  'update:licenses': [value: import('~/types/candidate').LicenseEntry[]]
 }>()
 
 const { fieldClasses, clearParseHighlight, isParseHighlighted } = useIntakePrefillHighlight()
@@ -142,28 +140,10 @@ function validateExpiry(cert: string) {
           <option value="N/A">N/A</option>
         </select>
       </label>
-      <div>
-      <label class="field-label">License number</label>
-      <input
-        id="intake-field-license_number"
-        :value="licenseNumber"
-        type="text"
-        :class="fieldClasses('license_number')"
-        @input="clearParseHighlight('license_number'); emit('update:licenseNumber', ($event.target as HTMLInputElement).value)"
-      >
-    </div>
-    <div>
-      <label class="field-label">License state</label>
-      <input
-        id="intake-field-license_state"
-        :value="licenseState"
-        type="text"
-        maxlength="2"
-        placeholder="e.g. CA"
-        :class="fieldClasses('license_state', 'uppercase')"
-        @input="clearParseHighlight('license_state'); emit('update:licenseState', ($event.target as HTMLInputElement).value)"
-      >
-    </div>
+      <LicenseRepeater
+        :model-value="licenses"
+        @update:model-value="emit('update:licenses', $event)"
+      />
     </div>
   </div>
 </template>

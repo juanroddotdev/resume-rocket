@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import { legacyScalarsFromLicenses } from '~/utils/licenseRows'
 import { candidatePatchSchema } from '~/server/utils/schemas'
 
 type CandidatePatchBody = z.infer<typeof candidatePatchSchema>
@@ -26,6 +27,9 @@ export async function patchCandidateRow(candidateId: string, body: CandidatePatc
 
   const patch = { ...body }
   if (patch.email === '') patch.email = undefined
+  if (patch.licenses !== undefined) {
+    Object.assign(patch, legacyScalarsFromLicenses(patch.licenses))
+  }
 
   const { data, error } = await supabase
     .from('candidates')

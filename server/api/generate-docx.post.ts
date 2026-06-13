@@ -45,6 +45,7 @@ export default defineEventHandler(async (event) => {
     phone: candidate.phone as string | null,
     license_number: candidate.license_number as string | null,
     license_state: candidate.license_state as string | null,
+    licenses: candidate.licenses as import('../../types/candidate').LicenseEntry[] | null,
     emr_system: candidate.emr_system as string | null,
     specialties: candidate.specialties as string[] | null,
     employers: candidate.employers,

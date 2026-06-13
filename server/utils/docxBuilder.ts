@@ -2,11 +2,17 @@ import Docxtemplater from 'docxtemplater'
 import PizZip from 'pizzip'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import type { CredentialsMap, EducationEntry, EmployerEntry, LicenseEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
 import { employerEmrProficienciesUnion } from '../../utils/emrSystem.ts'
 import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
+import {
+  activeLicensesListForDocx,
+  formatLicenseRowForDocx,
+  primaryLicense,
+  resolveCandidateLicenses,
+} from '../../utils/licenseRows.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
@@ -23,6 +29,7 @@ export interface DocxCandidate {
   employers?: DocxEmployer[] | null
   credentials?: CredentialsMap | null
   education?: EducationEntry[] | null
+  licenses?: LicenseEntry[] | null
   years_nursing_experience?: string | null
   compact_license_status?: string | null
   average_patient_ratios?: string | null
@@ -52,17 +59,22 @@ function certExpiry(
 function formatLicenseStateAndExpiry(
   licenseState?: string | null,
   licenseNumber?: string | null,
+  expiry?: string | null,
 ): string {
   const parts: string[] = []
   if (licenseState) parts.push(licenseState.toUpperCase())
   if (licenseNumber) parts.push(licenseNumber)
-  return parts.join(' — ')
+  if (expiry?.trim()) parts.push(expiry.trim())
+  return parts.join(' · ')
 }
 
 function activeLicensesList(
+  licenses: LicenseEntry[],
   licenseState?: string | null,
   licenseNumber?: string | null,
 ): string[] {
+  const fromRows = activeLicensesListForDocx(licenses)
+  if (fromRows.length) return fromRows
   const formatted = formatLicenseStateAndExpiry(licenseState, licenseNumber)
   return formatted ? [formatted] : []
 }
@@ -134,6 +146,15 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const employers = candidate.employers || []
   const emrUnion = employerEmrProficienciesUnion(employers)
   const emrProficiencies = emrUnion || candidate.emr_system || ''
+  const licenses = resolveCandidateLicenses({
+    licenses: candidate.licenses,
+    license_state: candidate.license_state,
+    license_number: candidate.license_number,
+  })
+  const primary = primaryLicense(licenses)
+  const licenseState = primary?.state || candidate.license_state
+  const licenseNumber = primary?.number || candidate.license_number
+  const licenseExpiry = primary?.expiry
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
   const activeCerts = activeCertKeys(credentials)
@@ -146,8 +167,8 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     candidate_phone: candidate.phone || '',
     candidate_email: candidate.email || '',
     candidate_city: employerCity,
-    candidate_state: candidate.license_state?.toUpperCase() || employerState,
-    active_licenses_list: activeLicensesList(candidate.license_state, candidate.license_number),
+    candidate_state: licenseState?.toUpperCase() || employerState,
+    active_licenses_list: activeLicensesList(licenses, candidate.license_state, candidate.license_number),
 
     total_years_nursing_experience: candidate.years_nursing_experience || '',
     primary_specialty_unit: primarySpecialty,
@@ -159,10 +180,9 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     emr_software_proficiencies: emrProficiencies,
     core_life_support_certifications: activeCerts.join(', '),
 
-    rn_license_state_and_expiry: formatLicenseStateAndExpiry(
-      candidate.license_state,
-      candidate.license_number,
-    ),
+    rn_license_state_and_expiry: primary
+      ? formatLicenseRowForDocx(primary)
+      : formatLicenseStateAndExpiry(licenseState, licenseNumber, licenseExpiry),
     compact_license_status: candidate.compact_license_status || '',
     BLS_certification_expiration_date: certExpiry(credentials, 'BLS'),
     ACLS_certification_expiration_date: certExpiry(credentials, 'ACLS'),

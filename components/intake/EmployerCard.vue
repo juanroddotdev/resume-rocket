@@ -27,6 +27,23 @@ const emit = defineEmits<{
 }>()
 
 const showClinical = ref(false)
+
+function employerHasOptionalDetails(employer: EmployerEntry) {
+  return Boolean(
+    employer.unitBedCount?.trim()
+    || employer.avgDailyPatients?.trim()
+    || employer.floatedUnits?.length
+    || employer.equipmentProcedures?.length
+  )
+}
+
+watch(
+  () => props.employer,
+  (employer) => {
+    if (employerHasOptionalDetails(employer)) showClinical.value = true
+  },
+  { immediate: true, deep: true },
+)
 const showLinkSearch = ref(false)
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const {
@@ -407,29 +424,29 @@ function openFacilityGoogleSearch() {
 
           <div v-if="showClinical" class="space-y-2 border-t border-slate-100 pt-2">
             <p class="text-xs font-medium text-slate-700">Unit details (your unit — not hospital-wide)</p>
-            <label class="block" :for="`intake-field-employer-${index}-unit-beds`">
-              <span class="field-label-compact">Unit beds</span>
-              <input
-                :id="`intake-field-${employerFieldId('unit-beds')}`"
-                :value="employer.unitBedCount || ''"
-                placeholder="e.g. 24-bed ICU"
-                :class="fieldClasses(employerFieldId('unit-beds'))"
-                @input="patchField('unit-beds', { unitBedCount: ($event.target as HTMLInputElement).value })"
-              >
-            </label>
-            <label class="block" :for="`intake-field-employer-${index}-avg-patients`">
-              <span class="field-label-compact">Average daily patients (this unit)</span>
-              <input
-                :id="`intake-field-${employerFieldId('avg-patients')}`"
-                :value="employer.avgDailyPatients || ''"
-                placeholder="e.g. 4–5 couplets"
-                :class="fieldClasses(employerFieldId('avg-patients'))"
-                @input="patchField('avg-patients', { avgDailyPatients: ($event.target as HTMLInputElement).value })"
-              >
-              <span class="mt-1 block text-xs text-slate-500">
-                Patients you cared for at this hospital — separate from career-wide ratios on Step 3.
-              </span>
-            </label>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <MetricTile
+                editable
+                label="Unit beds"
+                :model-value="employer.unitBedCount || ''"
+                placeholder="e.g. 24"
+                :input-id="`intake-field-${employerFieldId('unit-beds')}`"
+                :input-class="fieldClasses(employerFieldId('unit-beds'))"
+                @update:model-value="patchField('unit-beds', { unitBedCount: $event })"
+              />
+              <MetricTile
+                editable
+                label="Avg daily patients"
+                :model-value="employer.avgDailyPatients || ''"
+                placeholder="e.g. 4–5"
+                :input-id="`intake-field-${employerFieldId('avg-patients')}`"
+                :input-class="fieldClasses(employerFieldId('avg-patients'))"
+                @update:model-value="patchField('avg-patients', { avgDailyPatients: $event })"
+              />
+            </div>
+            <p class="text-xs text-slate-500">
+              Patients you cared for at this hospital — separate from career-wide ratios on Step 3.
+            </p>
             <label class="block" :for="`intake-field-employer-${index}-floated`">
               <span class="field-label-compact">Floated units</span>
               <textarea

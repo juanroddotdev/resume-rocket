@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai'
 import type { ParseAudit, ParsedResume } from '~/types/parse'
+import { inferClinicalFlagsFromHighlights } from '../../utils/employerClinicalFlags.ts'
 
 export const GEMINI_PLACEHOLDER_KEYS = new Set([
   'your-gemini-api-key',
@@ -33,7 +34,7 @@ Education: education[] with degree, school, graduation_year
 Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (MM/YYYY, e.g. 06/2026)
 - Split combined cert lines into one object per certification
 
-Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], source_snippet
+Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], charge_nurse_experience (boolean when stated), preceptor_experience (boolean when stated), source_snippet
 - One object per hospital/facility assignment; split combined job blocks into separate employers when dates or facilities differ
 - name: facility or hospital name as on the resume
 - source_snippet: short verbatim excerpt from the resume supporting this employer (max ${PARSE_AUDIT_SNIPPET_MAX_CHARS} characters); QA evidence only — do not include beds/trauma/teaching here
@@ -93,6 +94,8 @@ export type GeminiEmployerJson = {
   avg_daily_patients?: string
   patient_acuity?: string
   highlights?: string[]
+  charge_nurse_experience?: boolean
+  preceptor_experience?: boolean
   source_snippet?: string
 }
 
@@ -173,6 +176,8 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
           avg_daily_patients: { type: Type.STRING },
           patient_acuity: { type: Type.STRING },
           highlights: stringArraySchema,
+          charge_nurse_experience: { type: Type.BOOLEAN },
+          preceptor_experience: { type: Type.BOOLEAN },
           source_snippet: { type: Type.STRING },
         },
       },
@@ -224,6 +229,8 @@ export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
 
 function mapGeminiEmployer(e: GeminiEmployerJson) {
   if (!e.name?.trim()) return null
+  const highlights = e.highlights?.filter(Boolean)
+  const inferred = inferClinicalFlagsFromHighlights(highlights)
   return {
     name: e.name.trim(),
     role: e.role?.trim() || undefined,
@@ -238,7 +245,13 @@ function mapGeminiEmployer(e: GeminiEmployerJson) {
     equipmentProcedures: e.equipment_procedures?.filter(Boolean),
     avgDailyPatients: e.avg_daily_patients?.trim() || undefined,
     patientAcuity: e.patient_acuity?.trim() || undefined,
-    highlights: e.highlights?.filter(Boolean),
+    highlights,
+    chargeNurseExperience: e.charge_nurse_experience === true
+      ? true
+      : inferred.chargeNurseExperience,
+    preceptorExperience: e.preceptor_experience === true
+      ? true
+      : inferred.preceptorExperience,
   }
 }
 

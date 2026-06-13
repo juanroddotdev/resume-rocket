@@ -30,6 +30,7 @@ describe('mapCandidateToTemplateData', () => {
         patientScope: 'Adult ICU',
         patientAcuity: 'High',
         highlights: ['Charge nurse'],
+        emrSystem: 'Epic',
       }],
     })
 
@@ -67,8 +68,16 @@ describe('mapCandidateToTemplateData', () => {
       last_name: 'Doe',
       specialties: ['ICU'],
       employers: [
-        { name: 'Metro Hospital', role: 'ICU RN', emrSystem: 'Epic' },
-        { name: 'Regional Medical', role: 'ER RN', emrSystem: 'Cerner' },
+        {
+          name: 'Metro Hospital',
+          role: 'ICU RN',
+          emrSystem: 'Epic',
+        },
+        {
+          name: 'Regional Medical',
+          role: 'ER RN',
+          emrSystem: 'Cerner',
+        },
       ],
     })
 
@@ -107,6 +116,23 @@ describe('mapCandidateToTemplateData', () => {
       'TX · RN-2',
     ])
     assert.equal(data.rn_license_state_and_expiry, 'CA · RN-1 · 06/2027')
+  })
+
+  it('appends PRN schedule to employment type in DOCX', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['Med-Surg'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'Staff RN',
+        employmentType: 'PRN',
+        prnSchedule: '2 shifts/month',
+        emrSystem: 'Epic',
+      }],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_employment_type, 'PRN — 2 shifts/month')
   })
 
   it('maps manual trauma and teaching for unlinked employers', () => {

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry, LicenseEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
+import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 import { employerEmrProficienciesUnion } from '../../utils/emrSystem.ts'
 import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
 import {
@@ -110,6 +111,13 @@ function mapEducation(education: EducationEntry[] | null | undefined) {
   }))
 }
 
+function formatEmploymentTypeForDocx(employer: DocxEmployer): string {
+  const type = normalizeEmploymentType(employer.employmentType) || employer.employmentType || ''
+  const schedule = employer.prnSchedule?.trim()
+  if (type === 'PRN' && schedule) return `${type} — ${schedule}`
+  return type
+}
+
 function mapEmployerToExperience(
   employer: DocxEmployer,
   primarySpecialty: string,
@@ -126,7 +134,7 @@ function mapEmployerToExperience(
     experience_facility_location: location,
     experience_employment_dates:
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
-    experience_employment_type: employer.employmentType || '',
+    experience_employment_type: formatEmploymentTypeForDocx(employer),
     experience_role_details: employer.role || '',
     experience_unit_bed_count: employer.unitBedCount || '',
     experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',

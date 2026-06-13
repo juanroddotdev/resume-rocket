@@ -2,6 +2,7 @@ import type { CandidateDraftInput, EducationEntry, EmployerEntry, LicenseEntry }
 import { normalizeGraduationMonth } from '~/utils/educationGraduation'
 import { hasCompleteLicense, resolveCandidateLicenses } from '~/utils/licenseRows'
 import { isStoredEmrComplete } from '~/utils/emrSystem'
+import { normalizeEmploymentType } from '~/utils/employmentType'
 
 export interface MissingTemplateField {
   id: string
@@ -56,6 +57,9 @@ function employerMissing(employer: EmployerEntry, index: number): MissingTemplat
   }
   if (!isStoredEmrComplete(employer.emrSystem)) {
     missing.push({ id: `employer-${index}-emr`, label: `${prefix}: EMR platform`, step: 2 })
+  }
+  if (normalizeEmploymentType(employer.employmentType) === 'PRN' && !hasText(employer.prnSchedule)) {
+    missing.push({ id: `employer-${index}-prn-schedule`, label: `${prefix}: typical PRN schedule`, step: 2 })
   }
   return missing
 }

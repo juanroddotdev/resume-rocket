@@ -4,6 +4,7 @@ import {
   normalizeEducation,
   normalizeEmployers,
 } from '~/server/utils/normalizeCandidate'
+import { legacyScalarsFromLicenses, normalizeLicenses } from '~/utils/licenseRows'
 
 const stringArrayInput = z.array(z.union([z.string(), z.number()])).optional()
 
@@ -46,6 +47,8 @@ export const employerInputSchema = z.object({
   preceptor_experience: z.boolean().optional(),
   emrSystem: z.string().optional(),
   emr_system: z.string().optional(),
+  prnSchedule: z.string().optional(),
+  prn_schedule: z.string().optional(),
 })
 
 const credentialInputSchema = z.union([
@@ -65,6 +68,8 @@ const compactLicenseSchema = z
     return trimmed || undefined
   })
 
+const licenseInputSchema = z.record(z.unknown())
+
 export const candidatePatchSchema = z.object({
   first_name: z.string().optional(),
   last_name: z.string().optional(),
@@ -72,6 +77,10 @@ export const candidatePatchSchema = z.object({
   phone: z.string().optional(),
   license_number: z.string().optional(),
   license_state: z.string().optional(),
+  licenses: z
+    .array(licenseInputSchema)
+    .optional()
+    .transform(arr => (arr !== undefined ? normalizeLicenses(arr) : undefined)),
   specialties: z.array(z.string()).optional(),
   credentials: z
     .record(z.string(), credentialInputSchema)

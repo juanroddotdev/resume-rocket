@@ -3,6 +3,7 @@ import {
   normalizeEducation,
   normalizeEmployers,
 } from '~/server/utils/normalizeCandidate'
+import { resolveCandidateLicenses } from '~/utils/licenseRows'
 
 export const CANDIDATE_DRAFT_SELECT = [
   'id',
@@ -14,6 +15,7 @@ export const CANDIDATE_DRAFT_SELECT = [
   'phone',
   'license_number',
   'license_state',
+  'licenses',
   'specialties',
   'credentials',
   'employers',
@@ -46,6 +48,11 @@ export function buildCandidateDraftResponse(row: Record<string, unknown>) {
     phone: row.phone,
     license_number: row.license_number,
     license_state: row.license_state,
+    licenses: resolveCandidateLicenses({
+      licenses: row.licenses,
+      license_state: row.license_state as string | null | undefined,
+      license_number: row.license_number as string | null | undefined,
+    }),
     emr_system: row.emr_system,
     specialties: row.specialties,
     credentials: row.credentials ? normalizeCredentials(row.credentials) : null,

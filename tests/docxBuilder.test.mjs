@@ -90,6 +90,25 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
   })
 
+  it('maps multi-license rows with expiry in active_licenses_list', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      licenses: [
+        { state: 'CA', number: 'RN-1', expiry: '06/2027' },
+        { state: 'TX', number: 'RN-2' },
+      ],
+      specialties: ['ICU'],
+      employers: [{ name: 'Metro Hospital', role: 'ICU RN', emrSystem: 'Epic' }],
+    })
+
+    assert.deepEqual(data.active_licenses_list, [
+      'CA · RN-1 · 06/2027',
+      'TX · RN-2',
+    ])
+    assert.equal(data.rn_license_state_and_expiry, 'CA · RN-1 · 06/2027')
+  })
+
   it('maps manual trauma and teaching for unlinked employers', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

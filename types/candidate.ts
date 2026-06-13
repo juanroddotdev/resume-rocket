@@ -14,6 +14,7 @@ export interface CandidateRow {
   phone: string | null
   license_number: string | null
   license_state: string | null
+  licenses: LicenseEntry[] | null
   specialties: string[] | null
   credentials: CredentialsMap | null
   parsed_resume: Record<string, unknown> | null
@@ -50,6 +51,14 @@ export interface EducationEntry {
   /** 01–12 when known */
   graduationMonth?: string
   graduationYear?: string
+}
+
+export interface LicenseEntry {
+  /** 2-letter US state */
+  state?: string
+  number?: string
+  /** MM/YYYY when known */
+  expiry?: string
 }
 
 import type { HospitalSuggestion } from '~/types/hospital'
@@ -89,6 +98,8 @@ export interface EmployerEntry {
   preceptorExperience?: boolean
   /** VMS experience_emr_system — per-facility EMR platform */
   emrSystem?: string
+  /** Typical schedule when employmentType is PRN (appended to DOCX employment type) */
+  prnSchedule?: string
 }
 
 export interface CandidateDraftInput {
@@ -98,6 +109,7 @@ export interface CandidateDraftInput {
   phone?: string
   license_number?: string
   license_state?: string
+  licenses?: LicenseEntry[]
   specialties?: string[]
   credentials?: CredentialsMap | Record<string, boolean>
   parsed_resume?: Record<string, unknown>

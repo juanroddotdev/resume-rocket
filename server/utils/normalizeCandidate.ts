@@ -1,4 +1,4 @@
-import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry, LicenseEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import {
   normalizeGraduationMonth,
@@ -6,6 +6,7 @@ import {
   splitLegacyGraduationValue,
 } from '../../utils/educationGraduation.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
+import { normalizeLicense, normalizeLicenses, resolveCandidateLicenses } from '../../utils/licenseRows.ts'
 import { normalizeTraumaLevel } from '../../utils/traumaLevel.ts'
 
 function optionalString(value: unknown): string | undefined {
@@ -70,6 +71,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
     e.preceptorExperience ?? e.preceptor_experience,
   )
   const emrSystem = optionalString(e.emrSystem ?? e.emr_system)
+  const prnSchedule = optionalString(e.prnSchedule ?? e.prn_schedule)
 
   if (role) entry.role = role
   if (startDate) entry.startDate = startDate
@@ -97,6 +99,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (chargeNurseExperience != null) entry.chargeNurseExperience = chargeNurseExperience
   if (preceptorExperience != null) entry.preceptorExperience = preceptorExperience
   if (emrSystem) entry.emrSystem = emrSystem
+  if (prnSchedule) entry.prnSchedule = prnSchedule
 
   return entry
 }
@@ -204,26 +207,34 @@ export function normalizeCandidateJsonbFields(fields: {
   employers?: unknown
   credentials?: unknown
   education?: unknown
+  licenses?: unknown
 }) {
   const out: {
     employers?: EmployerEntry[]
     credentials?: CredentialsMap
     education?: EducationEntry[]
+    licenses?: LicenseEntry[]
   } = {}
 
   if (fields.employers !== undefined) out.employers = normalizeEmployers(fields.employers)
   if (fields.credentials !== undefined) out.credentials = normalizeCredentials(fields.credentials)
   if (fields.education !== undefined) out.education = normalizeEducation(fields.education)
+  if (fields.licenses !== undefined) out.licenses = normalizeLicenses(fields.licenses)
 
   return out
 }
 
-/** Normalize JSONB columns when reading a candidate row for export or server use. */
 export function normalizeCandidateRow<T extends Record<string, unknown>>(row: T) {
+  const licenses = resolveCandidateLicenses({
+    licenses: row.licenses,
+    license_state: row.license_state as string | null | undefined,
+    license_number: row.license_number as string | null | undefined,
+  })
   return {
     ...row,
     employers: normalizeEmployers(row.employers),
     credentials: normalizeCredentials(row.credentials),
     education: normalizeEducation(row.education),
+    licenses,
   }
 }

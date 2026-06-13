@@ -8,7 +8,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "generate:template": "node scripts/generate-template.mjs",
-    "test": "node --test tests/*.test.mjs && node scripts/test-normalize-candidate.mjs && node scripts/test-docx-mapping.mjs && node scripts/test-gemini-parse-map.mjs"
+    "test": "node --test tests/*.test.mjs && node scripts/test-normalize-candidate.mjs && node scripts/test-docx-mapping.mjs && node scripts/test-gemini-parse-map.mjs && node scripts/inventory-template-tags.mjs",
+    "test:release": "npm run test"
   },
   "dependencies": {
     "@google/genai": "^2.6.0",

@@ -143,6 +143,7 @@ export function applyParseResultToForm(
     phone?: string
     license_number?: string
     license_state?: string
+    emr_system?: string
     specialties?: string[]
     years_nursing_experience?: string
     compact_license_status?: string
@@ -151,6 +152,7 @@ export function applyParseResultToForm(
     education?: EducationEntry[]
     suggested_employers?: Array<EmployerEntry & { employer_hospital_suggestions?: HospitalSuggestion[] }>
     detected_credentials?: string[]
+    credentials?: CredentialsMap
   },
 ) {
   if (data.first_name) form.first_name = data.first_name
@@ -159,6 +161,7 @@ export function applyParseResultToForm(
   if (data.phone) form.phone = data.phone
   if (data.license_number) form.license_number = data.license_number
   if (data.license_state) form.license_state = data.license_state
+  if (data.emr_system) form.emr_system = data.emr_system
   if (data.specialties?.length) form.specialties = data.specialties
   if (data.years_nursing_experience) form.years_nursing_experience = data.years_nursing_experience
   if (data.compact_license_status) form.compact_license_status = data.compact_license_status
@@ -170,7 +173,9 @@ export function applyParseResultToForm(
   if (data.suggested_employers?.length) {
     form.employers = mapParsedEmployers(data.suggested_employers)
   }
-  if (data.detected_credentials?.length) {
+  if (data.credentials && Object.keys(data.credentials).length) {
+    form.credentials = { ...data.credentials }
+  } else if (data.detected_credentials?.length) {
     for (const cert of data.detected_credentials) {
       form.credentials[cert.toUpperCase()] = { active: true }
     }

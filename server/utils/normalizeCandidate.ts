@@ -1,4 +1,5 @@
 import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
+import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 
 function optionalString(value: unknown): string | undefined {
   if (value == null) return undefined
@@ -42,7 +43,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   const beds = optionalNumber(e.beds)
   const traumaLevel = optionalString(e.traumaLevel ?? e.trauma_level)
   const teachingStatus = optionalBool(e.teachingStatus ?? e.teaching_status)
-  const employmentType = optionalString(e.employmentType ?? e.employment_type)
+  const employmentTypeRaw = optionalString(e.employmentType ?? e.employment_type)
   const unitBedCount = optionalString(e.unitBedCount ?? e.unit_bed_count)
   const patientScope = optionalString(e.patientScope ?? e.patient_scope)
   const floatedUnits = optionalStringArray(e.floatedUnits ?? e.floated_units)
@@ -64,7 +65,10 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (beds != null) entry.beds = beds
   if (traumaLevel) entry.traumaLevel = traumaLevel
   if (teachingStatus != null) entry.teachingStatus = teachingStatus
-  if (employmentType) entry.employmentType = employmentType
+  if (employmentTypeRaw) {
+    const canonical = normalizeEmploymentType(employmentTypeRaw)
+    entry.employmentType = canonical || employmentTypeRaw
+  }
   if (unitBedCount) entry.unitBedCount = unitBedCount
   if (patientScope) entry.patientScope = patientScope
   if (floatedUnits) entry.floatedUnits = floatedUnits

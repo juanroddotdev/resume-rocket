@@ -21,7 +21,7 @@ Prioritized remaining work (updated 2026-06-09). VMS template + wizard core is *
 | **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
 | **A** | Intake polish | Ratio copy disambiguation, optional validity icons; several Step 1 polish items already shipped |
-| **B** | Step 4 | Document preview before download (largest new feature) |
+| **B** | Step 4 | Document preview + admin per-employment layout (eventual — not built yet) |
 | **C** | Admin hub | Open intake from table, invite success banner |
 | **D** | Optional | Unit `MetricTile`s, EMR Other validation, storage upload filenames |
 | **Defer** | — | Multi-license `licenses[]`, `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
@@ -70,12 +70,12 @@ Prioritized remaining work (updated 2026-06-09). VMS template + wizard core is *
 
 Lowest cost; run entirely in GitHub Actions today. One concern per PR.
 
-- [ ] **`inventory-template-tags.mjs` in CI** — fail if contract tags missing from `docxBuilder`; add to `npm run test` or CI step
+- [x] **`inventory-template-tags.mjs` in CI** — fail if contract tags missing from `docxBuilder`; add to `npm run test` or CI step
 - [ ] **Fixture PDF regression (offline)** — synthetic PDFs in `tests/fixtures/` (no real PHI); extract text via `extractText`; optional **recorded Gemini JSON** fixtures so CI never calls the API; assert audit `source_snippet` overlaps extracted text; multi-employer fixture asserts `identified_facilities_raw` (extends [Parse audit Phase B](#backlog--phase-b-regression-scripts))
 - [ ] **`vmsGapReview` contract tests** — required-field list matches [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md) Required rows; `goToField` step/id pairs stable
 - [ ] **Parse route unit tests (mocked)** — `parse.post` handler with stubbed Supabase/Gemini/storage: MIME rejection, invite missing → 401, rate limit → 429, `partial_parse` / `document_scan` flags, audit stripped from client body
 - [ ] **DOCX content assertions** — unzip generated buffer in `test-docx-mapping.mjs`; spot-check key tags present in `word/document.xml` (not just “non-empty buffer”)
-- [ ] **`npm run test:release` script** — single entry: unit + all script smokes + inventory; document in RELEASE-CHECKLIST “Automated” section
+- [x] **`npm run test:release` script** — single entry: unit + all script smokes + inventory; document in RELEASE-CHECKLIST “Automated” section
 
 **Done when:** CI catches template/docx/gap-review/parse-contract regressions without a browser.
 
@@ -229,10 +229,15 @@ Two patterns — don’t mix them on the same control:
 
 **Defer:** Per-field validity checkmarks; decorative icons without a11y review; rigid equal-width metric grids on variable data
 
-- [ ] **Disambiguate global vs per-employer ratios copy** — clinical summary **Average patient ratios** vs employer **Average daily patients**; add helper text so candidates know which scope each field covers (labels exist; semantics still easy to confuse)
+- [x] **Disambiguate global vs per-employer ratios copy** — clinical summary **Average patient ratios** vs employer **Average daily patients**; helper text on [`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue) and [`EmployerCard.vue`](../components/intake/EmployerCard.vue)
 
 #### Prefill & manual entry (remaining)
 
+- [ ] **Education graduation month + year** — [`EducationRepeater.vue`](../components/intake/EducationRepeater.vue) (intake + admin builder): collect **month and year** (not year-only); store on `education[]` JSONB (e.g. `graduationMonth` + `graduationYear` or single `MM/YYYY`); map to DOCX for download ([`docxBuilder.ts`](../server/utils/docxBuilder.ts) → `education_graduation_year` today is year-only — confirm contract template tag format or add `education_graduation_month` in [`template.docx`](../server/assets/template.docx) + [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md)); gap review, parse/Gemini, normalizeCandidate
+- [ ] **Multi-license rows (State · License · expiration)** — replace separate license fields in [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) with repeatable **one-line rows**: **State** | **License #** | **Expiration** (MM/YYYY — see credential expiry todo); **+ Add license** for multiple active licenses; intake + admin builder; new `licenses[]` JSONB (e.g. `{ state, number, expiry? }`); map to `{#active_licenses_list}` and `rn_license_state_and_expiry` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts) (today: single `license_state` + `license_number`, no license expiry); PATCH schema, gap review, parse prefill; migrate or fallback from legacy columns
+  - **Include compact license status in this block** — move Yes/No/N/A compact select from [`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue) into the license section (not under “Clinical summary”)
+  - **Remove average patient ratios from this area** — drop career-wide **Average patient ratios** from under compact license in clinical summary ([`ClinicalSummaryFields.vue`](../components/intake/ClinicalSummaryFields.vue)); per-employer ratios stay on employer cards; decide whether to remove `average_patient_ratios` from wizard/gap review/DOCX or relocate elsewhere
+- [ ] **Credential expiry format MM/YYYY** — [`CredentialsChecklist.vue`](../components/intake/CredentialsChecklist.vue) (intake + admin builder): expiration inputs use **MM/YYYY** (not `YYYY-MM` / free text); placeholder + validation/normalize on PATCH; align DOCX output for `BLS_certification_expiration_date`, `ACLS_certification_expiration_date`, `PALS_certification_expiration_date` ([`docxBuilder.ts`](../server/utils/docxBuilder.ts)); update parse prompt in [`geminiShared.ts`](../server/utils/geminiShared.ts) if Gemini still targets `YYYY-MM`; optional normalize legacy stored values
 - [ ] **“Other” selects — validation** — EMR Other shows helper when blank but does not block Next; audit whether any future select needs hard empty/error when Other + no text
 
 #### Step 1 — visual polish (remaining)
@@ -245,16 +250,27 @@ Two patterns — don’t mix them on the same control:
 
 Deck shipped (#47) — optional follow-ups only. Plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
 
+- [ ] **Employment type dropdown** — replace free-text on [`EmployerCard.vue`](../components/intake/EmployerCard.vue) with `<select>`: **Travel**, **Staff**, **PRN** (intake + admin builder); normalize parse values where possible; maps to `employers[].employmentType` → `experience_employment_type`
+  - **When PRN selected:** show companion field for average work time (e.g. hours per week / shifts per month — label TBD); new employer JSONB field; confirm DOCX mapping (no template tag today — may need manifest + `docxBuilder` or fold into an existing experience text field)
+- [ ] **Per-employer trauma + teaching inputs** — on [`EmployerCard.vue`](../components/intake/EmployerCard.vue) (intake + admin builder); maps to `employers[].traumaLevel` / `teachingStatus` → `experience_trauma_level` / `experience_is_teaching_facility` ([`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md))
+  - **Today:** trauma/teaching come from hospital DB when linked (read-only chips); unlinked/manual employers have no way to enter them
+  - **Pick when building (linked facility behavior):**
+    - **A — DB wins:** after link, trauma/teaching stay read-only; change only by unlinking or picking another hospital
+    - **B — Recruiter override:** prefill from DB on link, but fields stay editable to fix bad matches or gaps in seed data
+    - **C — Inputs only when unlinked:** show trauma/teaching inputs for manual hospitals only; linked cards keep read-only DB metrics
+- [ ] **Charge nurse + preceptor experience (per card)** — yes/no on each [`EmployerCard.vue`](../components/intake/EmployerCard.vue) (intake + admin builder); new employer JSONB fields (e.g. `chargeNurseExperience`, `preceptorExperience` booleans); today these often appear only in free-text `highlights[]` from parse — confirm DOCX mapping (no dedicated template tags in [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md) today; may append to highlights, add tags, or new experience fields in `docxBuilder`)
+- [ ] **EMR on each employment card (required)** — **not** a single Employment-section dropdown; each [`EmployerCard.vue`](../components/intake/EmployerCard.vue) gets its own EMR platform select (+ Other custom text per [`emrSystem.ts`](../utils/emrSystem.ts)); remove global `form.emr_system` / footer EMR block in intake + admin builder; store per row on `employers[]` (e.g. `emrSystem`); update [`docxBuilder.ts`](../server/utils/docxBuilder.ts) so each loop row uses that card’s EMR (`experience_emr_system`); PATCH schema, gap review (per employer), derive summary `emr_software_proficiencies` from union of card values
 - [ ] **MetricTile for optional unit stats** — Unit beds, Avg daily patients as tiles in expanded deck body (today: labeled text inputs)
 - [ ] **Optional section grouping** — light subheads (“Role & dates”, “Clinical”) only if manual test with 5+ employers still needs scan structure; may drop
 
 #### Step 4 — review & finish
 
+**Eventual plan (not built yet)** — preview before download, then admin layout control in the same initiative.
+
 - [ ] **Document preview before download** — show filled contract template before final download; candidate confirms or goes back to edit
   - **Today:** gap review is field checklist only; DOCX on submit with no preview ([`finalizeAndDownload`](../pages/intake/[token].vue), [`docxBuilder`](../server/utils/docxBuilder.ts))
-  - **UX:** “Preview your packet” + **Download** / **Go back and edit**
-  - **Options (pick in PR):** preview DOCX/PDF endpoint; in-browser HTML summary; iframe PDF — must not log PHI in preview URLs
-  - **Empty/error:** loading + retry; fallback to download-only with clear copy if preview unavailable
+  - **Phase 1 — preview:** “Preview your packet” + **Download** / **Go back and edit**; pick implementation in PR — preview DOCX/PDF endpoint, in-browser HTML summary, or iframe PDF; must not log PHI in preview URLs; loading + retry; fallback to download-only if preview unavailable
+  - **Phase 2 — admin layout (concierge):** in the same preview experience ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue)), recruiter configures **flexible blocks / columns per employment row** — which fields show, order, grouping — to style each hospital’s section in the final DOCX (not one fixed row layout for every employer); layout config on `employers[]` or packet JSON + [`docxBuilder.ts`](../server/utils/docxBuilder.ts) / template strategy beyond today’s fixed `{#professional_experiences}` loop; admin-first unless product expands to candidates
 - [ ] **Review summary tiles (optional)** — gap review filled employer/clinical stats via `MetricTile`; pairs with document preview long-term
 
 ---
@@ -327,8 +343,9 @@ See also [Test automation plan — Phase 1](#phase-1--expand-script--unit-covera
 
 ### Backlog
 
+- [ ] **Hospital data Google search helper** — small helper control on unlinked employer / facility link UI ([`EmployerCard.vue`](../components/intake/EmployerCard.vue), [`HospitalAutocomplete.vue`](../components/intake/HospitalAutocomplete.vue); intake + admin builder) that opens a new tab to Google with a prefilled query (employer name, city/state, e.g. “trauma level beds teaching hospital”) so recruiters can research metrics before linking or manual entry; no PHI in query beyond what’s already on the card
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
-- [ ] **PR 5 (optional)** — Multi-license `licenses[]` if resumes often list several active licenses
+- [ ] **PR 5 (optional)** — covered by [Multi-license rows](#prefill--manual-entry-remaining) in Candidate intake UX (superseded when that ships)
 
 ---
 

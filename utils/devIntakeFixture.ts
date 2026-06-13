@@ -83,6 +83,8 @@ export function buildDevIntakeParsePayload(candidateId?: string | null): DevInta
         role: 'Staff Nurse',
         startDate: '2018-06',
         endDate: '2021-02',
+        traumaLevel: 'III',
+        teachingStatus: false,
       },
     ],
     detected_credentials: ['BLS', 'ACLS'],

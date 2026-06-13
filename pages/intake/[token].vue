@@ -133,6 +133,29 @@ const saveStatusShowSavedIdle = computed(
 
 const employersEmrComplete = computed(() => allEmployersEmrComplete(form.value.employers))
 
+const identityTouched = reactive({
+  first_name: false,
+  last_name: false,
+  email: false,
+  phone: false,
+})
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+function isValidPhone(value: string) {
+  return value.replace(/\D/g, '').length >= 10
+}
+
+function identityFieldValid(field: 'first_name' | 'last_name' | 'email' | 'phone') {
+  const value = form.value[field]?.trim() || ''
+  if (!value) return false
+  if (field === 'email') return isValidEmail(value)
+  if (field === 'phone') return isValidPhone(value)
+  return true
+}
+
 const showSubmitOverlay = computed(() => submitting.value || submitPhase.value === 'success')
 
 const submitMessage = computed(() => finalizePhaseMessage(submitPhase.value))
@@ -455,53 +478,85 @@ async function onDownloadAgain() {
         </button>
         <label class="block">
           <span class="field-label">First name</span>
-          <input
-            id="intake-field-first_name"
-            v-model="form.first_name"
-            autocomplete="given-name"
-            placeholder="Jane"
-            required
-            :class="fieldClasses('first_name')"
-            @input="clearParseHighlight('first_name')"
-          >
+          <div class="relative">
+            <input
+              id="intake-field-first_name"
+              v-model="form.first_name"
+              autocomplete="given-name"
+              placeholder="Jane"
+              required
+              class="field pr-9"
+              :class="fieldClasses('first_name')"
+              @input="clearParseHighlight('first_name')"
+              @blur="identityTouched.first_name = true"
+            >
+            <FieldValidityIcon
+              :touched="identityTouched.first_name"
+              :valid="identityFieldValid('first_name')"
+            />
+          </div>
         </label>
         <label class="block">
           <span class="field-label">Last name</span>
-          <input
-            id="intake-field-last_name"
-            v-model="form.last_name"
-            autocomplete="family-name"
-            placeholder="Doe"
-            required
-            :class="fieldClasses('last_name')"
-            @input="clearParseHighlight('last_name')"
-          >
+          <div class="relative">
+            <input
+              id="intake-field-last_name"
+              v-model="form.last_name"
+              autocomplete="family-name"
+              placeholder="Doe"
+              required
+              class="field pr-9"
+              :class="fieldClasses('last_name')"
+              @input="clearParseHighlight('last_name')"
+              @blur="identityTouched.last_name = true"
+            >
+            <FieldValidityIcon
+              :touched="identityTouched.last_name"
+              :valid="identityFieldValid('last_name')"
+            />
+          </div>
         </label>
         <label class="block">
           <span class="field-label">Email</span>
-          <input
-            id="intake-field-email"
-            v-model="form.email"
-            type="email"
-            autocomplete="email"
-            placeholder="you@example.com"
-            required
-            :class="fieldClasses('email')"
-            @input="clearParseHighlight('email')"
-          >
+          <div class="relative">
+            <input
+              id="intake-field-email"
+              v-model="form.email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+              class="field pr-9"
+              :class="fieldClasses('email')"
+              @input="clearParseHighlight('email')"
+              @blur="identityTouched.email = true"
+            >
+            <FieldValidityIcon
+              :touched="identityTouched.email"
+              :valid="identityFieldValid('email')"
+            />
+          </div>
         </label>
         <label class="block">
           <span class="field-label">Phone</span>
-          <input
-            id="intake-field-phone"
-            v-model="form.phone"
-            type="tel"
-            autocomplete="tel"
-            placeholder="(555) 555-5555"
-            required
-            :class="fieldClasses('phone')"
-            @input="clearParseHighlight('phone')"
-          >
+          <div class="relative">
+            <input
+              id="intake-field-phone"
+              v-model="form.phone"
+              type="tel"
+              autocomplete="tel"
+              placeholder="(555) 555-5555"
+              required
+              class="field pr-9"
+              :class="fieldClasses('phone')"
+              @input="clearParseHighlight('phone')"
+              @blur="identityTouched.phone = true"
+            >
+            <FieldValidityIcon
+              :touched="identityTouched.phone"
+              :valid="identityFieldValid('phone')"
+            />
+          </div>
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
         <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">

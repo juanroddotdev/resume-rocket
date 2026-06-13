@@ -22,7 +22,7 @@ Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is *
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
 | **A** | Intake polish | Optional validity icons; multi-license rows (deferred) |
 | **B** | Step 4 | Document preview + admin per-employment layout (eventual — not built yet) |
-| **C** | Admin hub | Candidates **list view** (separate dashboard mode — see [Recruiter admin UX](#recruiter-admin-ux)); open intake from table |
+| **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
 | **D** | Optional | EMR Other validation, storage upload filenames |
 | **Defer** | — | Multi-license `licenses[]`, `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
@@ -288,13 +288,13 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 - [x] **Admin intake preview (client / admin toggle)** — [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue); admin **Download draft packet** without changing candidate status
 - [x] **Admin section builder (concierge)** (#63) — [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`useAdminCandidateWorkspace`](../composables/useAdminCandidateWorkspace.ts); upload/parse/PATCH via admin APIs; **Copy link** + **Mark submitted**; employer cards in panel layout
 - [x] **Admin hub Day 1** (#67) — desktop sidebar layout (create link + candidate list beside builder); employment type dropdown; dismissible invite success banner on [`pages/admin.vue`](../pages/admin.vue)
+- [x] **Candidates table as alternate dashboard view** — Builder | All candidates toggle on [`pages/admin.vue`](../pages/admin.vue); default builder + sidebar; full [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) in table mode; **Open in builder**, **Open intake**, Download DOCX, Parse QA row actions; `?view=table` query sync
 - [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
 - [x] **Filter-specific empty copy** — search vs drafts vs empty table
 - [x] **Table row action clarity** — `hover:bg-slate-50`; **Download DOCX** label
 
 ### Backlog
 
-- [ ] **Candidates table as alternate dashboard view** — add [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) as a **second view** on [`pages/admin.vue`](../pages/admin.vue) (not stacked above or instead of the builder); default landing stays builder + sidebar list; table view for full scan/filter/download; row **Open in builder** loads selected candidate and returns to builder view; **Open intake** + dismissible invite success banner when clipboard fails; empty/error states per [empty-error-states](../.cursor/rules/empty-error-states.mdc)
 - [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass
 

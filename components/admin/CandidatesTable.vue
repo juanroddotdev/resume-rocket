@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
-import { downloadResumeDocxFromApi } from '~/utils/downloadResumeDocxClient'
 
 const props = defineProps<{
   candidates: CandidateRow[]
@@ -36,7 +35,7 @@ const filtered = computed(() => {
 
 const emptyMessage = computed(() => {
   if (!props.candidates.length) {
-    return 'No candidates yet. Create a packet above, then select a row to open the builder.'
+    return 'No candidates yet. Create a packet above, then use Open in builder on a row to complete the VMS packet.'
   }
   const q = props.search.trim()
   if (q) {
@@ -97,10 +96,6 @@ function parseOutcomeChips(c: CandidateRow) {
 function intakeLinkActive(c: CandidateRow) {
   return c.status === 'draft' && Boolean(c.intake_url)
 }
-
-function onRowSelect(candidate: CandidateRow) {
-  emit('select', candidate)
-}
 </script>
 
 <template>
@@ -134,13 +129,7 @@ function onRowSelect(candidate: CandidateRow) {
             :aria-selected="selectedId === c.id"
           >
             <td class="px-4 py-3 font-medium text-slate-900">
-              <button
-                type="button"
-                class="text-left font-medium text-slate-900 hover:text-brand-800"
-                @click="onRowSelect(c)"
-              >
-                {{ candidateDisplayName(c) }}
-              </button>
+              {{ candidateDisplayName(c) }}
             </td>
             <td class="px-4 py-3">
               <span class="inline-flex flex-wrap items-center gap-1.5 capitalize">
@@ -179,13 +168,21 @@ function onRowSelect(candidate: CandidateRow) {
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-2">
                 <button
+                  type="button"
+                  class="rounded-lg border border-brand-200 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                  title="Open this candidate in the resume builder"
+                  @click="emit('select', c)"
+                >
+                  Open in builder
+                </button>
+                <button
                   v-if="intakeLinkActive(c)"
                   type="button"
                   class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   title="Open candidate intake link in a new tab"
                   @click="emit('open-intake', c)"
                 >
-                  Preview link
+                  Open intake
                 </button>
                 <button
                   type="button"
@@ -197,7 +194,7 @@ function onRowSelect(candidate: CandidateRow) {
                 </button>
                 <button
                   type="button"
-                  class="rounded-lg border border-brand-200 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                  class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   title="Download VMS-ready resume (DOCX)"
                   @click="emit('download', c)"
                 >

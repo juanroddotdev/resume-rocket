@@ -1,4 +1,5 @@
 import type { ParsedResume } from '~/types/parse'
+import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 
 export function parsedResumeToApiFields(parsed: ParsedResume | null) {
   if (!parsed) {
@@ -70,7 +71,8 @@ export function credentialsInputFromParsed(parsed: ParsedResume | null) {
 
   for (const cert of parsed.certificationDetails || []) {
     const key = cert.name.toUpperCase()
-    acc[key] = cert.expiry ? { active: true, expiry: cert.expiry } : { active: true }
+    const expiry = cert.expiry ? normalizeCredentialExpiry(cert.expiry) : undefined
+    acc[key] = expiry ? { active: true, expiry } : { active: true }
   }
 
   return Object.keys(acc).length ? acc : null

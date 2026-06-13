@@ -109,9 +109,9 @@ export function buildDevIntakeParsePayloadComplete(candidateId?: string | null):
     specialized_medical_equipment: 'ECMO, CRRT, ventilators',
     specialties: ['ICU', 'Med-Surg'],
     credentials: {
-      BLS: { active: true, expiry: '2026-06-01' },
-      ACLS: { active: true, expiry: '2026-08-15' },
-      PALS: { active: true, expiry: '2027-01-20' },
+      BLS: { active: true, expiry: '06/2026' },
+      ACLS: { active: true, expiry: '08/2026' },
+      PALS: { active: true, expiry: '01/2027' },
       CCRN: { active: true },
     },
     education: [

@@ -17,7 +17,7 @@ describe('mapCandidateToTemplateData', () => {
       average_patient_ratios: '1:4',
       specialized_medical_equipment: 'ECMO',
       specialties: ['ICU'],
-      credentials: { BLS: { active: true, expiry: '2026-06-01' } },
+      credentials: { BLS: { active: true, expiry: '06/2026' } },
       education: [{ degree: 'BSN', school: 'State U', graduationYear: '2016' }],
       employers: [{
         name: 'Metro Hospital',
@@ -36,7 +36,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(data.candidate_first_name)
     assert.ok(data.education.length)
     assert.ok(data.professional_experiences.length)
-    assert.equal(data.BLS_certification_expiration_date, '2026-06-01')
+    assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')
   })
 })

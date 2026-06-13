@@ -7,6 +7,7 @@ import type {
 } from '../types/candidate'
 import type { HospitalSuggestion } from '../types/hospital'
 import { employersForPatch, mapParsedEmployers } from './employerLink.ts'
+import { displayCredentialExpiry } from './credentialExpiry.ts'
 
 export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'review'
 
@@ -35,7 +36,7 @@ function normalizeStoredCredentials(raw: unknown): CredentialsMap {
     } else if (value && typeof value === 'object' && 'active' in (value as CredentialEntry)) {
       const entry = value as CredentialEntry
       out[key.toUpperCase()] = entry.active || entry.expiry
-        ? { active: entry.active ?? true, expiry: entry.expiry }
+        ? { active: entry.active ?? true, expiry: displayCredentialExpiry(entry.expiry) || undefined }
         : { active: true }
     }
   }
@@ -174,7 +175,7 @@ export function applyParseResultToForm(
     form.employers = mapParsedEmployers(data.suggested_employers)
   }
   if (data.credentials && Object.keys(data.credentials).length) {
-    form.credentials = { ...data.credentials }
+    form.credentials = normalizeStoredCredentials(data.credentials)
   } else if (data.detected_credentials?.length) {
     for (const cert of data.detected_credentials) {
       form.credentials[cert.toUpperCase()] = { active: true }

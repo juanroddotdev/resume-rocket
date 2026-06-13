@@ -13,7 +13,7 @@ const { resume: sample, audit } = mapGeminiResumeJson(
     average_patient_ratios: '1:4',
     specialized_medical_equipment: 'ECMO, CRRT',
     education: [
-      { degree: 'BSN', school: 'State University', graduation_year: '2016' },
+      { degree: 'BSN', school: 'State University', graduation_month: '05', graduation_year: '2016' },
     ],
     certifications: [
       { name: 'BLS', expiry: '2027-01' },
@@ -44,6 +44,8 @@ const checks = [
   sample.yearsNursingExperience === '8',
   sample.compactLicenseStatus === 'Yes',
   sample.education?.[0]?.school === 'State University',
+  sample.education?.[0]?.graduationMonth === '05',
+  sample.education?.[0]?.graduationYear === '2016',
   sample.certificationDetails?.find(c => c.name === 'BLS')?.expiry === '2027-01',
   sample.employers?.[0]?.employmentType === 'Travel',
   sample.employers?.[0]?.unitBedCount === '24',

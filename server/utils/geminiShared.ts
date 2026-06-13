@@ -1,6 +1,11 @@
 import { GoogleGenAI, Type } from '@google/genai'
 import type { ParseAudit, ParsedResume } from '~/types/parse'
 import { inferClinicalFlagsFromHighlights } from '../../utils/employerClinicalFlags.ts'
+import {
+  normalizeGraduationMonth,
+  normalizeGraduationYear,
+  splitLegacyGraduationValue,
+} from '../../utils/educationGraduation.ts'
 
 export const GEMINI_PLACEHOLDER_KEYS = new Set([
   'your-gemini-api-key',
@@ -29,7 +34,7 @@ Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_expe
 - average_patient_ratios: as written (e.g. "1:4", "1:5-6")
 - specialized_medical_equipment: equipment and advanced skills from summary/skills sections (ECMO, CRRT, ventilators, etc.)
 
-Education: education[] with degree, school, graduation_year
+Education: education[] with degree, school, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined)
 
 Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (MM/YYYY, e.g. 06/2026)
 - Split combined cert lines into one object per certification
@@ -76,6 +81,7 @@ export type GeminiCertificationJson = {
 export type GeminiEducationJson = {
   degree?: string
   school?: string
+  graduation_month?: string
   graduation_year?: string
 }
 
@@ -143,6 +149,7 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
         properties: {
           degree: { type: Type.STRING },
           school: { type: Type.STRING },
+          graduation_month: { type: Type.STRING },
           graduation_year: { type: Type.STRING },
         },
       },
@@ -227,6 +234,25 @@ export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
   }
 }
 
+function mapGeminiEducation(ed: GeminiEducationJson) {
+  const degree = ed.degree?.trim() || undefined
+  const school = ed.school?.trim() || undefined
+  let graduationMonth = normalizeGraduationMonth(ed.graduation_month)
+  let graduationYear = normalizeGraduationYear(ed.graduation_year)
+  if (!graduationMonth && ed.graduation_year?.trim()) {
+    const legacy = splitLegacyGraduationValue(ed.graduation_year)
+    graduationMonth = legacy.graduationMonth ?? graduationMonth
+    graduationYear = legacy.graduationYear ?? graduationYear
+  }
+  if (!degree && !school && !graduationYear && !graduationMonth) return null
+  return {
+    degree,
+    school,
+    graduationMonth,
+    graduationYear,
+  }
+}
+
 function mapGeminiEmployer(e: GeminiEmployerJson) {
   if (!e.name?.trim()) return null
   const highlights = e.highlights?.filter(Boolean)
@@ -284,12 +310,8 @@ export function mapGeminiResumeJson(
       averagePatientRatios: parsed.average_patient_ratios?.trim() || undefined,
       specializedMedicalEquipment: parsed.specialized_medical_equipment?.trim() || undefined,
       education: parsed.education
-        ?.map(ed => ({
-          degree: ed.degree?.trim() || undefined,
-          school: ed.school?.trim() || undefined,
-          graduationYear: ed.graduation_year?.trim() || undefined,
-        }))
-        .filter(ed => ed.degree || ed.school || ed.graduationYear),
+        ?.map(mapGeminiEducation)
+        .filter((ed): ed is NonNullable<ReturnType<typeof mapGeminiEducation>> => ed !== null),
       certificationDetails: certificationDetails?.length ? certificationDetails : undefined,
       detectedCredentials: detectedFromCerts?.length ? [...new Set(detectedFromCerts)] : undefined,
       employers: parsed.suggested_employers

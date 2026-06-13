@@ -27,7 +27,7 @@ const fixture = {
     CCRN: { active: true },
   },
   education: [
-    { degree: 'BSN', school: 'University of California', graduationYear: '2016' },
+    { degree: 'BSN', school: 'University of California', graduationMonth: '06', graduationYear: '2016' },
   ],
   employers: [
     {
@@ -130,6 +130,7 @@ const checks = [
   ['total_years_nursing_experience', data.total_years_nursing_experience, '8'],
   ['compact_license_status', data.compact_license_status, 'Yes'],
   ['education[0].education_degree', data.education[0]?.education_degree, 'BSN'],
+  ['education[0].education_graduation_year', data.education[0]?.education_graduation_year, '06/2016'],
   ['BLS expiry', data.BLS_certification_expiration_date, '06/2026'],
   ['experience_employment_type', exp0?.experience_employment_type, 'Staff'],
   ['experience_patient_scope', exp0?.experience_patient_scope, 'Adult ICU — critical care'],

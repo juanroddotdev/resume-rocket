@@ -13,6 +13,7 @@ export interface ParsedResume {
   education?: Array<{
     degree?: string
     school?: string
+    graduationMonth?: string
     graduationYear?: string
   }>
   detectedCredentials?: string[]

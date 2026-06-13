@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EducationEntry } from '~/types/candidate'
+import { GRADUATION_MONTH_OPTIONS } from '~/utils/educationGraduation'
 
 const props = defineProps<{
   modelValue: EducationEntry[]
@@ -84,17 +85,41 @@ function patchEducationField(index: number, suffix: string, partial: Partial<Edu
           @input="patchEducationField(index, 'school', { school: ($event.target as HTMLInputElement).value })"
         >
       </label>
-      <label class="block" :for="`intake-field-${educationFieldId(index, 'year')}`">
-        <span class="field-label-compact">Graduation year</span>
-        <input
-          :id="`intake-field-${educationFieldId(index, 'year')}`"
-          :value="row.graduationYear || ''"
-          placeholder="YYYY"
-          inputmode="numeric"
-          :class="fieldClasses(educationFieldId(index, 'year'))"
-          @input="patchEducationField(index, 'year', { graduationYear: ($event.target as HTMLInputElement).value })"
-        >
-      </label>
+      <fieldset class="space-y-2">
+        <legend class="field-label-compact">Graduation date</legend>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="block" :for="`intake-field-${educationFieldId(index, 'month')}`">
+            <span class="sr-only">Graduation month</span>
+            <select
+              :id="`intake-field-${educationFieldId(index, 'month')}`"
+              :value="row.graduationMonth || ''"
+              :class="fieldClasses(educationFieldId(index, 'month'))"
+              @change="patchEducationField(index, 'month', { graduationMonth: ($event.target as HTMLSelectElement).value || undefined })"
+            >
+              <option value="">Month</option>
+              <option
+                v-for="option in GRADUATION_MONTH_OPTIONS"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+          <label class="block" :for="`intake-field-${educationFieldId(index, 'year')}`">
+            <span class="sr-only">Graduation year</span>
+            <input
+              :id="`intake-field-${educationFieldId(index, 'year')}`"
+              :value="row.graduationYear || ''"
+              placeholder="YYYY"
+              inputmode="numeric"
+              maxlength="4"
+              :class="fieldClasses(educationFieldId(index, 'year'))"
+              @input="patchEducationField(index, 'year', { graduationYear: ($event.target as HTMLInputElement).value })"
+            >
+          </label>
+        </div>
+      </fieldset>
     </div>
   </div>
 </template>

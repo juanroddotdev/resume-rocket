@@ -5,6 +5,11 @@ export interface ParsedResume {
   phone?: string
   licenseNumber?: string
   licenseState?: string
+  licenses?: Array<{
+    state?: string
+    number?: string
+    expiry?: string
+  }>
   specialties?: string[]
   yearsNursingExperience?: string
   compactLicenseStatus?: string

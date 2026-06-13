@@ -1,4 +1,5 @@
 import type { ParsedResume } from '~/types/parse'
+import { normalizeLicense } from '../../utils/licenseRows.ts'
 
 function preferPrimary<T>(primary: T | undefined, fallback: T | undefined): T | undefined {
   if (primary === undefined || primary === null) return fallback
@@ -22,12 +23,18 @@ export function parseResumeHeuristically(rawText: string): ParsedResume {
     || text.match(/\b([A-Z]{2})\s+RN\b/)?.[1]
 
   const licenseNumber = text.match(/\b(?:RN|License\s*#?)\s*[:#]?\s*([A-Z0-9-]{4,})\b/i)?.[1]
+  const licenses = licenseState || licenseNumber
+    ? [normalizeLicense({ state: licenseState, number: licenseNumber })].filter(
+      (row): row is NonNullable<typeof row> => row !== null,
+    )
+    : undefined
 
   return {
     email,
     phone,
     licenseNumber,
     licenseState,
+    licenses,
     detectedCredentials: detectedCredentials.length ? detectedCredentials : undefined,
     rawText: rawText.slice(0, 5000),
   }
@@ -41,6 +48,7 @@ export function hasParsedFields(parsed: ParsedResume): boolean {
     || parsed.phone
     || parsed.licenseNumber
     || parsed.licenseState
+    || parsed.licenses?.length
     || parsed.specialties?.length
     || parsed.yearsNursingExperience
     || parsed.compactLicenseStatus
@@ -79,6 +87,7 @@ export function mergeParsedResume(
     phone: preferPrimary(primary?.phone, fallback.phone),
     licenseNumber: preferPrimary(primary?.licenseNumber, fallback.licenseNumber),
     licenseState: preferPrimary(primary?.licenseState, fallback.licenseState),
+    licenses: preferPrimary(primary?.licenses, fallback.licenses),
     specialties: preferPrimary(primary?.specialties, fallback.specialties),
     yearsNursingExperience: preferPrimary(
       primary?.yearsNursingExperience,

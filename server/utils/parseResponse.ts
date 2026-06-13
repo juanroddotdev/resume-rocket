@@ -10,6 +10,7 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
       phone: undefined,
       license_number: undefined,
       license_state: undefined,
+      licenses: undefined,
       specialties: undefined,
       years_nursing_experience: undefined,
       compact_license_status: undefined,
@@ -27,6 +28,7 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
     phone: parsed.phone,
     license_number: parsed.licenseNumber,
     license_state: parsed.licenseState,
+    licenses: parsed.licenses,
     specialties: parsed.specialties,
     years_nursing_experience: parsed.yearsNursingExperience,
     compact_license_status: parsed.compactLicenseStatus,
@@ -45,6 +47,7 @@ export function countParsedFields(fields: ReturnType<typeof parsedResumeToApiFie
   if (fields.phone) count++
   if (fields.license_number) count++
   if (fields.license_state) count++
+  if (fields.licenses?.length) count++
   if (fields.specialties?.length) count++
   if (fields.years_nursing_experience) count++
   if (fields.compact_license_status) count++

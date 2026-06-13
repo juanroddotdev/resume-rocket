@@ -99,7 +99,7 @@ NIHSS, TNCC, CCRN contribute to `core_life_support_certifications` only; no sepa
 |--------------|----------------|----------------|-------------|----------|--------|
 | `education_degree` | `education[].degree` | Yes | 3 — Education | Yes | Live |
 | `education_school_name` | `education[].school` | Yes | 3 — Education | Yes | Live |
-| `education_graduation_year` | `education[].graduationYear` | Yes | 3 — Education | Yes | Live |
+| `education_graduation_year` | `education[].graduationMonth` + `education[].graduationYear` (DOCX: MM/YYYY when month known, else YYYY) | Yes | 3 — Education | Yes | Live |
 
 ---
 

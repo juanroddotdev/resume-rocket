@@ -18,6 +18,7 @@ type ParsePrefillInput = {
   education?: Array<{
     degree?: string
     school?: string
+    graduationMonth?: string
     graduationYear?: string
   }>
   suggested_employers?: Array<{
@@ -70,6 +71,7 @@ export function collectParsePrefillFieldIds(data: ParsePrefillInput): string[] {
   data.education?.forEach((row, index) => {
     pushFieldId(ids, `education-${index}-degree`, row.degree)
     pushFieldId(ids, `education-${index}-school`, row.school)
+    pushFieldId(ids, `education-${index}-month`, row.graduationMonth)
     pushFieldId(ids, `education-${index}-year`, row.graduationYear)
   })
 

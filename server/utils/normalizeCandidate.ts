@@ -1,5 +1,10 @@
 import type { CredentialEntry, CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
+import {
+  normalizeGraduationMonth,
+  normalizeGraduationYear,
+  splitLegacyGraduationValue,
+} from '../../utils/educationGraduation.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 import { normalizeTraumaLevel } from '../../utils/traumaLevel.ts'
 
@@ -134,13 +139,25 @@ export function normalizeEducation(raw: unknown): EducationEntry[] {
       const o = item as Record<string, unknown>
       const degree = optionalString(o.degree ?? o.education_degree)
       const school = optionalString(o.school ?? o.schoolName ?? o.education_school_name)
-      const graduationYear = optionalString(
+      let graduationMonth = normalizeGraduationMonth(
+        optionalString(o.graduationMonth ?? o.graduation_month ?? o.education_graduation_month),
+      )
+      let graduationYear = normalizeGraduationYear(
+        optionalString(o.graduationYear ?? o.graduation_year ?? o.education_graduation_year),
+      )
+      const legacyGraduation = optionalString(
         o.graduationYear ?? o.graduation_year ?? o.education_graduation_year,
       )
-      if (!degree && !school && !graduationYear) return null
+      if (!graduationMonth && legacyGraduation) {
+        const legacy = splitLegacyGraduationValue(legacyGraduation)
+        graduationMonth = legacy.graduationMonth ?? graduationMonth
+        graduationYear = legacy.graduationYear ?? graduationYear
+      }
+      if (!degree && !school && !graduationYear && !graduationMonth) return null
       const entry: EducationEntry = {}
       if (degree) entry.degree = degree
       if (school) entry.school = school
+      if (graduationMonth) entry.graduationMonth = graduationMonth
       if (graduationYear) entry.graduationYear = graduationYear
       return entry
     })

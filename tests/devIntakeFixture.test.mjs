@@ -46,6 +46,7 @@ describe('buildDevIntakeParsePayloadComplete', () => {
     assert.equal(payload.license_number, 'RN-123456')
     assert.equal(payload.license_state, 'CA')
     assert.equal(payload.emr_system, 'Epic')
+    assert.equal(payload.education?.[0]?.graduationMonth, '06')
     assert.equal(payload.education?.[0]?.graduationYear, '2016')
     assert.equal(payload.suggested_employers?.length, 2)
     assert.equal(payload.suggested_employers?.[0]?.employmentType, 'Staff')

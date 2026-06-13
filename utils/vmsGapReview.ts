@@ -1,4 +1,5 @@
 import type { CandidateDraftInput, EducationEntry, EmployerEntry } from '~/types/candidate'
+import { normalizeGraduationMonth } from '~/utils/educationGraduation'
 
 export interface MissingTemplateField {
   id: string
@@ -112,6 +113,9 @@ export function computeMissingTemplateFields(form: FormShape): MissingTemplateFi
       }
       if (!hasText(entry.school)) {
         missing.push({ id: `education-${index}-school`, label: `Education ${index + 1}: school`, step: 3 })
+      }
+      if (!normalizeGraduationMonth(entry.graduationMonth)) {
+        missing.push({ id: `education-${index}-month`, label: `Education ${index + 1}: graduation month`, step: 3 })
       }
       if (!hasText(entry.graduationYear)) {
         missing.push({ id: `education-${index}-year`, label: `Education ${index + 1}: graduation year`, step: 3 })

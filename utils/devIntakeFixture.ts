@@ -16,7 +16,7 @@ export type DevIntakeParsePayload = {
   compact_license_status?: string
   average_patient_ratios?: string
   specialized_medical_equipment?: string
-  education?: Array<{ degree?: string; school?: string; graduationYear?: string }>
+  education?: Array<{ degree?: string; school?: string; graduationMonth?: string; graduationYear?: string }>
   suggested_employers?: Array<Record<string, unknown>>
   detected_credentials?: string[]
   credentials?: CredentialsMap
@@ -117,7 +117,7 @@ export function buildDevIntakeParsePayloadComplete(candidateId?: string | null):
       CCRN: { active: true },
     },
     education: [
-      { degree: 'BSN', school: 'University of California', graduationYear: '2016' },
+      { degree: 'BSN', school: 'University of California', graduationMonth: '06', graduationYear: '2016' },
     ],
     suggested_employers: [
       {

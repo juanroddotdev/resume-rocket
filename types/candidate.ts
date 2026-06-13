@@ -47,6 +47,8 @@ export type CredentialsMap = Record<string, CredentialEntry>
 export interface EducationEntry {
   degree?: string
   school?: string
+  /** 01–12 when known */
+  graduationMonth?: string
   graduationYear?: string
 }
 

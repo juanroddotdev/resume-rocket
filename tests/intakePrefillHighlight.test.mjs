@@ -23,7 +23,7 @@ describe('collectParsePrefillFieldIds', () => {
 
   it('maps education and employer fields with snake_case dates', () => {
     const ids = collectParsePrefillFieldIds({
-      education: [{ degree: 'BSN', school: 'State U', graduationYear: '2018' }],
+      education: [{ degree: 'BSN', school: 'State U', graduationMonth: '05', graduationYear: '2018' }],
       suggested_employers: [{
         name: 'Metro Hospital',
         role: 'ICU RN',
@@ -34,6 +34,8 @@ describe('collectParsePrefillFieldIds', () => {
     })
 
     assert.ok(ids.includes('education-0-degree'))
+    assert.ok(ids.includes('education-0-month'))
+    assert.ok(ids.includes('education-0-year'))
     assert.ok(ids.includes('employer-0-start'))
     assert.ok(ids.includes('employer-0-highlights'))
     assert.ok(ids.includes('credential-BLS'))

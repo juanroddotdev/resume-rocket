@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
+import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
@@ -92,7 +93,7 @@ function mapEducation(education: EducationEntry[] | null | undefined) {
   return (education || []).map(entry => ({
     education_degree: entry.degree || '',
     education_school_name: entry.school || '',
-    education_graduation_year: entry.graduationYear || '',
+    education_graduation_year: formatEducationGraduationForDocx(entry),
   }))
 }
 

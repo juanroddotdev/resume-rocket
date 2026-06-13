@@ -331,6 +331,11 @@ function openFacilityGoogleSearch() {
             </div>
           </template>
 
+          <fieldset class="space-y-3 border-0 p-0">
+            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Role &amp; dates
+            </legend>
+
           <label class="block" :for="`intake-field-employer-${index}-role`">
             <span class="field-label-compact">Role / unit</span>
             <input
@@ -379,6 +384,12 @@ function openFacilityGoogleSearch() {
               </option>
             </select>
           </label>
+          </fieldset>
+
+          <fieldset class="space-y-3 border-0 border-t border-slate-100 p-0 pt-3">
+            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Clinical
+            </legend>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">
             <span class="field-label-compact">Patient scope</span>
@@ -470,6 +481,7 @@ function openFacilityGoogleSearch() {
               />
             </label>
           </div>
+          </fieldset>
         </div>
       </div>
     </div>

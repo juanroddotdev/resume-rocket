@@ -45,6 +45,8 @@ const actionError = ref<string | null>(null)
 const actionLoading = ref(false)
 const previewSaving = ref(false)
 const previewSaveError = ref<string | null>(null)
+const previewReloadToken = ref(0)
+const previewAuthHeaders = ref<Record<string, string>>({})
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const linkCopied = ref(false)
@@ -107,13 +109,15 @@ async function onReviewPreview() {
   previewSaving.value = true
   try {
     await flushAutosave()
+    previewAuthHeaders.value = await authHeaders()
   } catch {
     previewSaveError.value = 'Could not save the latest draft.'
   } finally {
     previewSaving.value = false
+    previewReloadToken.value += 1
     await nextTick()
     await nextTick()
-    document.getElementById('packet-preview-summary')?.scrollIntoView({
+    document.getElementById('docx-preview-viewer')?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     })
@@ -404,6 +408,9 @@ watch(loading, (isLoading) => {
               :submitting="actionLoading"
               allow-incomplete-submit
               :form="form"
+              :candidate-id="candidate.id"
+              :preview-headers="previewAuthHeaders"
+              :preview-reload-token="previewReloadToken"
               :preview-loading="previewSaving"
               :preview-save-error="previewSaveError"
               @go-to-field="({ step, fieldId }) => goToField(step, fieldId)"

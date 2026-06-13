@@ -407,7 +407,6 @@ watch(loading, (isLoading) => {
               :advisories="employerLinkAdvisories"
               :submitting="actionLoading"
               allow-incomplete-submit
-              :form="form"
               :candidate-id="candidate.id"
               :preview-headers="previewAuthHeaders"
               :preview-reload-token="previewReloadToken"

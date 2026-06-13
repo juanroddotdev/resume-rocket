@@ -4,6 +4,7 @@ import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
 import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employerLink'
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
 import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
+import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -123,6 +124,22 @@ function onEmploymentTypeChange(event: Event) {
 function openFacilityGoogleSearch() {
   if (!import.meta.client) return
   window.open(facilityGoogleSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
+}
+
+function onClinicalFlagChange(
+  suffix: string,
+  key: 'chargeNurseExperience' | 'preceptorExperience',
+  event: Event,
+) {
+  clearParseHighlight(employerFieldId(suffix))
+  const value = triStateBoolFromSelect((event.target as HTMLSelectElement).value)
+  const next = { ...props.employer }
+  if (value === undefined) {
+    delete next[key]
+  } else {
+    next[key] = value
+  }
+  emit('update', next)
 }
 </script>
 
@@ -412,6 +429,35 @@ function openFacilityGoogleSearch() {
               @input="patchField('acuity', { patientAcuity: ($event.target as HTMLInputElement).value })"
             >
           </label>
+
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <label class="block" :for="`intake-field-${employerFieldId('charge-nurse')}`">
+              <span class="field-label-compact">Charge nurse experience</span>
+              <select
+                :id="`intake-field-${employerFieldId('charge-nurse')}`"
+                :value="triStateBoolValue(employer.chargeNurseExperience)"
+                :class="fieldClasses(employerFieldId('charge-nurse'))"
+                @change="onClinicalFlagChange('charge-nurse', 'chargeNurseExperience', $event)"
+              >
+                <option value="">Select…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+            <label class="block" :for="`intake-field-${employerFieldId('preceptor')}`">
+              <span class="field-label-compact">Preceptor experience</span>
+              <select
+                :id="`intake-field-${employerFieldId('preceptor')}`"
+                :value="triStateBoolValue(employer.preceptorExperience)"
+                :class="fieldClasses(employerFieldId('preceptor'))"
+                @change="onClinicalFlagChange('preceptor', 'preceptorExperience', $event)"
+              >
+                <option value="">Select…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+          </div>
 
           <label class="block" :for="`intake-field-employer-${index}-highlights`">
             <span class="field-label-compact">Highlights</span>

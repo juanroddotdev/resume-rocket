@@ -1,5 +1,6 @@
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
+import { inferClinicalFlagsFromHighlights } from './employerClinicalFlags.ts'
 
 type ParsedEmployerFromApi = EmployerEntry & {
   employer_hospital_suggestions?: HospitalSuggestion[]
@@ -13,8 +14,16 @@ export function mapParsedEmployers(employers: ParsedEmployerFromApi[]): Employer
       ? employer_hospital_suggestions
       : hospitalSuggestions
 
+    const inferred = inferClinicalFlagsFromHighlights(rest.highlights)
+
     return {
       ...rest,
+      ...(rest.chargeNurseExperience == null && inferred.chargeNurseExperience != null
+        ? { chargeNurseExperience: inferred.chargeNurseExperience }
+        : {}),
+      ...(rest.preceptorExperience == null && inferred.preceptorExperience != null
+        ? { preceptorExperience: inferred.preceptorExperience }
+        : {}),
       ...(suggestions?.length ? { hospitalSuggestions: suggestions } : {}),
     }
   })

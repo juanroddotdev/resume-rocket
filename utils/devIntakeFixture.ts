@@ -136,6 +136,8 @@ export function buildDevIntakeParsePayloadComplete(candidateId?: string | null):
         floatedUnits: ['ER', 'Step-down'],
         equipmentProcedures: ['ECMO', 'CRRT', 'Ventilator management'],
         highlights: ['Charge nurse 18 months', 'Preceptor for new grads'],
+        chargeNurseExperience: true,
+        preceptorExperience: true,
       },
       {
         name: 'General Hospital',

@@ -81,6 +81,10 @@ export interface EmployerEntry {
   patientAcuity?: string
   /** VMS experience_highlights */
   highlights?: string[]
+  /** Included in DOCX highlights when true */
+  chargeNurseExperience?: boolean
+  /** Included in DOCX highlights when true */
+  preceptorExperience?: boolean
 }
 
 export interface CandidateDraftInput {

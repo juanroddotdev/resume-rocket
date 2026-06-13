@@ -56,6 +56,12 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   )
   const patientAcuity = optionalString(e.patientAcuity ?? e.patient_acuity)
   const highlights = optionalStringArray(e.highlights)
+  const chargeNurseExperience = optionalBool(
+    e.chargeNurseExperience ?? e.charge_nurse_experience,
+  )
+  const preceptorExperience = optionalBool(
+    e.preceptorExperience ?? e.preceptor_experience,
+  )
 
   if (role) entry.role = role
   if (startDate) entry.startDate = startDate
@@ -77,6 +83,8 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (avgDailyPatients) entry.avgDailyPatients = avgDailyPatients
   if (patientAcuity) entry.patientAcuity = patientAcuity
   if (highlights) entry.highlights = highlights
+  if (chargeNurseExperience != null) entry.chargeNurseExperience = chargeNurseExperience
+  if (preceptorExperience != null) entry.preceptorExperience = preceptorExperience
 
   return entry
 }

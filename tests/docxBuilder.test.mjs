@@ -39,6 +39,26 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')
   })
+
+  it('appends charge and preceptor highlights when employer flags are yes', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      emr_system: 'Epic',
+      specialties: ['ICU'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'ICU RN',
+        chargeNurseExperience: true,
+        preceptorExperience: true,
+      }],
+    })
+
+    assert.deepEqual(data.professional_experiences[0].experience_highlights, [
+      'Charge nurse experience',
+      'Preceptor experience',
+    ])
+  })
 })
 
 describe('buildResumeDocx smoke', () => {

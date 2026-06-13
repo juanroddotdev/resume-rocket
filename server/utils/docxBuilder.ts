@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
+import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
@@ -123,7 +124,7 @@ function mapEmployerToExperience(
     experience_equipment_procedures_list: employer.equipmentProcedures || [],
     experience_average_daily_patients: employer.avgDailyPatients || '',
     experience_patient_acuity_level: employer.patientAcuity || '',
-    experience_highlights: employer.highlights || [],
+    experience_highlights: experienceHighlightsForDocx(employer),
   }
 }
 

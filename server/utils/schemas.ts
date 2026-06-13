@@ -40,6 +40,10 @@ export const employerInputSchema = z.object({
   patientAcuity: z.string().optional(),
   patient_acuity: z.string().optional(),
   highlights: stringArrayInput,
+  chargeNurseExperience: z.boolean().optional(),
+  charge_nurse_experience: z.boolean().optional(),
+  preceptorExperience: z.boolean().optional(),
+  preceptor_experience: z.boolean().optional(),
 })
 
 const credentialInputSchema = z.union([

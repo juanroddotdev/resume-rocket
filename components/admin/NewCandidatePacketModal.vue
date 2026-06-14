@@ -5,19 +5,20 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  created: [payload: { inviteId: string; url: string; copied: boolean }]
+  ready: [payload: { candidateId: string; inviteId: string; url: string; copied: boolean }]
 }>()
 
 const supabase = useSupabaseClient()
-const email = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
+const selectedFile = ref<File | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 watch(
   () => props.open,
   (isOpen) => {
     if (!isOpen) {
-      email.value = ''
+      selectedFile.value = null
       error.value = null
       loading.value = false
     }
@@ -34,31 +35,78 @@ function onKeydown(event: KeyboardEvent) {
 onMounted(() => document.addEventListener('keydown', onKeydown))
 onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
-async function createPacket() {
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.access_token) {
+    throw new Error('Sign in required')
+  }
+  return { Authorization: `Bearer ${session.access_token}` }
+}
+
+async function createInviteAndCandidate() {
+  const headers = await authHeaders()
+  const invite = await $fetch<{ id: string; url: string; expires_at: string }>('/api/invites', {
+    method: 'POST',
+    headers,
+    body: { expires_in_days: 7 },
+  })
+  const created = await $fetch<{ id: string }>('/api/admin/candidates', {
+    method: 'POST',
+    headers,
+    body: { intake_invite_id: invite.id },
+  })
+  let copied = false
+  try {
+    await navigator.clipboard.writeText(invite.url)
+    copied = true
+  } catch {
+    copied = false
+  }
+  return { invite, candidateId: created.id, copied }
+}
+
+function onFileInput(event: Event) {
+  const input = event.target as HTMLInputElement
+  selectedFile.value = input.files?.[0] ?? null
+  error.value = null
+}
+
+function chooseFile() {
+  fileInputRef.value?.click()
+}
+
+async function onUploadPath() {
+  if (!selectedFile.value) {
+    error.value = 'Choose a resume file to upload.'
+    return
+  }
   loading.value = true
   error.value = null
   try {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.access_token) {
-      error.value = 'Sign in required'
-      return
-    }
-    const res = await $fetch<{ id: string; url: string; expires_at: string }>('/api/invites', {
+    const { invite, candidateId, copied } = await createInviteAndCandidate()
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
+    await $fetch(`/api/admin/candidates/${candidateId}/parse`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}` },
-      body: {
-        candidate_email: email.value || undefined,
-        expires_in_days: 7,
-      },
+      headers: await authHeaders(),
+      body: formData,
     })
-    let copied = false
-    try {
-      await navigator.clipboard.writeText(res.url)
-      copied = true
-    } catch {
-      copied = false
-    }
-    emit('created', { inviteId: res.id, url: res.url, copied })
+    emit('ready', { candidateId, inviteId: invite.id, url: invite.url, copied })
+    emit('close')
+  } catch (e: unknown) {
+    const err = e as { data?: { statusMessage?: string }; message?: string }
+    error.value = err.data?.statusMessage || err.message || 'Could not create packet from upload'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function onScratchPath() {
+  loading.value = true
+  error.value = null
+  try {
+    const { invite, candidateId, copied } = await createInviteAndCandidate()
+    emit('ready', { candidateId, inviteId: invite.id, url: invite.url, copied })
     emit('close')
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; message?: string }
@@ -84,31 +132,63 @@ async function createPacket() {
     >
       <h2 id="new-packet-title" class="text-lg font-semibold text-slate-900">New candidate packet</h2>
       <p class="mt-1 text-sm text-slate-600">
-        Creates a draft you can build in the workspace. Copy the intake link from the builder when you are ready to hand off.
+        Upload a resume to parse and prefill, or start with an empty builder. Copy the intake link from the builder when you are ready to hand off.
       </p>
-      <label class="mt-4 block">
-        <span class="field-label">Candidate email (optional)</span>
-        <input
-          v-model="email"
-          type="email"
-          autocomplete="email"
-          placeholder="name@example.com"
-          class="field mt-1"
-          @keydown.enter.prevent="createPacket"
-        >
-      </label>
-      <p v-if="error" class="mt-3 text-sm text-red-600" role="alert">{{ error }}</p>
-      <div class="mt-6 flex justify-end gap-2">
-        <button type="button" class="rounded-lg border px-4 py-2 text-sm" @click="emit('close')">
-          Cancel
-        </button>
+
+      <div class="mt-5 space-y-4">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-medium text-slate-900">Upload resume</p>
+          <p class="mt-1 text-xs text-slate-600">PDF or Word (.docx), max 10MB.</p>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            class="hidden"
+            :disabled="loading"
+            @change="onFileInput"
+          >
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              :disabled="loading"
+              @click="chooseFile"
+            >
+              Choose file
+            </button>
+            <span v-if="selectedFile" class="min-w-0 truncate text-sm text-slate-600">{{ selectedFile.name }}</span>
+            <span v-else class="text-sm text-slate-500">No file selected</span>
+          </div>
+          <button
+            type="button"
+            class="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            :disabled="loading || !selectedFile"
+            @click="onUploadPath"
+          >
+            {{ loading ? 'Creating…' : 'Create & parse' }}
+          </button>
+        </div>
+
+        <div class="relative flex items-center py-1">
+          <div class="flex-1 border-t border-slate-200" />
+          <span class="px-3 text-xs text-slate-500">or</span>
+          <div class="flex-1 border-t border-slate-200" />
+        </div>
+
         <button
           type="button"
-          class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
           :disabled="loading"
-          @click="createPacket"
+          @click="onScratchPath"
         >
-          {{ loading ? 'Creating…' : 'Create & open builder' }}
+          {{ loading ? 'Creating…' : 'Start from scratch' }}
+        </button>
+      </div>
+
+      <p v-if="error" class="mt-4 text-sm text-red-600" role="alert">{{ error }}</p>
+      <div class="mt-6 flex justify-end">
+        <button type="button" class="rounded-lg border px-4 py-2 text-sm" :disabled="loading" @click="emit('close')">
+          Cancel
         </button>
       </div>
     </div>

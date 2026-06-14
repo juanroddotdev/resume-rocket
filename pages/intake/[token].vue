@@ -56,6 +56,7 @@ const previewSaveError = ref<string | null>(null)
 const previewReloadToken = ref(0)
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
+const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => boolean } | null>(null)
 const adminDraftDownloadNotice = ref<string | null>(null)
 const devPrefilling = ref(false)
 
@@ -322,6 +323,10 @@ async function goToField(step: number, fieldId: string) {
   }
   if (step === 2 && fieldId.startsWith('employer-')) {
     hospitalAutocompleteRef.value?.openEmployerField(fieldId)
+    await nextTick()
+  }
+  if (step === 3 && fieldId.startsWith('education-')) {
+    educationRepeaterRef.value?.openEducationField(fieldId)
     await nextTick()
   }
   await focusIntakeField(fieldId)
@@ -648,7 +653,7 @@ async function onReviewPreview() {
           v-model:average-patient-ratios="form.average_patient_ratios"
           v-model:specialized-medical-equipment="form.specialized_medical_equipment"
         />
-        <EducationRepeater v-model="form.education" />
+        <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />
         <p
           v-if="isClientView && step3LicenseMissing.length"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"

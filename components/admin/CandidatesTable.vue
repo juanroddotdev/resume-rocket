@@ -36,7 +36,7 @@ const filtered = computed(() => {
 
 const emptyMessage = computed(() => {
   if (!props.candidates.length) {
-    return 'No candidates yet. Create a packet above, then use Open in builder on a row to complete the VMS packet.'
+    return 'No candidates yet. Create a packet, then use Open in builder on a row to complete the VMS packet.'
   }
   const q = props.search.trim()
   if (q) {

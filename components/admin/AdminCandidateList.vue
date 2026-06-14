@@ -42,7 +42,7 @@ function candidateDisplayName(c: CandidateRow) {
     <div v-if="loading" class="space-y-2 p-3">
       <div v-for="n in 4" :key="n" class="h-10 animate-pulse rounded-lg bg-slate-100" />
     </div>
-    <ul v-else-if="filtered.length" class="max-h-80 divide-y divide-slate-100 overflow-y-auto">
+    <ul v-else-if="filtered.length" class="divide-y divide-slate-100">
       <li v-for="c in filtered" :key="c.id">
         <button
           type="button"
@@ -56,7 +56,7 @@ function candidateDisplayName(c: CandidateRow) {
       </li>
     </ul>
     <p v-else class="px-3 py-6 text-center text-sm text-slate-500">
-      No candidates yet. Create a link, then upload a resume in the builder.
+      No candidates yet. Create a packet to get started.
     </p>
   </div>
 </template>

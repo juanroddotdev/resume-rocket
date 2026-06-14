@@ -24,7 +24,6 @@ const {
   loading,
   loadError,
   isEditable,
-  intakeUrl,
   resumeFilename,
   certKeys,
   scheduleAutosave,
@@ -51,7 +50,6 @@ const previewAuthHeaders = ref<Record<string, string>>({})
 const previewOpen = ref(false)
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
-const linkCopied = ref(false)
 const skipAutosave = ref(true)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
@@ -83,6 +81,18 @@ const displayName = computed(() => {
 })
 
 const canvasRef = ref<HTMLElement | null>(null)
+
+const scrollSpyEnabled = computed(() => !loading.value && !loadError.value && !devPrefilling.value)
+const { pauseScrollSpy, syncActiveSectionFromScroll } = useAdminBuilderSectionSpy(
+  canvasRef,
+  activeSection,
+  scrollSpyEnabled,
+)
+
+function scrollToSectionPaused(section: AdminSectionId) {
+  pauseScrollSpy()
+  scrollToSection(section)
+}
 
 async function onDownloadDraft() {
   actionError.value = null
@@ -125,7 +135,7 @@ async function onReviewPreview() {
 
 async function onSectionSelect(sectionId: AdminSectionId) {
   closePreview()
-  scrollToSection(sectionId)
+  scrollToSectionPaused(sectionId)
 }
 
 async function onMarkSubmitted() {
@@ -142,20 +152,9 @@ async function onMarkSubmitted() {
   }
 }
 
-async function copyInviteLink() {
-  if (!intakeUrl.value) return
-  linkCopied.value = false
-  try {
-    await navigator.clipboard.writeText(intakeUrl.value)
-    linkCopied.value = true
-  } catch {
-    linkCopied.value = false
-  }
-}
-
 async function goToField(step: number, fieldId: string) {
   closePreview()
-  scrollToSection(adminSectionForStep(step))
+  scrollToSectionPaused(adminSectionForStep(step))
   await nextTick()
   if (fieldId.startsWith('employer-')) {
     hospitalAutocompleteRef.value?.openEmployerField(fieldId)
@@ -166,16 +165,11 @@ async function goToField(step: number, fieldId: string) {
   focusIntakeField(fieldId)
 }
 
-function onParsedResult(data: Record<string, unknown>) {
-  onParsed(data)
-  markParsePrefillFromApi(data as Parameters<typeof markParsePrefillFromApi>[0])
-  emit('reload')
-}
-
 async function onDevFixture(mode: 'partial' | 'complete') {
   if (!import.meta.dev || !isEditable.value) return
   if (hasExistingFormData.value && !confirm(REPLACE_RESUME_CONFIRM)) return
 
+  const scrollTop = canvasRef.value?.scrollTop ?? 0
   devPrefilling.value = true
   actionError.value = null
   try {
@@ -186,8 +180,14 @@ async function onDevFixture(mode: 'partial' | 'complete') {
     const payload = mode === 'complete'
       ? buildDevIntakeParsePayloadComplete(props.candidate.id)
       : buildDevIntakeParsePayload(props.candidate.id)
-    onParsedResult(payload as Record<string, unknown>)
-    scrollToSection('identity')
+    onParsed(payload as Record<string, unknown>, { focusIdentity: false })
+    markParsePrefillFromApi(payload as Parameters<typeof markParsePrefillFromApi>[0])
+    emit('reload')
+    await nextTick()
+    await nextTick()
+    if (canvasRef.value) canvasRef.value.scrollTop = scrollTop
+    await nextTick()
+    syncActiveSectionFromScroll()
   } catch (e: unknown) {
     actionError.value = e instanceof Error ? e.message : 'Could not load dev fixture.'
   } finally {
@@ -204,6 +204,7 @@ watch(loading, (isLoading) => {
   if (!isLoading) {
     nextTick(() => {
       skipAutosave.value = false
+      syncActiveSectionFromScroll()
     })
   } else {
     skipAutosave.value = true
@@ -245,7 +246,7 @@ watch(devFixtureRequest, (mode) => {
             <button
               type="button"
               class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-              :disabled="previewSaving || !isEditable"
+              :disabled="previewSaving || !isEditable || devPrefilling"
               @click="openPreview"
             >
               {{ previewSaving && previewOpen ? 'Preparing…' : 'Preview packet' }}
@@ -253,7 +254,7 @@ watch(devFixtureRequest, (mode) => {
             <button
               type="button"
               class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              :disabled="actionLoading || !isEditable"
+              :disabled="actionLoading || !isEditable || devPrefilling"
               @click="onDownloadDraft"
             >
               Download draft
@@ -261,6 +262,7 @@ watch(devFixtureRequest, (mode) => {
           </div>
         </div>
       </div>
+      <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</p>
 
       <AdminSectionTabs
         :sections="ADMIN_SECTIONS"
@@ -271,8 +273,19 @@ watch(devFixtureRequest, (mode) => {
 
       <div
         ref="canvasRef"
-        class="flex-1 space-y-10 overflow-y-auto p-4 sm:p-6"
+        data-admin-builder-canvas
+        class="relative flex-1 space-y-10 overflow-y-auto p-4 sm:p-6"
       >
+        <div
+          v-if="devPrefilling"
+          class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
+          role="status"
+          aria-live="polite"
+        >
+          <p class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+            Loading fixture…
+          </p>
+        </div>
           <!-- Resume -->
           <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
             <div>
@@ -289,7 +302,7 @@ watch(devFixtureRequest, (mode) => {
             </p>
             <ParseNoticeBanner :meta="parseMeta" show-fields-found />
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              Submitted — upload is locked. Download DOCX from the footer if needed.
+              Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
           </section>
 
@@ -405,7 +418,7 @@ watch(devFixtureRequest, (mode) => {
               @go-to-field="({ step, fieldId }) => goToField(step, fieldId)"
               @preview="onReviewPreview"
               @submit="onDownloadDraft"
-              @back="scrollToSection('credentials')"
+              @back="scrollToSectionPaused('credentials')"
             />
             <div v-if="isEditable" class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
               <p class="text-sm font-medium text-slate-900">Finish entirely yourself?</p>
@@ -422,29 +435,6 @@ watch(devFixtureRequest, (mode) => {
               </button>
             </div>
           </section>
-      </div>
-
-      <div class="shrink-0 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6">
-          <div class="flex flex-wrap items-center gap-4">
-            <div v-if="intakeUrl" class="flex min-w-0 flex-1 items-center gap-2">
-              <input
-                :value="intakeUrl"
-                type="text"
-                readonly
-                class="min-w-0 flex-1 rounded-lg border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-700"
-                aria-label="Candidate intake link"
-                @focus="($event.target as HTMLInputElement).select()"
-              >
-              <button
-                type="button"
-                class="shrink-0 rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
-                @click="copyInviteLink"
-              >
-                {{ linkCopied ? 'Copied!' : 'Copy link' }}
-              </button>
-            </div>
-          </div>
-        <p v-if="actionError" class="mt-2 text-sm text-red-600">{{ actionError }}</p>
       </div>
     </div>
 

@@ -118,7 +118,10 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
     await patchCandidate()
   }
 
-  function onParsed(data: Record<string, unknown>) {
+  function onParsed(
+    data: Record<string, unknown>,
+    options?: { focusIdentity?: boolean },
+  ) {
     applyParseResultToForm(form, data as Parameters<typeof applyParseResultToForm>[1])
     parseMeta.value = {
       document_scan: Boolean(data.document_scan),
@@ -126,7 +129,9 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
       fields_found: typeof data.fields_found === 'number' ? data.fields_found : undefined,
     }
     scheduleAutosave()
-    activeSection.value = 'identity'
+    if (options?.focusIdentity !== false) {
+      activeSection.value = 'identity'
+    }
   }
 
   async function ensureCandidateForInvite(intakeInviteId: string): Promise<string | null> {
@@ -169,7 +174,18 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
     activeSection.value = section
     if (!import.meta.client) return
     nextTick(() => {
-      document.getElementById(`admin-section-${section}`)?.scrollIntoView({
+      const el = document.getElementById(`admin-section-${section}`)
+      const canvas = el?.closest('[data-admin-builder-canvas]') as HTMLElement | null
+      if (canvas && el) {
+        const canvasTop = canvas.getBoundingClientRect().top
+        const elTop = el.getBoundingClientRect().top
+        canvas.scrollTo({
+          top: canvas.scrollTop + (elTop - canvasTop),
+          behavior: 'smooth',
+        })
+        return
+      }
+      el?.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       })

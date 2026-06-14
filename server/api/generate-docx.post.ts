@@ -1,3 +1,4 @@
+import { authorizeCandidateDocxAccess } from '../utils/docxAccess'
 import {
   buildResumeDownloadFilename,
   contentDispositionAttachment,
@@ -9,12 +10,7 @@ export default defineEventHandler(async (event) => {
 
   let candidate
   if (body.id) {
-    const intakeToken = getInviteTokenFromEvent(event)
-    if (intakeToken) {
-      await requireInviteForCandidate(event, body.id)
-    } else {
-      await requireAdminSession(event)
-    }
+    await authorizeCandidateDocxAccess(event, body.id)
     const { data, error } = await supabase
       .from('candidates')
       .select('*')

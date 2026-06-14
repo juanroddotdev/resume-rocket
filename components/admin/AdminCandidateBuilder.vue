@@ -3,7 +3,7 @@ import type { CandidateRow } from '~/types/candidate'
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
-import { ADMIN_SECTIONS, adminSectionForStep } from '~/utils/adminCandidateForm'
+import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/utils/adminCandidateForm'
 import { allEmployersEmrComplete } from '~/utils/emrSystem'
 
 const props = defineProps<{
@@ -47,6 +47,7 @@ const previewSaving = ref(false)
 const previewSaveError = ref<string | null>(null)
 const previewReloadToken = ref(0)
 const previewAuthHeaders = ref<Record<string, string>>({})
+const previewOpen = ref(false)
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const linkCopied = ref(false)
@@ -104,7 +105,7 @@ async function onDownloadDraft() {
   }
 }
 
-async function onReviewPreview() {
+async function preparePreview() {
   previewSaveError.value = null
   previewSaving.value = true
   try {
@@ -115,13 +116,25 @@ async function onReviewPreview() {
   } finally {
     previewSaving.value = false
     previewReloadToken.value += 1
-    await nextTick()
-    await nextTick()
-    document.getElementById('docx-preview-viewer')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
   }
+}
+
+async function openPreview() {
+  previewOpen.value = true
+  await preparePreview()
+}
+
+function closePreview() {
+  previewOpen.value = false
+}
+
+async function onReviewPreview() {
+  await openPreview()
+}
+
+async function onSidebarSection(sectionId: AdminSectionId) {
+  closePreview()
+  scrollToSection(sectionId)
 }
 
 async function onMarkSubmitted() {
@@ -150,6 +163,7 @@ async function copyInviteLink() {
 }
 
 async function goToField(step: number, fieldId: string) {
+  closePreview()
   scrollToSection(adminSectionForStep(step))
   await nextTick()
   if (fieldId.startsWith('employer-')) {
@@ -209,7 +223,7 @@ watch(loading, (isLoading) => {
 </script>
 
 <template>
-  <div class="flex min-h-[640px] flex-col rounded-xl border border-slate-200 bg-white shadow-sm lg:flex-row">
+  <div class="relative flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:flex-row">
     <nav class="shrink-0 border-b border-slate-200 p-4 lg:w-52 lg:border-b-0 lg:border-r">
       <template v-if="loading">
         <p class="text-sm font-semibold text-slate-900">{{ sidebarName }}</p>
@@ -228,7 +242,7 @@ watch(loading, (isLoading) => {
             :class="activeSection === section.id
               ? 'bg-brand-50 font-medium text-brand-800'
               : 'text-slate-700 hover:bg-slate-50'"
-            @click="scrollToSection(section.id)"
+            @click="onSidebarSection(section.id)"
           >
             <span>{{ section.label }}</span>
             <span
@@ -248,7 +262,7 @@ watch(loading, (isLoading) => {
       </ul>
     </nav>
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
       <AdminCandidateBuilderSkeleton v-if="loading" />
 
       <div
@@ -261,7 +275,31 @@ watch(loading, (isLoading) => {
         </button>
       </div>
 
-      <div v-else class="flex flex-1 flex-col">
+      <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          class="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur"
+        >
+          <IntakeSaveStatus :status="saveStatus" />
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              :disabled="previewSaving || !isEditable"
+              @click="openPreview"
+            >
+              {{ previewSaving && previewOpen ? 'Preparing…' : 'Preview packet' }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              :disabled="actionLoading || !isEditable"
+              @click="onDownloadDraft"
+            >
+              Download draft
+            </button>
+          </div>
+        </div>
+
         <div class="flex-1 space-y-10 overflow-y-auto p-6">
           <!-- Resume -->
           <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
@@ -407,6 +445,7 @@ watch(loading, (isLoading) => {
               :advisories="employerLinkAdvisories"
               :submitting="actionLoading"
               allow-incomplete-submit
+              :present-preview="false"
               :candidate-id="candidate.id"
               :preview-headers="previewAuthHeaders"
               :preview-reload-token="previewReloadToken"
@@ -434,9 +473,8 @@ watch(loading, (isLoading) => {
           </section>
         </div>
 
-        <div class="sticky bottom-0 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur">
+        <div class="sticky bottom-0 shrink-0 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur">
           <div class="flex flex-wrap items-center gap-4">
-            <IntakeSaveStatus :status="saveStatus" />
             <div v-if="intakeUrl" class="flex min-w-0 flex-1 items-center gap-2">
               <input
                 :value="intakeUrl"
@@ -454,19 +492,25 @@ watch(loading, (isLoading) => {
                 {{ linkCopied ? 'Copied!' : 'Copy link' }}
               </button>
             </div>
-            <button
-              type="button"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              :disabled="actionLoading || !isEditable"
-              @click="onDownloadDraft"
-            >
-              Download draft DOCX
-            </button>
           </div>
           <p v-if="actionError" class="mt-2 text-sm text-red-600">{{ actionError }}</p>
         </div>
       </div>
     </div>
+
+    <DocxPreviewSlideOver
+      v-if="!loading && !loadError"
+      :open="previewOpen"
+      :candidate-id="candidate.id"
+      :headers="previewAuthHeaders"
+      :reload-token="previewReloadToken"
+      :preparing="previewSaving"
+      :prepare-error="previewSaveError"
+      :submitting="actionLoading"
+      download-label="Download draft DOCX"
+      @close="closePreview"
+      @download="onDownloadDraft"
+    />
 
     <div
       v-if="markConfirmOpen"

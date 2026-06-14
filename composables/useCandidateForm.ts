@@ -245,7 +245,11 @@ export function useCandidateForm() {
 
   async function ensureDraft() {
     if (candidateId.value) return candidateId.value
+    return reconcileCandidateId()
+  }
 
+  /** Resolve the invite-scoped candidate id from the server (resume or create). */
+  async function reconcileCandidateId() {
     const res = await $fetch<{ id: string }>('/api/candidates', {
       method: 'POST',
       headers: intakeHeaders(),
@@ -578,6 +582,7 @@ export function useCandidateForm() {
     certKeys: CERT_KEYS,
     resetWizard,
     ensureDraft,
+    reconcileCandidateId,
     scheduleAutosave,
     flushAutosave,
     applyParseResult,

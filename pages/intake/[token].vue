@@ -34,6 +34,7 @@ const {
   finalizeAndDownload,
   downloadDocxOnly,
   flushAutosave,
+  reconcileCandidateId,
   parseMeta,
   setParseMeta,
   clearParseMeta,
@@ -387,6 +388,7 @@ async function onReviewPreview() {
   previewSaveError.value = null
   previewSaving.value = true
   try {
+    await reconcileCandidateId()
     await flushAutosave()
   } catch {
     previewSaveError.value = 'Could not save your latest answers.'

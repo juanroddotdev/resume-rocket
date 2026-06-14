@@ -6,6 +6,8 @@ const props = defineProps<{
   headers?: Record<string, string>
   /** Bump to refetch after draft save or re-open preview. */
   reloadToken?: number | string
+  /** Fill available height (slide-over) vs embedded max height. */
+  fill?: boolean
 }>()
 
 const bodyContainer = ref<HTMLElement | null>(null)
@@ -14,8 +16,22 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 let renderGeneration = 0
 
+async function waitForContainers() {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await nextTick()
+    if (bodyContainer.value) return true
+  }
+  return Boolean(bodyContainer.value)
+}
+
 async function loadPreview() {
-  if (!props.candidateId || !bodyContainer.value) return
+  if (!import.meta.client || !props.candidateId) return
+
+  const hasContainers = await waitForContainers()
+  if (!hasContainers || !bodyContainer.value) {
+    error.value = 'Preview could not initialize. Try again.'
+    return
+  }
 
   const generation = ++renderGeneration
   loading.value = true
@@ -28,7 +44,7 @@ async function loadPreview() {
       body: { id: props.candidateId },
       headers: props.headers,
     })
-    if (generation !== renderGeneration) return
+    if (generation !== renderGeneration || !bodyContainer.value) return
 
     const { renderAsync } = await import('docx-preview')
     await renderAsync(
@@ -53,15 +69,10 @@ async function loadPreview() {
 watch(
   () => [props.candidateId, props.reloadToken] as const,
   () => {
-    if (import.meta.client && props.candidateId) {
-      nextTick(() => loadPreview())
-    }
+    if (props.candidateId) loadPreview()
   },
+  { immediate: true },
 )
-
-onMounted(() => {
-  if (props.candidateId) loadPreview()
-})
 
 onBeforeUnmount(() => {
   renderGeneration++
@@ -71,51 +82,54 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <ClientOnly>
-    <div
-      role="region"
-      aria-labelledby="docx-preview-heading"
-      class="overflow-hidden rounded-lg border border-slate-200 bg-white"
-    >
-      <p id="docx-preview-heading" class="sr-only">VMS packet document preview</p>
+  <div
+    role="region"
+    aria-labelledby="docx-preview-heading"
+    class="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white"
+    :class="fill ? 'h-full min-h-0' : ''"
+  >
+    <p id="docx-preview-heading" class="sr-only">VMS packet document preview</p>
 
-      <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500" role="status">
+    <div
+      v-if="error && !loading"
+      class="space-y-3 border-b border-red-100 bg-red-50 px-4 py-6 text-center"
+      role="alert"
+    >
+      <p class="text-sm text-red-800">{{ error }}</p>
+      <button
+        type="button"
+        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+        @click="loadPreview"
+      >
+        Retry
+      </button>
+    </div>
+
+    <div
+      class="relative overflow-auto bg-slate-100 p-3"
+      :class="fill ? 'min-h-0 flex-1' : 'max-h-[min(70vh,720px)] min-h-[12rem]'"
+    >
+      <div ref="styleContainer" class="docx-preview-styles" aria-hidden="true" />
+      <div ref="bodyContainer" class="docx-preview-body mx-auto max-w-full bg-white shadow-sm" />
+
+      <div
+        v-if="loading"
+        class="absolute inset-0 flex items-center justify-center bg-white/90 text-sm text-slate-500"
+        role="status"
+      >
         Generating preview…
       </div>
-
-      <div
-        v-else-if="error"
-        class="space-y-3 px-4 py-8 text-center"
-        role="alert"
-      >
-        <p class="text-sm text-red-800">{{ error }}</p>
-        <button
-          type="button"
-          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
-          @click="loadPreview"
-        >
-          Retry
-        </button>
-      </div>
-
-      <div
-        v-show="!loading && !error"
-        class="max-h-[min(70vh,720px)] overflow-auto bg-slate-100 p-3"
-      >
-        <div ref="styleContainer" class="docx-preview-styles" aria-hidden="true" />
-        <div ref="bodyContainer" class="docx-preview-body mx-auto max-w-full bg-white shadow-sm" />
-      </div>
     </div>
-    <template #fallback>
-      <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-        Loading preview…
-      </div>
-    </template>
-  </ClientOnly>
+  </div>
 </template>
 
 <style scoped>
-.docx-preview-styles :deep(.docx-wrapper) {
+.docx-preview-body :deep(.docx-wrapper) {
   margin: 0 auto;
+  background: white;
+}
+
+.docx-preview-body :deep(section.docx) {
+  min-height: 1rem;
 }
 </style>

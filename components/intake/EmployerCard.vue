@@ -21,10 +21,19 @@ const props = defineProps<{
   canMoveDown?: boolean
   requestLinkSearch?: boolean
   layout?: 'deck' | 'panel'
+  /** Deck list spacing: gap below expanded card, overlap among other collapsed headers. */
+  deckCollapseStyle?: 'none' | 'overlap' | 'gap'
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
 const isExpanded = computed(() => isPanel.value || props.expanded)
+
+const deckRowMarginClass = computed(() => {
+  if (isPanel.value || props.expanded) return 'mt-0'
+  if (props.deckCollapseStyle === 'gap') return 'mt-3'
+  if (props.deckCollapseStyle === 'overlap') return '-mt-2'
+  return 'mt-0'
+})
 
 const emit = defineEmits<{
   update: [value: EmployerEntry]
@@ -200,7 +209,7 @@ function onTraumaLevelChange(event: Event) {
     class="employer-deck-row relative"
     :class="[
       isPanel ? 'py-3' : expanded ? 'z-30 py-8' : 'z-10 py-0',
-      !isPanel && index > 0 && !expanded ? '-mt-2' : 'mt-0',
+      !isPanel && deckRowMarginClass,
     ]"
   >
     <div

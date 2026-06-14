@@ -29,7 +29,9 @@ watch(
   async (len, prevLen) => {
     if (len > prevLen) {
       activeCardIndex.value = len - 1
-      await scrollCardToTop(len - 1)
+      if (len - prevLen === 1) {
+        await scrollCardToTop(len - 1)
+      }
     } else if (activeCardIndex.value >= len) {
       activeCardIndex.value = Math.max(0, len - 1)
     }
@@ -141,6 +143,13 @@ async function openEmployerField(fieldId: string): boolean {
   return true
 }
 
+function deckCollapseStyle(index: number): 'none' | 'overlap' | 'gap' {
+  if (index === activeCardIndex.value) return 'none'
+  if (index === activeCardIndex.value + 1) return 'gap'
+  if (index > 0) return 'overlap'
+  return 'none'
+}
+
 defineExpose({ openEmployerField })
 </script>
 
@@ -236,6 +245,7 @@ defineExpose({ openEmployerField })
         :index="index"
         :layout="isMultiDeck ? 'panel' : 'deck'"
         :expanded="isMultiDeck ? true : activeCardIndex === index"
+        :deck-collapse-style="isMultiDeck ? 'none' : deckCollapseStyle(index)"
         :can-move-up="index > 0"
         :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"

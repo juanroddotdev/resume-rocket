@@ -12,10 +12,13 @@ const props = withDefaults(defineProps<{
   previewLoading?: boolean
   previewSaveError?: string | null
   active?: boolean
+  /** When false, preview opens externally (e.g. slide-over) via the preview event. */
+  presentPreview?: boolean
 }>(), {
   previewHeaders: () => ({}),
   previewReloadToken: 0,
   active: true,
+  presentPreview: true,
 })
 
 const emit = defineEmits<{
@@ -40,7 +43,7 @@ const canPreview = computed(
 
 function onPreviewClick() {
   emit('preview')
-  showPreview.value = true
+  if (props.presentPreview) showPreview.value = true
 }
 
 function onBackToEdit() {

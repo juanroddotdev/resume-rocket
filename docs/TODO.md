@@ -280,12 +280,12 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 ### Done
 
 - [x] **Candidates table empty state** — “No candidates yet — create an intake link above” ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
-- [x] **Invite copy feedback** — clipboard copy + inline “Copied!”; readonly URL if clipboard API fails ([`CreateInvitePanel`](../components/admin/CreateInvitePanel.vue))
+- [x] **Invite copy feedback** — clipboard copy + inline “Copied!” in builder footer and modal flow ([`NewCandidatePacketModal.vue`](../components/admin/NewCandidatePacketModal.vue))
 - [x] **Parse status in table** — status + icon if `parse_error` (not full audit UI)
 - [x] **Loading skeleton** for candidates table
 - [x] **Admin intake preview (client / admin toggle)** — [`useIntakePreviewMode`](../composables/useIntakePreviewMode.ts) + [`IntakePreviewModeToggle.vue`](../components/intake/IntakePreviewModeToggle.vue); admin **Download draft packet** without changing candidate status
 - [x] **Admin section builder (concierge)** (#63) — [`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`useAdminCandidateWorkspace`](../composables/useAdminCandidateWorkspace.ts); upload/parse/PATCH via admin APIs; **Copy link** + **Mark submitted**; employer cards in panel layout
-- [x] **Admin hub Day 1** (#67) — desktop sidebar layout (create link + candidate list beside builder); employment type dropdown; dismissible invite success banner on [`pages/admin.vue`](../pages/admin.vue)
+- [x] **Admin hub Day 1** (#67) — desktop sidebar layout (create link + candidate list beside builder); employment type dropdown; post-create opens builder (full-width success banner removed — see notifications backlog)
 - [x] **Candidates table as alternate dashboard view** — Builder | All candidates toggle on [`pages/admin.vue`](../pages/admin.vue); default builder + sidebar; full [`CandidatesTable.vue`](../components/admin/CandidatesTable.vue) in table mode; **Open in builder**, **Open intake**, Download DOCX, Parse QA row actions; `?view=table` query sync
 - [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
 - [x] **Filter-specific empty copy** — search vs drafts vs empty table
@@ -293,7 +293,8 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 
 ### Backlog
 
-- [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open
+- [ ] **App notifications & toasts (cross-cutting)** — Replace ad-hoc inline banners with a shared notification layer (toast stack or compact status rail). **Scope:** post-create packet success (“builder ready”, clipboard copied), save/autosave errors, DOCX download failures, parse outcomes, confirmation email skipped, real-time “updated elsewhere” when candidate edits via invite. **Principles:** non-blocking, dismissible, no full-width dashboard chrome; reuse across admin hub, builder, and intake where appropriate. **Deferred:** removed green “Packet created — builder ready” banner from [`pages/admin.vue`](../pages/admin.vue); create flow still auto-opens builder + **Copy link** in footer.
+- [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open (fold into notifications project above)
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass
 
 **Test:** [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) admin section

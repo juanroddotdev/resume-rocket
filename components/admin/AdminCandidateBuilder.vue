@@ -85,13 +85,7 @@ const displayName = computed(() => {
   return name || 'Unnamed candidate'
 })
 
-const sidebarName = computed(() => {
-  if (loading.value) {
-    const name = `${props.candidate.first_name || ''} ${props.candidate.last_name || ''}`.trim()
-    return name || 'Unnamed candidate'
-  }
-  return displayName.value
-})
+const canvasRef = ref<HTMLElement | null>(null)
 
 async function onDownloadDraft() {
   actionError.value = null
@@ -132,7 +126,7 @@ async function onReviewPreview() {
   await openPreview()
 }
 
-async function onSidebarSection(sectionId: AdminSectionId) {
+async function onSectionSelect(sectionId: AdminSectionId) {
   closePreview()
   scrollToSection(sectionId)
 }
@@ -223,62 +217,28 @@ watch(loading, (isLoading) => {
 </script>
 
 <template>
-  <div class="relative flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:flex-row">
-    <nav class="shrink-0 border-b border-slate-200 p-4 lg:w-52 lg:border-b-0 lg:border-r">
-      <template v-if="loading">
-        <p class="text-sm font-semibold text-slate-900">{{ sidebarName }}</p>
-        <div class="mt-2 h-3 w-16 animate-pulse rounded bg-slate-100" />
-      </template>
-      <template v-else>
-        <p class="text-sm font-semibold text-slate-900">{{ displayName }}</p>
-        <p class="mt-0.5 text-xs capitalize text-slate-500">{{ candidate.status }}</p>
-      </template>
-      <ul class="mt-4 space-y-1">
-        <li v-for="section in ADMIN_SECTIONS" :key="section.id">
-          <button
-            v-if="!loading"
-            type="button"
-            class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition"
-            :class="activeSection === section.id
-              ? 'bg-brand-50 font-medium text-brand-800'
-              : 'text-slate-700 hover:bg-slate-50'"
-            @click="onSidebarSection(section.id)"
-          >
-            <span>{{ section.label }}</span>
-            <span
-              v-if="sectionMissingCounts[section.id]"
-              class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900"
-            >
-              {{ sectionMissingCounts[section.id] }}
-            </span>
-          </button>
-          <div
-            v-else
-            class="flex items-center justify-between rounded-lg px-3 py-2"
-          >
-            <div class="h-4 w-24 animate-pulse rounded bg-slate-100" />
-          </div>
-        </li>
-      </ul>
-    </nav>
+  <div class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <AdminCandidateBuilderSkeleton v-if="loading" class="flex-1" />
 
-    <div class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-      <AdminCandidateBuilderSkeleton v-if="loading" />
+    <div
+      v-else-if="loadError"
+      class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center"
+    >
+      <p class="text-sm text-red-700">{{ loadError }}</p>
+      <button type="button" class="text-sm font-medium text-brand-700 underline" @click="reload()">
+        Retry
+      </button>
+    </div>
 
+    <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
-        v-else-if="loadError"
-        class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center"
+        class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
       >
-        <p class="text-sm text-red-700">{{ loadError }}</p>
-        <button type="button" class="text-sm font-medium text-brand-700 underline" @click="reload()">
-          Retry
-        </button>
-      </div>
-
-      <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div
-          class="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur"
-        >
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold text-slate-900">{{ displayName }}</p>
+          <p class="text-xs capitalize text-slate-500">{{ candidate.status }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
           <IntakeSaveStatus :status="saveStatus" />
           <div class="flex items-center gap-2">
             <button
@@ -299,8 +259,19 @@ watch(loading, (isLoading) => {
             </button>
           </div>
         </div>
+      </div>
 
-        <div class="flex-1 space-y-10 overflow-y-auto p-6">
+      <AdminSectionTabs
+        :sections="ADMIN_SECTIONS"
+        :active-section="activeSection"
+        :section-missing-counts="sectionMissingCounts"
+        @select="onSectionSelect"
+      />
+
+      <div
+        ref="canvasRef"
+        class="flex-1 space-y-10 overflow-y-auto p-4 sm:p-6"
+      >
           <!-- Resume -->
           <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -471,9 +442,9 @@ watch(loading, (isLoading) => {
               </button>
             </div>
           </section>
-        </div>
+      </div>
 
-        <div class="sticky bottom-0 shrink-0 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur">
+      <div class="shrink-0 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:px-6">
           <div class="flex flex-wrap items-center gap-4">
             <div v-if="intakeUrl" class="flex min-w-0 flex-1 items-center gap-2">
               <input
@@ -493,8 +464,7 @@ watch(loading, (isLoading) => {
               </button>
             </div>
           </div>
-          <p v-if="actionError" class="mt-2 text-sm text-red-600">{{ actionError }}</p>
-        </div>
+        <p v-if="actionError" class="mt-2 text-sm text-red-600">{{ actionError }}</p>
       </div>
     </div>
 

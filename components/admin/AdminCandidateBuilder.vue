@@ -12,7 +12,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   reload: []
-  'open-parse-qa': []
 }>()
 
 const selected = toRef(props, 'candidate')
@@ -40,6 +39,8 @@ const {
 
 const { fieldClasses, markParsePrefillFromApi, clearParseHighlight } = useIntakePrefillHighlight()
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
+const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => boolean } | null>(null)
+const { devFixtureRequest } = useAdminHubMenu()
 
 const actionError = ref<string | null>(null)
 const actionLoading = ref(false)
@@ -75,10 +76,6 @@ const sectionMissingCounts = computed(() => {
   }
   return counts
 })
-
-const parseUrl = computed(() =>
-  props.candidate.id ? `/api/admin/candidates/${props.candidate.id}/parse` : undefined,
-)
 
 const displayName = computed(() => {
   const name = `${form.first_name || props.candidate.first_name || ''} ${form.last_name || props.candidate.last_name || ''}`.trim()
@@ -162,13 +159,11 @@ async function goToField(step: number, fieldId: string) {
   await nextTick()
   if (fieldId.startsWith('employer-')) {
     hospitalAutocompleteRef.value?.openEmployerField(fieldId)
+  } else if (fieldId.startsWith('education-')) {
+    educationRepeaterRef.value?.openEducationField(fieldId)
   }
   await nextTick()
   focusIntakeField(fieldId)
-}
-
-function onManualContinue() {
-  scrollToSection('identity')
 }
 
 function onParsedResult(data: Record<string, unknown>) {
@@ -213,6 +208,12 @@ watch(loading, (isLoading) => {
   } else {
     skipAutosave.value = true
   }
+})
+
+watch(devFixtureRequest, (mode) => {
+  if (!mode) return
+  devFixtureRequest.value = null
+  onDevFixture(mode)
 })
 </script>
 
@@ -274,41 +275,20 @@ watch(loading, (isLoading) => {
       >
           <!-- Resume -->
           <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 class="text-lg font-semibold text-slate-900">Resume</h2>
-                <p class="mt-1 text-sm text-slate-600">Upload the candidate's emailed resume to parse and prefill.</p>
-              </div>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                @click="emit('open-parse-qa')"
-              >
-                Parse QA
-              </button>
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">Resume</h2>
+              <p class="mt-1 text-sm text-slate-600">
+                Parsed fields appear below. Use <span class="font-medium">Re-upload resume</span> in the sidebar to replace the file.
+              </p>
             </div>
             <p v-if="resumeFilename" class="text-sm text-slate-600">
               Current file: <span class="font-medium">{{ resumeFilename }}</span>
             </p>
+            <p v-else-if="isEditable" class="text-sm text-slate-600">
+              No resume uploaded yet. Use the sidebar to upload, or continue manually in Identity and other sections.
+            </p>
             <ParseNoticeBanner :meta="parseMeta" show-fields-found />
-            <FileDropZone
-              v-if="isEditable"
-              variant="admin"
-              :candidate-id="candidate.id"
-              :parse-url="parseUrl"
-              :auth-headers="authHeaders"
-              :has-existing-data="hasExistingFormData"
-              :disabled="devPrefilling"
-              @parsed="onParsedResult"
-              @manual="onManualContinue"
-            />
-            <DevParseFixturePanel
-              v-if="isEditable"
-              context="admin"
-              :disabled="devPrefilling"
-              @prefill="onDevFixture"
-            />
-            <p v-else class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Download DOCX from the footer if needed.
             </p>
           </section>
@@ -406,7 +386,7 @@ watch(loading, (isLoading) => {
               v-model:average-patient-ratios="form.average_patient_ratios"
               v-model:specialized-medical-equipment="form.specialized_medical_equipment"
             />
-            <EducationRepeater v-model="form.education" />
+            <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />
           </section>
 
           <!-- Review -->

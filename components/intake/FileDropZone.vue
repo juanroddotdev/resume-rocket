@@ -18,7 +18,7 @@ const props = defineProps<{
   /** Extra headers for parse request (admin bearer auth). */
   authHeaders?: Record<string, string> | (() => Record<string, string> | Promise<Record<string, string>>)
   /** Admin-facing copy tweaks */
-  variant?: 'intake' | 'admin'
+  variant?: 'intake' | 'admin' | 'admin-sidebar'
 }>()
 
 const { intakeHeaders } = useIntakeInvite()
@@ -29,6 +29,7 @@ const parseProgress = ref(0)
 const error = ref<string | null>(null)
 const dragOver = ref(false)
 const reducedMotion = ref(false)
+const sidebarFileInputRef = ref<HTMLInputElement | null>(null)
 
 const PDF_STAGES = [
   'Uploading file…',
@@ -204,11 +205,46 @@ function onInput(e: Event) {
   if (file) handleFile(file)
   input.value = ''
 }
+
+function chooseSidebarFile() {
+  sidebarFileInputRef.value?.click()
+}
 </script>
 
 <template>
-  <div class="space-y-4">
-    <p class="text-xs text-slate-500">
+  <div :class="props.variant === 'admin-sidebar' ? 'space-y-2' : 'space-y-4'">
+    <template v-if="props.variant === 'admin-sidebar'">
+      <input
+        ref="sidebarFileInputRef"
+        type="file"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        class="hidden"
+        :disabled="disabled"
+        @change="onInput"
+      >
+      <div v-if="parsing" class="rounded-lg border border-brand-200 bg-brand-50/60 p-3">
+        <IntakeProcessingCard
+          mode="parse"
+          :status="parseCardStatus"
+          :message="displayStage"
+          :progress="parseProgress"
+          :reduced-motion="reducedMotion"
+        />
+      </div>
+      <button
+        v-else
+        type="button"
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+        :disabled="isBusy"
+        @click="chooseSidebarFile"
+      >
+        Re-upload resume
+      </button>
+      <p v-if="error" class="text-xs text-red-600">{{ error }}</p>
+    </template>
+
+    <template v-else>
+      <p class="text-xs text-slate-500">
       PDF or Word (.docx), max 10MB.
       {{ props.variant === 'admin' ? ' Upload the resume the candidate emailed you.' : ' Data is used for placement only and is not sold.' }}
     </p>
@@ -261,6 +297,7 @@ function onInput(e: Event) {
     >
       Continue manually
     </button>
+    </template>
   </div>
 </template>
 

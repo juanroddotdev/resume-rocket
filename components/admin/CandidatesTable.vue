@@ -13,7 +13,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [candidate: CandidateRow]
   download: [candidate: CandidateRow]
-  'open-parse-qa': [candidate: CandidateRow]
   'open-intake': [candidate: CandidateRow]
 }>()
 
@@ -184,14 +183,6 @@ function intakeLinkActive(c: CandidateRow) {
                   @click="emit('open-intake', c)"
                 >
                   Open intake
-                </button>
-                <button
-                  type="button"
-                  class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                  title="Review parse outcome and employer evidence"
-                  @click="emit('open-parse-qa', c)"
-                >
-                  Parse QA
                 </button>
                 <button
                   type="button"

@@ -25,11 +25,35 @@ const adminView = ref<AdminView>('builder')
 const docxError = ref<string | null>(null)
 const intakeOpenError = ref<string | null>(null)
 const newPacketModalOpen = ref(false)
+const builderReloadKey = ref(0)
+
+const { hasSelectedCandidate, parseQaTrigger, devFixtureRequest } = useAdminHubMenu()
 
 const parseQaCandidateName = computed(() => {
   if (!selectedCandidate.value) return 'Candidate'
   const name = `${selectedCandidate.value.first_name || ''} ${selectedCandidate.value.last_name || ''}`.trim()
   return name || 'Unnamed candidate'
+})
+
+const isSelectedDraft = computed(() => selectedCandidate.value?.status === 'draft')
+
+const sidebarParseUrl = computed(() =>
+  selectedCandidate.value?.id
+    ? `/api/admin/candidates/${selectedCandidate.value.id}/parse`
+    : undefined,
+)
+
+watch(selectedCandidate, (candidate) => {
+  hasSelectedCandidate.value = Boolean(candidate)
+}, { immediate: true })
+
+watch(parseQaTrigger, () => {
+  openParseQa()
+})
+
+watch(devFixtureRequest, (mode) => {
+  if (!mode || !selectedCandidate.value) return
+  setAdminView('builder')
 })
 
 watch(
@@ -91,22 +115,23 @@ watch(user, (u) => {
   }
 }, { immediate: true })
 
-async function onInviteCreated(payload: { inviteId: string; url: string; copied: boolean }) {
-  const { inviteId } = payload
+async function onPacketReady(payload: { candidateId: string }) {
+  await loadCandidates(payload.candidateId)
+  openInBuilder(candidates.value.find(c => c.id === payload.candidateId) ?? null)
+  builderReloadKey.value += 1
+}
 
+async function adminAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.access_token) return
-  try {
-    const created = await $fetch<{ id: string }>('/api/admin/candidates', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}` },
-      body: { intake_invite_id: inviteId },
-    })
-    await loadCandidates(created.id)
-    openInBuilder(candidates.value.find(c => c.id === created.id) ?? null)
-  } catch {
-    await loadCandidates()
+  if (!session?.access_token) {
+    throw new Error('Sign in required')
   }
+  return { Authorization: `Bearer ${session.access_token}` }
+}
+
+async function onSidebarParsed() {
+  await loadCandidates(selectedCandidate.value?.id)
+  builderReloadKey.value += 1
 }
 
 function selectCandidate(candidate: CandidateRow) {
@@ -122,11 +147,6 @@ function openInBuilder(candidate: CandidateRow | null) {
 
 function openParseQa() {
   if (!selectedCandidate.value) return
-  parseQaOpen.value = true
-}
-
-function openParseQaForCandidate(candidate: CandidateRow) {
-  selectedCandidate.value = candidate
   parseQaOpen.value = true
 }
 
@@ -179,44 +199,9 @@ function openCandidateIntake(candidate: CandidateRow) {
 
     <template v-else>
       <div class="flex h-full min-h-0 flex-col">
-        <div class="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
-          <h1 class="text-lg font-semibold text-slate-900">Recruiter dashboard</h1>
-          <div
-            class="relative grid grid-cols-2 rounded-lg border border-slate-200 bg-slate-50 p-0.5"
-            role="tablist"
-            aria-label="Dashboard view"
-          >
-            <span
-              aria-hidden="true"
-              class="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-md bg-white shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none"
-              :class="adminView === 'table' ? 'translate-x-full' : 'translate-x-0'"
-            />
-            <button
-              type="button"
-              role="tab"
-              class="relative z-10 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200"
-              :class="adminView === 'builder' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-              :aria-selected="adminView === 'builder'"
-              @click="setAdminView('builder')"
-            >
-              Builder
-            </button>
-            <button
-              type="button"
-              role="tab"
-              class="relative z-10 rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200"
-              :class="adminView === 'table' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-              :aria-selected="adminView === 'table'"
-              @click="setAdminView('table')"
-            >
-              All candidates
-            </button>
-          </div>
-        </div>
-
         <div
           v-if="docxError || intakeOpenError"
-          class="mb-4 shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          class="mb-3 shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
           role="alert"
         >
           {{ docxError || intakeOpenError }}
@@ -232,6 +217,37 @@ function openCandidateIntake(candidate: CandidateRow) {
         <div class="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <aside class="flex w-[280px] shrink-0 flex-col border-r border-slate-200 bg-slate-50">
             <div class="shrink-0 space-y-3 border-b border-slate-200 p-3">
+              <div
+                class="relative grid grid-cols-2 rounded-lg border border-slate-200 bg-white p-0.5"
+                role="tablist"
+                aria-label="Dashboard view"
+              >
+                <span
+                  aria-hidden="true"
+                  class="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-md bg-slate-100 shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none"
+                  :class="adminView === 'table' ? 'translate-x-full' : 'translate-x-0'"
+                />
+                <button
+                  type="button"
+                  role="tab"
+                  class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
+                  :class="adminView === 'builder' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
+                  :aria-selected="adminView === 'builder'"
+                  @click="setAdminView('builder')"
+                >
+                  Builder
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
+                  :class="adminView === 'table' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
+                  :aria-selected="adminView === 'table'"
+                  @click="setAdminView('table')"
+                >
+                  All candidates
+                </button>
+              </div>
               <button
                 type="button"
                 class="w-full rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
@@ -239,6 +255,15 @@ function openCandidateIntake(candidate: CandidateRow) {
               >
                 + New candidate packet
               </button>
+              <FileDropZone
+                v-if="selectedCandidate && isSelectedDraft && sidebarParseUrl"
+                variant="admin-sidebar"
+                :candidate-id="selectedCandidate.id"
+                :parse-url="sidebarParseUrl"
+                :auth-headers="adminAuthHeaders"
+                :has-existing-data="true"
+                @parsed="onSidebarParsed"
+              />
               <div class="flex flex-wrap items-center gap-2">
                 <input
                   v-model="search"
@@ -277,9 +302,9 @@ function openCandidateIntake(candidate: CandidateRow) {
               <div v-if="adminView === 'builder'" key="builder" class="flex h-full min-h-0 flex-col p-4">
                 <AdminCandidateBuilder
                   v-if="selectedCandidate"
+                  :key="`${selectedCandidate.id}-${builderReloadKey}`"
                   :candidate="selectedCandidate"
                   @reload="loadCandidates()"
-                  @open-parse-qa="openParseQa"
                 />
                 <div
                   v-else
@@ -309,7 +334,6 @@ function openCandidateIntake(candidate: CandidateRow) {
                   @select="openInBuilder"
                   @download="downloadCandidateDocx"
                   @open-intake="openCandidateIntake"
-                  @open-parse-qa="openParseQaForCandidate"
                 />
               </div>
             </Transition>
@@ -320,7 +344,7 @@ function openCandidateIntake(candidate: CandidateRow) {
       <NewCandidatePacketModal
         :open="newPacketModalOpen"
         @close="newPacketModalOpen = false"
-        @created="onInviteCreated"
+        @ready="onPacketReady"
       />
 
       <ParseQAPanel

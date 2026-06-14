@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-svh flex-col bg-slate-50">
+  <div class="flex h-svh flex-col overflow-hidden bg-slate-50">
     <header class="shrink-0 border-b border-slate-200 bg-white">
       <div class="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3">
         <NuxtLink to="/" class="text-lg font-semibold text-brand-700">Resume Rocket</NuxtLink>

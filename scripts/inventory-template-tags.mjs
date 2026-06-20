@@ -74,6 +74,7 @@ function flattenBuilderKeys(obj) {
 /** Tags inside loops when fixture arrays are empty in mapCandidateToTemplateData(). */
 const NESTED_LOOP_SCALARS = {
   education: ['education_degree', 'education_school_name', 'education_graduation_year'],
+  certifications_list: ['certification_name', 'certification_expiration_date'],
 }
 
 const NESTED_EXPERIENCE_LOOPS = [

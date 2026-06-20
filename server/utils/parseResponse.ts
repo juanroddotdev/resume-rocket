@@ -1,4 +1,5 @@
 import type { ParsedResume } from '~/types/parse'
+import { resolveCanonicalCert } from '../../utils/certificationOptions.ts'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 
 export function parsedResumeToApiFields(parsed: ParsedResume | null) {
@@ -77,11 +78,13 @@ export function credentialsInputFromParsed(parsed: ParsedResume | null) {
   const acc: Record<string, boolean | { active: boolean, expiry?: string }> = {}
 
   for (const cert of parsed.detectedCredentials || []) {
-    acc[cert.toUpperCase()] = true
+    const key = resolveCanonicalCert(cert) ?? cert.trim().toUpperCase()
+    if (key) acc[key] = true
   }
 
   for (const cert of parsed.certificationDetails || []) {
-    const key = cert.name.toUpperCase()
+    const key = resolveCanonicalCert(cert.name) ?? cert.name.trim().toUpperCase()
+    if (!key) continue
     const expiry = cert.expiry ? normalizeCredentialExpiry(cert.expiry) : undefined
     acc[key] = expiry ? { active: true, expiry } : { active: true }
   }

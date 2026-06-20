@@ -14,6 +14,7 @@ import {
   primaryLicense,
   resolveCandidateLicenses,
 } from '../../utils/licenseRows.ts'
+import { orderedActiveCertificationKeys } from '../../utils/certificationOptions.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 
 interface DocxEmployer extends EmployerEntry {}
@@ -161,6 +162,14 @@ function mapEmployerToExperience(
   }
 }
 
+function mapCertificationsForDocx(credentials: CredentialsMap | null | undefined) {
+  const keys = orderedActiveCertificationKeys(activeCredentialKeys(credentials))
+  return keys.map(key => ({
+    certification_name: key,
+    certification_expiration_date: certExpiry(credentials, key) || 'Current',
+  }))
+}
+
 export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const employers = candidate.employers || []
   const emrUnion = employerEmrProficienciesUnion(employers)
@@ -176,7 +185,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const licenseExpiry = primary?.expiry
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
-  const activeCerts = activeCertKeys(credentials)
+  const activeCerts = orderedActiveCertificationKeys(activeCertKeys(credentials))
   const primarySpecialty = specialties[0] || ''
   const { city: homeCity, state: homeState } = resolveCandidateLocation(candidate)
 
@@ -199,6 +208,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     specialized_medical_equipment: candidate.specialized_medical_equipment || '',
     emr_software_proficiencies: emrProficiencies,
     core_life_support_certifications: activeCerts.join(', '),
+    certifications_list: mapCertificationsForDocx(credentials),
 
     rn_license_state_and_expiry: primary
       ? formatLicenseRowForDocx(primary)

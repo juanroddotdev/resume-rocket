@@ -86,6 +86,25 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.emr_software_proficiencies, 'Epic, Cerner')
   })
 
+  it('maps certifications_list with names and expiries for all active credentials', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      credentials: {
+        BLS: { active: true, expiry: '06/2026' },
+        CCRN: { active: true },
+        ARRT: { active: true, expiry: '01/2027' },
+      },
+    })
+
+    assert.equal(data.core_life_support_certifications, 'BLS, CCRN, ARRT')
+    assert.deepEqual(data.certifications_list, [
+      { certification_name: 'BLS', certification_expiration_date: '06/2026' },
+      { certification_name: 'CCRN', certification_expiration_date: 'Current' },
+      { certification_name: 'ARRT', certification_expiration_date: '01/2027' },
+    ])
+  })
+
   it('falls back to legacy global emr_system when employers lack per-card EMR', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

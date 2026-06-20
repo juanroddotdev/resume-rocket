@@ -41,6 +41,41 @@ export interface DocxCandidate {
   specialized_medical_equipment?: string | null
 }
 
+/** Coerce template scalars so docxtemplater never renders the literal "undefined". */
+function docxText(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return ''
+}
+
+function docxStringList(items: unknown): string[] {
+  if (!Array.isArray(items)) return []
+  return items.map(item => docxText(item)).filter(item => item.length > 0)
+}
+
+/** Recursively replace null/undefined leaves with empty strings for DOCX render. */
+export function sanitizeDocxTemplateData(value: unknown): unknown {
+  if (value == null) return ''
+  if (Array.isArray(value)) {
+    if (value.length === 0) return []
+    if (typeof value[0] === 'object' && value[0] !== null) {
+      return value.map(item => sanitizeDocxTemplateData(item))
+    }
+    return docxStringList(value)
+  }
+  if (typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [key, nested] of Object.entries(value)) {
+      out[key] = sanitizeDocxTemplateData(nested)
+    }
+    return out
+  }
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return ''
+}
+
 function traumaLevel(employer: DocxEmployer): string {
   return employer.traumaLevel || ''
 }
@@ -142,7 +177,7 @@ function mapEmployerToExperience(
   return {
     experience_unit_specialty: unitSpecialty,
     experience_facility_type: '',
-    experience_hospital_name: employer.name,
+    experience_hospital_name: docxText(employer.name),
     experience_facility_location: location,
     experience_employment_dates:
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
@@ -154,11 +189,11 @@ function mapEmployerToExperience(
     experience_is_teaching_facility: teachingFacilityLabel(employer),
     experience_emr_system: employer.emrSystem || legacyEmrSystem || '',
     experience_patient_scope: employer.patientScope || '',
-    experience_floated_units_list: employer.floatedUnits || [],
-    experience_equipment_procedures_list: employer.equipmentProcedures || [],
+    experience_floated_units_list: docxStringList(employer.floatedUnits),
+    experience_equipment_procedures_list: docxStringList(employer.equipmentProcedures),
     experience_average_daily_patients: employer.avgDailyPatients || '',
-    experience_patient_acuity_level: '',
-    experience_highlights: experienceHighlightsForDocx(employer),
+    experience_patient_acuity_level: docxText(employer.patientAcuity),
+    experience_highlights: docxStringList(experienceHighlightsForDocx(employer)),
   }
 }
 
@@ -189,7 +224,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const primarySpecialty = specialties[0] || ''
   const { city: homeCity, state: homeState } = resolveCandidateLocation(candidate)
 
-  return {
+  return sanitizeDocxTemplateData({
     candidate_first_name: candidate.first_name || '',
     candidate_last_name: candidate.last_name || '',
     candidate_phone: candidate.phone || '',
@@ -223,7 +258,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     professional_experiences: employers.map(e =>
       mapEmployerToExperience(e, primarySpecialty, candidate.emr_system || ''),
     ),
-  }
+  })
 }
 
 export async function buildResumeDocx(candidate: DocxCandidate): Promise<Buffer> {

@@ -83,7 +83,6 @@ const OPTIONAL_EMPTY = new Set([
   'average_patient_ratios', // omitted from DOCX summary per client feedback
   'facility_types_trauma_levels', // trauma shown per employer only
   'experience_facility_type', // trauma not duplicated on title line
-  'experience_patient_acuity_level', // deprecated field
   'experience_role_details', // omitted when redundant with unit specialty
 ])
 
@@ -142,6 +141,7 @@ const checks = [
   ['BLS expiry', data.BLS_certification_expiration_date, '06/2026'],
   ['experience_employment_type', exp0?.experience_employment_type, 'Staff'],
   ['experience_patient_scope', exp0?.experience_patient_scope, 'Adult ICU — critical care'],
+  ['experience_patient_acuity_level', exp0?.experience_patient_acuity_level, 'High acuity'],
   ['experience_highlights', exp0?.experience_highlights?.length, 2],
 ]
 

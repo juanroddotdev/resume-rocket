@@ -1,6 +1,21 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { mapCandidateToTemplateData } from '../server/utils/docxBuilder.ts'
+import { mapCandidateToTemplateData, sanitizeDocxTemplateData } from '../server/utils/docxBuilder.ts'
+
+function collectUndefinedPaths(value, prefix = '') {
+  if (value === undefined) return prefix ? [prefix] : ['root']
+  if (value == null || typeof value !== 'object') return []
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) =>
+      collectUndefinedPaths(item, prefix ? `${prefix}[${index}]` : `[${index}]`),
+    )
+  }
+
+  return Object.entries(value).flatMap(([key, nested]) =>
+    collectUndefinedPaths(nested, prefix ? `${prefix}.${key}` : key),
+  )
+}
 
 describe('mapCandidateToTemplateData', () => {
   it('returns a non-empty buffer-ready payload for a complete candidate', () => {
@@ -40,6 +55,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(data.professional_experiences.length)
     assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')
+    assert.equal(data.professional_experiences[0].experience_patient_acuity_level, 'High')
   })
 
   it('appends charge and preceptor highlights when employer flags are yes', () => {
@@ -191,6 +207,39 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_unit_specialty, 'PICU RN')
     assert.equal(data.professional_experiences[0].experience_role_details, '')
   })
+
+  it('never leaves undefined template values for sparse candidates', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      employers: [{
+        role: 'ICU RN',
+        floatedUnits: ['ICU', undefined, ''],
+        equipmentProcedures: [undefined],
+        highlights: [undefined, 'Charge nurse'],
+      }],
+      education: [{ degree: undefined, school: null }],
+      specialties: [undefined, 'ICU'],
+    })
+
+    assert.deepEqual(collectUndefinedPaths(data), [])
+    assert.equal(data.professional_experiences[0].experience_hospital_name, '')
+    assert.deepEqual(data.professional_experiences[0].experience_floated_units_list, ['ICU'])
+    assert.deepEqual(data.professional_experiences[0].experience_highlights, ['Charge nurse'])
+  })
+
+  it('sanitizeDocxTemplateData coerces nullish leaves to empty strings', () => {
+    const sanitized = sanitizeDocxTemplateData({
+      name: undefined,
+      nested: { value: null },
+      list: ['ok', undefined, null],
+    })
+
+    assert.deepEqual(sanitized, {
+      name: '',
+      nested: { value: '' },
+      list: ['ok'],
+    })
+  })
 })
 
 describe('buildResumeDocx smoke', () => {
@@ -209,5 +258,22 @@ describe('buildResumeDocx smoke', () => {
     })
     assert.ok(Buffer.isBuffer(buffer))
     assert.ok(buffer.length > 1000)
+  })
+
+  it('does not render the literal word undefined in document text', async () => {
+    const PizZip = (await import('pizzip')).default
+    const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
+    const buffer = await buildResumeDocx({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['ICU'],
+      employers: [{ role: 'ICU RN' }],
+      education: [{}],
+    })
+
+    const zip = new PizZip(buffer)
+    const xml = zip.file('word/document.xml')?.asText() || ''
+    assert.ok(xml.length > 0)
+    assert.equal(xml.includes('undefined'), false)
   })
 })

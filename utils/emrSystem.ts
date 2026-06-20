@@ -1,24 +1,38 @@
-export const EMR_PRESET_OPTIONS = [
-  'Epic',
-  'Cerner / Millennium',
-  'Meditech',
-  'McKesson',
-  'Allscripts',
-  'CPSI',
-  'PointClickCare',
-  'AlayaCare',
-  'Homecare Homebase',
-  'MatrixCare',
-] as const
+import {
+  EMR_CHARTING_GROUPS,
+  EMR_CHARTING_GROUP_LABELS,
+} from './emrChartingSystems.ts'
+
+export { EMR_CHARTING_GROUPS, EMR_CHARTING_GROUP_LABELS }
+
+export const EMR_PRESET_OPTIONS = EMR_CHARTING_GROUP_LABELS.flatMap(
+  label => EMR_CHARTING_GROUPS[label],
+)
+
+const EMR_PRESET_SET = new Set<string>(EMR_PRESET_OPTIONS)
+
 export type EmrPreset = (typeof EMR_PRESET_OPTIONS)[number]
 export const EMR_OTHER_OPTION = 'Other'
 
+/** Map legacy stored values to current preset labels. */
+const EMR_LEGACY_ALIASES: Record<string, string> = {
+  'Cerner / Millennium': 'Cerner / Oracle Health Millennium',
+  Meditech: 'MEDITECH (Expanse, Magic)',
+  McKesson: 'McKesson Horizon Clinicals',
+  Allscripts: 'Allscripts Sunrise',
+  'Homecare Homebase': 'Homecare Homebase (HCHB)',
+}
+
+function normalizeStoredEmr(value: string): string {
+  return EMR_LEGACY_ALIASES[value] ?? value
+}
+
 export function resolveEmrFields(emrSystem: string | null | undefined) {
-  const value = (emrSystem || '').trim()
+  const value = normalizeStoredEmr((emrSystem || '').trim())
   if (!value) {
     return { selection: '', custom: '' }
   }
-  if ((EMR_PRESET_OPTIONS as readonly string[]).includes(value)) {
+  if (EMR_PRESET_SET.has(value)) {
     return { selection: value, custom: '' }
   }
   return { selection: EMR_OTHER_OPTION, custom: value }

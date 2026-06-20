@@ -7,8 +7,9 @@ import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import {
+  EMR_CHARTING_GROUPS,
+  EMR_CHARTING_GROUP_LABELS,
   EMR_OTHER_OPTION,
-  EMR_PRESET_OPTIONS,
   emrSystemFromFields,
   resolveEmrFields,
 } from '~/utils/emrSystem'
@@ -566,7 +567,7 @@ function onTraumaLevelChange(event: Event) {
             </legend>
 
           <label class="block" :for="`intake-field-${employerFieldId('emr')}`">
-            <span class="field-label-compact">EMR platform</span>
+            <span class="field-label-compact">EMR / charting system</span>
             <select
               :id="`intake-field-${employerFieldId('emr')}`"
               :value="emrSelection"
@@ -574,9 +575,19 @@ function onTraumaLevelChange(event: Event) {
               @change="onEmrSelectionChange"
             >
               <option value="">Select…</option>
-              <option v-for="option in EMR_PRESET_OPTIONS" :key="option" :value="option">
-                {{ option }}
-              </option>
+              <optgroup
+                v-for="groupLabel in EMR_CHARTING_GROUP_LABELS"
+                :key="groupLabel"
+                :label="groupLabel"
+              >
+                <option
+                  v-for="option in EMR_CHARTING_GROUPS[groupLabel]"
+                  :key="option"
+                  :value="option"
+                >
+                  {{ option }}
+                </option>
+              </optgroup>
               <option :value="EMR_OTHER_OPTION">Other</option>
             </select>
           </label>
@@ -585,7 +596,7 @@ function onTraumaLevelChange(event: Event) {
             class="block"
             :for="`intake-field-${employerFieldId('emr-other')}`"
           >
-            <span class="field-label-compact">Other EMR platform</span>
+            <span class="field-label-compact">Other EMR / charting system</span>
             <input
               :id="`intake-field-${employerFieldId('emr-other')}`"
               :value="emrCustom"
@@ -600,7 +611,7 @@ function onTraumaLevelChange(event: Event) {
             class="text-xs text-amber-800"
             role="status"
           >
-            Enter the EMR name — required when Other is selected.
+            Enter the system name — required when Other is selected.
           </p>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">

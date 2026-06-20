@@ -419,7 +419,7 @@ watch(devFixtureRequest, (mode) => {
               @update:employers="form.employers = $event"
             />
             <p v-if="!employersEmrComplete && form.employers.length" class="text-sm text-amber-800" role="status">
-              Select an EMR platform on each employer card. If you choose Other, enter the system name — required before download.
+              Select an EMR / charting system on each employer card. If you choose Other, enter the system name — required before download.
             </p>
           </section>
 

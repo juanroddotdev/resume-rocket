@@ -661,7 +661,7 @@ async function onReviewPreview() {
           v-else-if="isClientView && form.employers.length && !employersEmrComplete"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
-          Select an EMR platform on each employer card. If you choose Other, enter the system name — required before continuing.
+          Select an EMR / charting system on each employer card. If you choose Other, enter the system name — required before continuing.
         </p>
         <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>

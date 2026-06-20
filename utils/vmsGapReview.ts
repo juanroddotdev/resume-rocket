@@ -56,7 +56,7 @@ function employerMissing(employer: EmployerEntry, index: number): MissingTemplat
     missing.push({ id: `employer-${index}-highlights`, label: `${prefix}: at least one highlight`, step: 2 })
   }
   if (!isStoredEmrComplete(employer.emrSystem)) {
-    missing.push({ id: `employer-${index}-emr`, label: `${prefix}: EMR platform`, step: 2 })
+    missing.push({ id: `employer-${index}-emr`, label: `${prefix}: EMR / charting system`, step: 2 })
   }
   if (normalizeEmploymentType(employer.employmentType) === 'PRN' && !hasText(employer.prnSchedule)) {
     missing.push({ id: `employer-${index}-prn-schedule`, label: `${prefix}: typical PRN schedule`, step: 2 })

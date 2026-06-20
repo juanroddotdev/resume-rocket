@@ -6,16 +6,6 @@ import { findCanonicalEmrPreset } from './emrSearch.ts'
 
 export { EMR_CHARTING_GROUPS, EMR_CHARTING_GROUP_LABELS }
 
-/** One-tap presets for the most common employer EMR / charting systems. */
-export const EMR_QUICK_PRESETS = [
-  'Epic',
-  'Cerner / Oracle Health Millennium',
-  'MEDITECH (Expanse, Magic)',
-  'PointClickCare',
-  'Homecare Homebase (HCHB)',
-  'MatrixCare',
-] as const
-
 export const EMR_PRESET_OPTIONS = EMR_CHARTING_GROUP_LABELS.flatMap(
   label => EMR_CHARTING_GROUPS[label],
 )

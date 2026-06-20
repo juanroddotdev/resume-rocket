@@ -10,7 +10,6 @@ import {
 import {
   EMR_CHARTING_GROUPS,
   EMR_CHARTING_GROUP_LABELS,
-  EMR_QUICK_PRESETS,
   commitEmrValue,
   resolveStoredEmrLabel,
 } from '~/utils/emrSystem'
@@ -168,10 +167,6 @@ function backToBrowseCategories() {
   activeIndex.value = 0
 }
 
-function onPresetClick(preset: string) {
-  selectValue(preset)
-}
-
 function onInput(event: Event) {
   query.value = (event.target as HTMLInputElement).value
   editing.value = true
@@ -294,26 +289,8 @@ function browseRowClass(index: number) {
 </script>
 
 <template>
-  <div ref="rootRef" class="space-y-2">
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="preset in EMR_QUICK_PRESETS"
-        :key="preset"
-        type="button"
-        class="rounded-full px-3 py-1.5 text-xs font-medium transition sm:text-sm"
-        :class="
-          displayValue === preset
-            ? 'bg-brand-600 text-white'
-            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-        "
-        @click="onPresetClick(preset)"
-      >
-        {{ preset }}
-      </button>
-    </div>
-
-    <div class="relative">
-      <input
+  <div ref="rootRef" class="relative">
+    <input
         :id="inputId"
         ref="inputRef"
         :value="editing ? query : displayValue"
@@ -426,6 +403,5 @@ function browseRowClass(index: number) {
           </template>
         </template>
       </ul>
-    </div>
   </div>
 </template>

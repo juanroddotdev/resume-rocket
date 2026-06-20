@@ -5,6 +5,7 @@ import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employ
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
 import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
+import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import {
   EMR_OTHER_OPTION,
   EMR_PRESET_OPTIONS,
@@ -23,6 +24,7 @@ const props = defineProps<{
   layout?: 'deck' | 'panel'
   /** Deck list spacing: gap below expanded card, overlap among other collapsed headers. */
   deckCollapseStyle?: 'none' | 'overlap' | 'gap'
+  persistImmediate?: () => void | Promise<void>
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
@@ -118,15 +120,48 @@ function startChangeFacility() {
   showLinkSearch.value = true
 }
 
-function linesToArray(value: string): string[] {
-  return value
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
+type LineField = 'highlights' | 'floatedUnits' | 'equipmentProcedures'
+
+const lineDrafts = reactive<Record<LineField, string>>({
+  highlights: '',
+  floatedUnits: '',
+  equipmentProcedures: '',
+})
+
+const focusedLineField = ref<LineField | null>(null)
+
+function syncLineDraft(field: LineField, values?: string[]) {
+  if (focusedLineField.value === field) return
+  lineDrafts[field] = arrayToLines(values)
 }
 
-function arrayToLines(values?: string[]) {
-  return values?.join('\n') || ''
+watch(
+  () => props.employer.highlights,
+  value => syncLineDraft('highlights', value),
+  { immediate: true },
+)
+watch(
+  () => props.employer.floatedUnits,
+  value => syncLineDraft('floatedUnits', value),
+  { immediate: true },
+)
+watch(
+  () => props.employer.equipmentProcedures,
+  value => syncLineDraft('equipmentProcedures', value),
+  { immediate: true },
+)
+
+function onLineDraftInput(field: LineField, event: Event) {
+  lineDrafts[field] = (event.target as HTMLTextAreaElement).value
+}
+
+function commitLineDraft(
+  field: LineField,
+  suffix: string,
+  key: 'highlights' | 'floatedUnits' | 'equipmentProcedures',
+) {
+  focusedLineField.value = null
+  patchField(suffix, { [key]: linesToArray(lineDrafts[field]) })
 }
 
 const employmentTypeValue = computed(() => {
@@ -176,6 +211,7 @@ function onClinicalFlagChange(
     next[key] = value
   }
   emit('update', next)
+  void props.persistImmediate?.()
 }
 
 function onTeachingStatusChange(event: Event) {
@@ -612,11 +648,13 @@ function onTraumaLevelChange(event: Event) {
             <span class="field-label-compact">Highlights</span>
             <textarea
               :id="`intake-field-${employerFieldId('highlights')}`"
-              :value="arrayToLines(employer.highlights)"
+              :value="lineDrafts.highlights"
               placeholder="One achievement per line"
               rows="3"
               :class="fieldClasses(employerFieldId('highlights'))"
-              @input="patchField('highlights', { highlights: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+              @focus="focusedLineField = 'highlights'"
+              @input="onLineDraftInput('highlights', $event)"
+              @blur="commitLineDraft('highlights', 'highlights', 'highlights')"
             />
           </label>
 
@@ -657,22 +695,26 @@ function onTraumaLevelChange(event: Event) {
               <span class="field-label-compact">Floated units</span>
               <textarea
                 :id="`intake-field-employer-${index}-floated`"
-                :value="arrayToLines(employer.floatedUnits)"
+                :value="lineDrafts.floatedUnits"
                 placeholder="One unit per line"
                 rows="2"
                 class="field"
-                @input="patch({ floatedUnits: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+                @focus="focusedLineField = 'floatedUnits'"
+                @input="onLineDraftInput('floatedUnits', $event)"
+                @blur="commitLineDraft('floatedUnits', '', 'floatedUnits')"
               />
             </label>
             <label class="block" :for="`intake-field-employer-${index}-equipment`">
               <span class="field-label-compact">Equipment / procedures</span>
               <textarea
                 :id="`intake-field-employer-${index}-equipment`"
-                :value="arrayToLines(employer.equipmentProcedures)"
+                :value="lineDrafts.equipmentProcedures"
                 placeholder="One item per line"
                 rows="2"
                 class="field"
-                @input="patch({ equipmentProcedures: linesToArray(($event.target as HTMLTextAreaElement).value) })"
+                @focus="focusedLineField = 'equipmentProcedures'"
+                @input="onLineDraftInput('equipmentProcedures', $event)"
+                @blur="commitLineDraft('equipmentProcedures', '', 'equipmentProcedures')"
               />
             </label>
           </div>

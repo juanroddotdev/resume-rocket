@@ -376,6 +376,7 @@ watch(devFixtureRequest, (mode) => {
               ref="hospitalAutocompleteRef"
               deck-mode="multi"
               :employers="form.employers"
+              :persist-immediate="flushAutosave"
               @update:employers="form.employers = $event"
             />
             <p v-if="!employersEmrComplete && form.employers.length" class="text-sm text-amber-800" role="status">

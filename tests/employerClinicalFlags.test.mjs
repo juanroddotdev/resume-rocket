@@ -5,6 +5,7 @@ import {
   PRECEPTOR_HIGHLIGHT_LABEL,
   experienceHighlightsForDocx,
   inferClinicalFlagsFromHighlights,
+  resolveClinicalFlagFromParse,
   triStateBoolFromSelect,
   triStateBoolValue,
 } from '../utils/employerClinicalFlags.ts'
@@ -23,13 +24,26 @@ describe('experienceHighlightsForDocx', () => {
     ])
   })
 
-  it('does not duplicate when highlights already mention charge or preceptor', () => {
+  it('always appends canonical labels when yes even if highlights mention keywords', () => {
     const items = experienceHighlightsForDocx({
       highlights: ['Charge nurse 18 months', 'Preceptor for new grads'],
       chargeNurseExperience: true,
       preceptorExperience: true,
     })
-    assert.deepEqual(items, ['Charge nurse 18 months', 'Preceptor for new grads'])
+    assert.deepEqual(items, [
+      'Charge nurse 18 months',
+      'Preceptor for new grads',
+      CHARGE_NURSE_HIGHLIGHT_LABEL,
+      PRECEPTOR_HIGHLIGHT_LABEL,
+    ])
+  })
+})
+
+describe('resolveClinicalFlagFromParse', () => {
+  it('honors explicit false over highlight inference', () => {
+    assert.equal(resolveClinicalFlagFromParse(false, true), false)
+    assert.equal(resolveClinicalFlagFromParse(true, false), true)
+    assert.equal(resolveClinicalFlagFromParse(undefined, true), true)
   })
 })
 

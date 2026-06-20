@@ -1,6 +1,9 @@
 import { GoogleGenAI, Type } from '@google/genai'
 import type { ParseAudit, ParsedResume } from '~/types/parse'
-import { inferClinicalFlagsFromHighlights } from '../../utils/employerClinicalFlags.ts'
+import {
+  inferClinicalFlagsFromHighlights,
+  resolveClinicalFlagFromParse,
+} from '../../utils/employerClinicalFlags.ts'
 import {
   normalizeGraduationMonth,
   normalizeGraduationYear,
@@ -299,12 +302,14 @@ function mapGeminiEmployer(e: GeminiEmployerJson) {
     avgDailyPatients: e.avg_daily_patients?.trim() || undefined,
     patientAcuity: e.patient_acuity?.trim() || undefined,
     highlights,
-    chargeNurseExperience: e.charge_nurse_experience === true
-      ? true
-      : inferred.chargeNurseExperience,
-    preceptorExperience: e.preceptor_experience === true
-      ? true
-      : inferred.preceptorExperience,
+    chargeNurseExperience: resolveClinicalFlagFromParse(
+      e.charge_nurse_experience,
+      inferred.chargeNurseExperience,
+    ),
+    preceptorExperience: resolveClinicalFlagFromParse(
+      e.preceptor_experience,
+      inferred.preceptorExperience,
+    ),
   }
 }
 

@@ -609,6 +609,7 @@ async function onReviewPreview() {
         <HospitalAutocomplete
           ref="hospitalAutocompleteRef"
           :employers="form.employers"
+          :persist-immediate="flushAutosave"
           @update:employers="form.employers = $event"
         />
         <p

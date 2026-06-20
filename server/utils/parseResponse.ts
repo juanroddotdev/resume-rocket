@@ -8,6 +8,9 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
       last_name: undefined,
       email: undefined,
       phone: undefined,
+      home_address: undefined,
+      home_city: undefined,
+      home_state: undefined,
       license_number: undefined,
       license_state: undefined,
       licenses: undefined,
@@ -26,6 +29,9 @@ export function parsedResumeToApiFields(parsed: ParsedResume | null) {
     last_name: parsed.lastName,
     email: parsed.email,
     phone: parsed.phone,
+    home_address: parsed.homeAddress,
+    home_city: parsed.homeCity,
+    home_state: parsed.homeState,
     license_number: parsed.licenseNumber,
     license_state: parsed.licenseState,
     licenses: parsed.licenses,
@@ -45,6 +51,8 @@ export function countParsedFields(fields: ReturnType<typeof parsedResumeToApiFie
   if (fields.last_name) count++
   if (fields.email) count++
   if (fields.phone) count++
+  if (fields.home_address) count++
+  if (fields.home_city) count++
   if (fields.license_number) count++
   if (fields.license_state) count++
   if (fields.licenses?.length) count++

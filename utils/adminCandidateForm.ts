@@ -52,6 +52,9 @@ export function defaultCandidateForm() {
     last_name: '',
     email: '',
     phone: '',
+    home_address: '',
+    home_city: '',
+    home_state: '',
     license_number: '',
     license_state: '',
     licenses: [] as LicenseEntry[],
@@ -87,6 +90,9 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     last_name: form.last_name,
     email: form.email,
     phone: form.phone,
+    home_address: form.home_address || undefined,
+    home_city: form.home_city || undefined,
+    home_state: form.home_state || undefined,
     license_number: legacyScalars.license_number ?? form.license_number,
     license_state: legacyScalars.license_state ?? form.license_state,
     licenses: licenses.length ? licenses : undefined,
@@ -122,6 +128,9 @@ export type AdminDraftResponse = {
   compact_license_status?: string | null
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
+  home_address?: string | null
+  home_city?: string | null
+  home_state?: string | null
   resume_storage_path?: string | null
   resume_original_filename?: string | null
   parse_error?: string | null
@@ -144,6 +153,9 @@ export function applyAdminDraftToForm(
     last_name: row.last_name ?? '',
     email: row.email ?? '',
     phone: row.phone ?? '',
+    home_address: row.home_address ?? '',
+    home_city: row.home_city ?? '',
+    home_state: row.home_state ?? '',
     license_number: legacyScalars.license_number ?? row.license_number ?? '',
     license_state: legacyScalars.license_state ?? row.license_state ?? '',
     licenses,
@@ -166,6 +178,9 @@ export function applyParseResultToForm(
     last_name?: string
     email?: string
     phone?: string
+    home_address?: string
+    home_city?: string
+    home_state?: string
     license_number?: string
     license_state?: string
     licenses?: LicenseEntry[]
@@ -185,6 +200,9 @@ export function applyParseResultToForm(
   if (data.last_name) form.last_name = data.last_name
   if (data.email) form.email = data.email
   if (data.phone) form.phone = data.phone
+  if (data.home_address) form.home_address = data.home_address
+  if (data.home_city) form.home_city = data.home_city
+  if (data.home_state) form.home_state = data.home_state
   if (data.license_number || data.license_state) {
     form.licenses = resolveCandidateLicenses({
       licenses: data.licenses,

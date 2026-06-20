@@ -12,6 +12,9 @@ const fixture = {
   last_name: 'Doe',
   email: 'jane.doe@example.com',
   phone: '(555) 123-4567',
+  home_address: '123 Main St',
+  home_city: 'San Diego',
+  home_state: 'CA',
   license_number: 'RN-123456',
   license_state: 'CA',
   emr_system: 'Epic',
@@ -77,6 +80,11 @@ const outPath = join('/tmp', 'resume-rocket-test.docx')
 /** Tags that may legitimately be empty even for a complete submission. */
 const OPTIONAL_EMPTY = new Set([
   'PALS_certification_expiration_date', // optional cert in manifest
+  'average_patient_ratios', // omitted from DOCX summary per client feedback
+  'facility_types_trauma_levels', // trauma shown per employer only
+  'experience_facility_type', // trauma not duplicated on title line
+  'experience_patient_acuity_level', // deprecated field
+  'experience_role_details', // omitted when redundant with unit specialty
 ])
 
 function flatten(obj, prefix = '') {

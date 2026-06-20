@@ -154,7 +154,23 @@ describe('mapCandidateToTemplateData', () => {
     const exp = data.professional_experiences[0]
     assert.equal(exp.experience_trauma_level, 'III')
     assert.equal(exp.experience_is_teaching_facility, 'No')
-    assert.match(data.facility_types_trauma_levels, /Level III Trauma/)
+    assert.equal(data.facility_types_trauma_levels, '')
+  })
+
+  it('omits redundant role details when role matches unit specialty', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['PICU'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'PICU RN',
+        emrSystem: 'Epic',
+      }],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_unit_specialty, 'PICU RN')
+    assert.equal(data.professional_experiences[0].experience_role_details, '')
   })
 })
 

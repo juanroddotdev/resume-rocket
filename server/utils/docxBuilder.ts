@@ -23,6 +23,9 @@ export interface DocxCandidate {
   last_name?: string | null
   email?: string | null
   phone?: string | null
+  home_address?: string | null
+  home_city?: string | null
+  home_state?: string | null
   license_number?: string | null
   license_state?: string | null
   emr_system?: string | null
@@ -80,21 +83,28 @@ function activeLicensesList(
   return formatted ? [formatted] : []
 }
 
-function facilityTypesTraumaLevels(employers: DocxEmployer[]): string {
-  const levels = employers
-    .map(traumaLevel)
-    .filter(Boolean)
-    .map(level => `Level ${level} Trauma`)
-
-  return [...new Set(levels)].join(', ')
+function facilityTypesTraumaLevels(_employers: DocxEmployer[]): string {
+  return ''
 }
 
-function primaryEmployerLocation(employers: DocxEmployer[]) {
-  const first = employers[0]
-  return {
-    city: first?.city?.trim() || '',
-    state: first?.state?.trim().toUpperCase() || '',
+function roleDetailsForDocx(role: string | undefined, unitSpecialty: string): string {
+  const roleText = (role || '').trim()
+  const unitText = unitSpecialty.trim()
+  if (!roleText) return ''
+  if (!unitText) return roleText
+  if (roleText.toLowerCase() === unitText.toLowerCase()) return ''
+  if (roleText.toLowerCase().includes(unitText.toLowerCase())) return ''
+  if (unitText.toLowerCase().includes(roleText.toLowerCase())) return ''
+  return roleText
+}
+
+function resolveCandidateLocation(candidate: DocxCandidate) {
+  const homeCity = candidate.home_city?.trim() || ''
+  const homeState = candidate.home_state?.trim().toUpperCase() || ''
+  if (homeCity || homeState) {
+    return { city: homeCity, state: homeState }
   }
+  return { city: '', state: '' }
 }
 
 function teachingFacilityLabel(employer: DocxEmployer): string {
@@ -126,16 +136,17 @@ function mapEmployerToExperience(
   const trauma = traumaLevel(employer)
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const dates = [employer.startDate, employer.endDate].filter(Boolean)
+  const unitSpecialty = employer.role?.trim() || primarySpecialty
 
   return {
-    experience_unit_specialty: employer.role || primarySpecialty,
-    experience_facility_type: trauma ? `Level ${trauma} Trauma Center` : '',
+    experience_unit_specialty: unitSpecialty,
+    experience_facility_type: '',
     experience_hospital_name: employer.name,
     experience_facility_location: location,
     experience_employment_dates:
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
     experience_employment_type: formatEmploymentTypeForDocx(employer),
-    experience_role_details: employer.role || '',
+    experience_role_details: roleDetailsForDocx(employer.role, unitSpecialty),
     experience_unit_bed_count: employer.unitBedCount || '',
     experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',
     experience_trauma_level: trauma,
@@ -145,7 +156,7 @@ function mapEmployerToExperience(
     experience_floated_units_list: employer.floatedUnits || [],
     experience_equipment_procedures_list: employer.equipmentProcedures || [],
     experience_average_daily_patients: employer.avgDailyPatients || '',
-    experience_patient_acuity_level: employer.patientAcuity || '',
+    experience_patient_acuity_level: '',
     experience_highlights: experienceHighlightsForDocx(employer),
   }
 }
@@ -167,15 +178,16 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const credentials = candidate.credentials
   const activeCerts = activeCertKeys(credentials)
   const primarySpecialty = specialties[0] || ''
-  const { city: employerCity, state: employerState } = primaryEmployerLocation(employers)
+  const { city: homeCity, state: homeState } = resolveCandidateLocation(candidate)
 
   return {
     candidate_first_name: candidate.first_name || '',
     candidate_last_name: candidate.last_name || '',
     candidate_phone: candidate.phone || '',
     candidate_email: candidate.email || '',
-    candidate_city: employerCity,
-    candidate_state: licenseState?.toUpperCase() || employerState,
+    candidate_home_address: candidate.home_address || '',
+    candidate_city: homeCity,
+    candidate_state: licenseState?.toUpperCase() || homeState,
     active_licenses_list: activeLicensesList(licenses, candidate.license_state, candidate.license_number),
 
     total_years_nursing_experience: candidate.years_nursing_experience || '',
@@ -183,7 +195,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     facility_types_trauma_levels: facilityTypesTraumaLevels(employers),
     core_clinical_competencies: specialties.join(', '),
     clinical_specialties_list: specialties,
-    average_patient_ratios: candidate.average_patient_ratios || '',
+    average_patient_ratios: '',
     specialized_medical_equipment: candidate.specialized_medical_equipment || '',
     emr_software_proficiencies: emrProficiencies,
     core_life_support_certifications: activeCerts.join(', '),

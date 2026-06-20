@@ -583,6 +583,45 @@ async function onReviewPreview() {
           </div>
           <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
         </label>
+        <label class="block">
+          <span class="field-label">Home address</span>
+          <input
+            id="intake-field-home_address"
+            v-model="form.home_address"
+            autocomplete="street-address"
+            placeholder="123 Main St, Apt 4"
+            class="field"
+            :class="fieldClasses('home_address')"
+            @input="clearParseHighlight('home_address')"
+          >
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="block">
+            <span class="field-label-compact">City</span>
+            <input
+              id="intake-field-home_city"
+              v-model="form.home_city"
+              autocomplete="address-level2"
+              placeholder="City"
+              class="field"
+              :class="fieldClasses('home_city')"
+              @input="clearParseHighlight('home_city')"
+            >
+          </label>
+          <label class="block">
+            <span class="field-label-compact">State</span>
+            <input
+              id="intake-field-home_state"
+              v-model="form.home_state"
+              autocomplete="address-level1"
+              placeholder="ST"
+              maxlength="2"
+              class="field"
+              :class="fieldClasses('home_state')"
+              @input="clearParseHighlight('home_state')"
+            >
+          </label>
+        </div>
         <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
@@ -651,7 +690,6 @@ async function onReviewPreview() {
         />
         <ClinicalSummaryFields
           v-model:years-nursing-experience="form.years_nursing_experience"
-          v-model:average-patient-ratios="form.average_patient_ratios"
           v-model:specialized-medical-equipment="form.specialized_medical_equipment"
         />
         <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />

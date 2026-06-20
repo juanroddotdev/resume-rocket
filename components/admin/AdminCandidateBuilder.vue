@@ -361,6 +361,45 @@ watch(devFixtureRequest, (mode) => {
                 >
               </label>
             </div>
+            <div class="grid gap-4 md:grid-cols-2">
+            <label class="block md:col-span-2">
+              <span class="field-label">Home address</span>
+              <input
+                id="intake-field-home_address"
+                v-model="form.home_address"
+                autocomplete="street-address"
+                class="field"
+                :class="fieldClasses('home_address')"
+                :disabled="!isEditable"
+                @input="clearParseHighlight('home_address')"
+              >
+            </label>
+            <label class="block">
+              <span class="field-label-compact">City</span>
+              <input
+                id="intake-field-home_city"
+                v-model="form.home_city"
+                autocomplete="address-level2"
+                class="field"
+                :class="fieldClasses('home_city')"
+                :disabled="!isEditable"
+                @input="clearParseHighlight('home_city')"
+              >
+            </label>
+            <label class="block">
+              <span class="field-label-compact">State</span>
+              <input
+                id="intake-field-home_state"
+                v-model="form.home_state"
+                autocomplete="address-level1"
+                maxlength="2"
+                class="field"
+                :class="fieldClasses('home_state')"
+                :disabled="!isEditable"
+                @input="clearParseHighlight('home_state')"
+              >
+            </label>
+            </div>
           </section>
 
           <!-- Employment -->
@@ -397,7 +436,6 @@ watch(devFixtureRequest, (mode) => {
             />
             <ClinicalSummaryFields
               v-model:years-nursing-experience="form.years_nursing_experience"
-              v-model:average-patient-ratios="form.average_patient_ratios"
               v-model:specialized-medical-equipment="form.specialized_medical_equipment"
             />
             <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />

@@ -15,12 +15,13 @@ describe('resolveEmrFields', () => {
 
   it('maps presets directly', () => {
     assert.deepEqual(resolveEmrFields('Epic'), { selection: 'Epic', custom: '' })
+    assert.deepEqual(resolveEmrFields('Allscripts'), { selection: 'Allscripts', custom: '' })
   })
 
   it('maps unknown values to Other with custom text', () => {
-    assert.deepEqual(resolveEmrFields('Allscripts'), {
+    assert.deepEqual(resolveEmrFields('Custom EMR'), {
       selection: EMR_OTHER_OPTION,
-      custom: 'Allscripts',
+      custom: 'Custom EMR',
     })
   })
 })

@@ -39,6 +39,9 @@ export type ServerDraftResponse = {
   compact_license_status?: string | null
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
+  home_address?: string | null
+  home_city?: string | null
+  home_state?: string | null
 }
 
 function normalizeStoredCredentials(raw: unknown): CredentialsMap {
@@ -63,6 +66,9 @@ function defaultForm() {
     last_name: '',
     email: '',
     phone: '',
+    home_address: '',
+    home_city: '',
+    home_state: '',
     license_number: '',
     license_state: '',
     licenses: [] as LicenseEntry[],
@@ -102,6 +108,9 @@ function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput
     last_name: form.last_name,
     email: form.email,
     phone: form.phone,
+    home_address: form.home_address || undefined,
+    home_city: form.home_city || undefined,
+    home_state: form.home_state || undefined,
     license_number: legacyScalars.license_number ?? form.license_number,
     license_state: legacyScalars.license_state ?? form.license_state,
     licenses: licenses.length ? licenses : undefined,
@@ -304,6 +313,9 @@ export function useCandidateForm() {
       last_name: row.last_name ?? '',
       email: row.email ?? '',
       phone: row.phone ?? '',
+      home_address: row.home_address ?? '',
+      home_city: row.home_city ?? '',
+      home_state: row.home_state ?? '',
       license_number: legacyScalars.license_number ?? row.license_number ?? '',
       license_state: legacyScalars.license_state ?? row.license_state ?? '',
       licenses,
@@ -336,6 +348,9 @@ export function useCandidateForm() {
       last_name: isEmptyString(current.last_name) ? (row.last_name ?? '') : current.last_name,
       email: isEmptyString(current.email) ? (row.email ?? '') : current.email,
       phone: isEmptyString(current.phone) ? (row.phone ?? '') : current.phone,
+      home_address: isEmptyString(current.home_address) ? (row.home_address ?? '') : current.home_address,
+      home_city: isEmptyString(current.home_city) ? (row.home_city ?? '') : current.home_city,
+      home_state: isEmptyString(current.home_state) ? (row.home_state ?? '') : current.home_state,
       license_number: isEmptyString(current.license_number)
         ? (row.license_number ?? '')
         : current.license_number,
@@ -415,6 +430,9 @@ export function useCandidateForm() {
     last_name?: string
     email?: string
     phone?: string
+    home_address?: string
+    home_city?: string
+    home_state?: string
     license_number?: string
     license_state?: string
     licenses?: LicenseEntry[]
@@ -437,6 +455,9 @@ export function useCandidateForm() {
     if (data.last_name) form.value.last_name = data.last_name
     if (data.email) form.value.email = data.email
     if (data.phone) form.value.phone = data.phone
+    if (data.home_address) form.value.home_address = data.home_address
+    if (data.home_city) form.value.home_city = data.home_city
+    if (data.home_state) form.value.home_state = data.home_state
     if (data.license_number || data.license_state || data.licenses?.length) {
       form.value.licenses = resolveCandidateLicenses({
         licenses: data.licenses,

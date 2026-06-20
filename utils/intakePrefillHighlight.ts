@@ -65,6 +65,9 @@ export function collectParsePrefillFieldIds(data: ParsePrefillInput): string[] {
   pushFieldId(ids, 'last_name', data.last_name)
   pushFieldId(ids, 'email', data.email)
   pushFieldId(ids, 'phone', data.phone)
+  pushFieldId(ids, 'home_address', (data as Record<string, unknown>).home_address)
+  pushFieldId(ids, 'home_city', (data as Record<string, unknown>).home_city)
+  pushFieldId(ids, 'home_state', (data as Record<string, unknown>).home_state)
   pushFieldId(ids, 'license_number', data.license_number)
   pushFieldId(ids, 'license_state', data.license_state)
   data.licenses?.forEach((row, index) => {
@@ -121,7 +124,7 @@ function collectEmployerPrefillIds(
   pushFieldId(ids, `${prefix}-state`, employer.state)
   pushFieldId(ids, `${prefix}-type`, employerField(employer, 'employmentType', 'employment_type'))
   pushFieldId(ids, `${prefix}-scope`, employerField(employer, 'patientScope', 'patient_scope'))
-  pushFieldId(ids, `${prefix}-acuity`, employerField(employer, 'patientAcuity', 'patient_acuity'))
+  pushFieldId(ids, `${prefix}-beds`, employerField(employer, 'beds', 'beds'))
   pushFieldId(ids, `${prefix}-unit-beds`, employerField(employer, 'unitBedCount', 'unit_bed_count'))
   pushFieldId(ids, `${prefix}-avg-patients`, employerField(employer, 'avgDailyPatients', 'avg_daily_patients'))
   pushFieldId(ids, `${prefix}-highlights`, employer.highlights)

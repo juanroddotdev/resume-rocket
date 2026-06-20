@@ -164,6 +164,16 @@ function commitLineDraft(
   patchField(suffix, { [key]: linesToArray(lineDrafts[field]) })
 }
 
+function onBedsInput(event: Event) {
+  const raw = (event.target as HTMLInputElement).value.trim()
+  if (!raw) {
+    patchField('beds', { beds: undefined })
+    return
+  }
+  const beds = Number.parseInt(raw, 10)
+  patchField('beds', { beds: Number.isFinite(beds) ? beds : undefined })
+}
+
 const employmentTypeValue = computed(() => {
   return normalizeEmploymentType(props.employer.employmentType) || ''
 })
@@ -604,14 +614,15 @@ function onTraumaLevelChange(event: Event) {
             >
           </label>
 
-          <label class="block" :for="`intake-field-employer-${index}-acuity`">
-            <span class="field-label-compact">Patient acuity</span>
+          <label v-if="!isLinked" class="block" :for="`intake-field-${employerFieldId('beds')}`">
+            <span class="field-label-compact">Hospital total beds</span>
             <input
-              :id="`intake-field-${employerFieldId('acuity')}`"
-              :value="employer.patientAcuity || ''"
-              placeholder="e.g. high acuity, level III NICU"
-              :class="fieldClasses(employerFieldId('acuity'))"
-              @input="patchField('acuity', { patientAcuity: ($event.target as HTMLInputElement).value })"
+              :id="`intake-field-${employerFieldId('beds')}`"
+              :value="employer.beds != null ? String(employer.beds) : ''"
+              inputmode="numeric"
+              placeholder="e.g. 450"
+              :class="fieldClasses(employerFieldId('beds'))"
+              @input="onBedsInput"
             >
           </label>
 
@@ -644,20 +655,6 @@ function onTraumaLevelChange(event: Event) {
             </label>
           </div>
 
-          <label class="block" :for="`intake-field-employer-${index}-highlights`">
-            <span class="field-label-compact">Highlights</span>
-            <textarea
-              :id="`intake-field-${employerFieldId('highlights')}`"
-              :value="lineDrafts.highlights"
-              placeholder="One achievement per line"
-              rows="3"
-              :class="fieldClasses(employerFieldId('highlights'))"
-              @focus="focusedLineField = 'highlights'"
-              @input="onLineDraftInput('highlights', $event)"
-              @blur="commitLineDraft('highlights', 'highlights', 'highlights')"
-            />
-          </label>
-
           <button
             type="button"
             class="text-sm text-brand-700"
@@ -680,9 +677,9 @@ function onTraumaLevelChange(event: Event) {
               />
               <MetricTile
                 editable
-                label="Avg daily patients"
+                label="Patient ratio"
                 :model-value="employer.avgDailyPatients || ''"
-                placeholder="e.g. 4–5"
+                placeholder="e.g. 1:2 or 1:4"
                 :input-id="`intake-field-${employerFieldId('avg-patients')}`"
                 :input-class="fieldClasses(employerFieldId('avg-patients'))"
                 @update:model-value="patchField('avg-patients', { avgDailyPatients: $event })"
@@ -701,7 +698,7 @@ function onTraumaLevelChange(event: Event) {
                 class="field"
                 @focus="focusedLineField = 'floatedUnits'"
                 @input="onLineDraftInput('floatedUnits', $event)"
-                @blur="commitLineDraft('floatedUnits', '', 'floatedUnits')"
+                @blur="commitLineDraft('floatedUnits', 'floated', 'floatedUnits')"
               />
             </label>
             <label class="block" :for="`intake-field-employer-${index}-equipment`">
@@ -714,10 +711,24 @@ function onTraumaLevelChange(event: Event) {
                 class="field"
                 @focus="focusedLineField = 'equipmentProcedures'"
                 @input="onLineDraftInput('equipmentProcedures', $event)"
-                @blur="commitLineDraft('equipmentProcedures', '', 'equipmentProcedures')"
+                @blur="commitLineDraft('equipmentProcedures', 'equipment', 'equipmentProcedures')"
               />
             </label>
           </div>
+
+          <label class="block" :for="`intake-field-employer-${index}-highlights`">
+            <span class="field-label-compact">Highlights</span>
+            <textarea
+              :id="`intake-field-${employerFieldId('highlights')}`"
+              :value="lineDrafts.highlights"
+              placeholder="One achievement per line"
+              rows="3"
+              :class="fieldClasses(employerFieldId('highlights'))"
+              @focus="focusedLineField = 'highlights'"
+              @input="onLineDraftInput('highlights', $event)"
+              @blur="commitLineDraft('highlights', 'highlights', 'highlights')"
+            />
+          </label>
           </fieldset>
         </div>
       </div>

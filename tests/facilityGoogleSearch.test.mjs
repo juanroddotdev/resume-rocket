@@ -12,7 +12,9 @@ describe('facilityGoogleSearchUrl', () => {
     assert.match(url, /^https:\/\/www\.google\.com\/search\?q=/)
     assert.match(decodeURIComponent(url), /Metro General/)
     assert.match(decodeURIComponent(url), /Austin, TX/)
-    assert.match(decodeURIComponent(url), /trauma level beds teaching hospital/)
+    assert.match(decodeURIComponent(url), /"trauma level"/)
+    assert.match(decodeURIComponent(url), /"total beds"/)
+    assert.match(decodeURIComponent(url), /"teaching hospital"/)
   })
 
   it('omits empty location segments', () => {

@@ -1,4 +1,15 @@
-export const EMR_PRESET_OPTIONS = ['Epic', 'Cerner', 'Meditech'] as const
+export const EMR_PRESET_OPTIONS = [
+  'Epic',
+  'Cerner / Millennium',
+  'Meditech',
+  'McKesson',
+  'Allscripts',
+  'CPSI',
+  'PointClickCare',
+  'AlayaCare',
+  'Homecare Homebase',
+  'MatrixCare',
+] as const
 export type EmrPreset = (typeof EMR_PRESET_OPTIONS)[number]
 export const EMR_OTHER_OPTION = 'Other'
 

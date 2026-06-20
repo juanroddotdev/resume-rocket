@@ -51,6 +51,9 @@ export default defineEventHandler(async (event) => {
     compact_license_status: candidate.compact_license_status as string | null,
     average_patient_ratios: candidate.average_patient_ratios as string | null,
     specialized_medical_equipment: candidate.specialized_medical_equipment as string | null,
+    home_address: candidate.home_address as string | null,
+    home_city: candidate.home_city as string | null,
+    home_state: candidate.home_state as string | null,
   })
 
   const filename = buildResumeDownloadFilename({

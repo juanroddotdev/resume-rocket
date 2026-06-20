@@ -11,7 +11,7 @@ export function highlightsMentionKeyword(
   return (highlights || []).some(line => pattern.test(line))
 }
 
-/** Merge wizard booleans into DOCX highlights without duplicating parse text. */
+/** Merge wizard booleans into DOCX highlights; always append canonical labels when Yes. */
 export function experienceHighlightsForDocx(
   employer: Pick<
     EmployerEntry,
@@ -20,21 +20,25 @@ export function experienceHighlightsForDocx(
 ): string[] {
   const items = [...(employer.highlights || [])]
 
-  if (
-    employer.chargeNurseExperience === true
-    && !highlightsMentionKeyword(items, 'charge')
-  ) {
+  if (employer.chargeNurseExperience === true && !items.includes(CHARGE_NURSE_HIGHLIGHT_LABEL)) {
     items.push(CHARGE_NURSE_HIGHLIGHT_LABEL)
   }
 
-  if (
-    employer.preceptorExperience === true
-    && !highlightsMentionKeyword(items, 'preceptor')
-  ) {
+  if (employer.preceptorExperience === true && !items.includes(PRECEPTOR_HIGHLIGHT_LABEL)) {
     items.push(PRECEPTOR_HIGHLIGHT_LABEL)
   }
 
   return items
+}
+
+/** Honor explicit Gemini booleans before highlight inference. */
+export function resolveClinicalFlagFromParse(
+  explicit: boolean | undefined,
+  inferred: boolean | undefined,
+): boolean | undefined {
+  if (explicit === true) return true
+  if (explicit === false) return false
+  return inferred
 }
 
 /** Prefill yes/no toggles when parse only captured these in free-text highlights. */

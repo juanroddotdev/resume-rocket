@@ -6,6 +6,7 @@ import { isDuplicateEmployer, linkEmployerFromHospital, createManualEmployer, is
 const props = defineProps<{
   employers: EmployerEntry[]
   deckMode?: 'single' | 'multi'
+  persistImmediate?: () => void | Promise<void>
 }>()
 
 const emit = defineEmits<{
@@ -249,6 +250,7 @@ defineExpose({ openEmployerField })
         :can-move-up="index > 0"
         :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"
+        :persist-immediate="persistImmediate"
         @update="patchEmployer(index, $event)"
         @remove="removeEmployer(index)"
         @move-up="moveEmployer(index, -1)"

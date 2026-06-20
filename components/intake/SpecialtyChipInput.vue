@@ -36,6 +36,14 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter') {
     e.preventDefault()
     addChip()
+    return
+  }
+  if (e.key === ',' || e.key === ' ') {
+    const value = draft.value.trim()
+    if (value) {
+      e.preventDefault()
+      addChip()
+    }
   }
 }
 
@@ -57,7 +65,7 @@ function removeChip(index: number) {
         :id="fieldId ? `intake-field-${fieldId}` : undefined"
         v-model="draft"
         type="text"
-        :placeholder="placeholder || 'Add specialty and press Enter'"
+        :placeholder="placeholder || 'Add specialty (Enter, comma, or space)'"
         :class="fieldClasses(specialtiesFieldId, 'min-w-0 flex-1')"
         @keydown="onKeydown"
         @input="clearSpecialtiesHighlight"

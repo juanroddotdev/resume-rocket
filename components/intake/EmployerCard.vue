@@ -6,13 +6,6 @@ import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employ
 import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
-import {
-  EMR_CHARTING_GROUPS,
-  EMR_CHARTING_GROUP_LABELS,
-  EMR_OTHER_OPTION,
-  emrSystemFromFields,
-  resolveEmrFields,
-} from '~/utils/emrSystem'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
 
 const props = defineProps<{
@@ -72,6 +65,7 @@ const {
   markEmployerDbMetrics,
   clearEmployerDbMetrics,
   isEmployerDbMetricsHighlighted,
+  isParseHighlighted,
 } = useIntakePrefillHighlight()
 
 const isLinked = computed(() => Boolean(props.employer.hospitalId))
@@ -179,19 +173,8 @@ const employmentTypeValue = computed(() => {
   return normalizeEmploymentType(props.employer.employmentType) || ''
 })
 
-const emrFields = computed(() => resolveEmrFields(props.employer.emrSystem))
-const emrSelection = computed(() => emrFields.value.selection)
-const emrCustom = computed(() => emrFields.value.custom)
-
-function onEmrSelectionChange(event: Event) {
-  const selection = (event.target as HTMLSelectElement).value
-  const custom = selection === EMR_OTHER_OPTION ? emrCustom.value : ''
-  patchField('emr', { emrSystem: emrSystemFromFields(selection, custom) })
-}
-
-function onEmrCustomInput(event: Event) {
-  const custom = (event.target as HTMLInputElement).value
-  patchField('emr-other', { emrSystem: emrSystemFromFields(EMR_OTHER_OPTION, custom) })
+function onEmrSystemChange(value: string) {
+  patchField('emr', { emrSystem: value })
 }
 
 function onEmploymentTypeChange(event: Event) {
@@ -568,51 +551,14 @@ function onTraumaLevelChange(event: Event) {
 
           <label class="block" :for="`intake-field-${employerFieldId('emr')}`">
             <span class="field-label-compact">EMR / charting system</span>
-            <select
-              :id="`intake-field-${employerFieldId('emr')}`"
-              :value="emrSelection"
-              :class="fieldClasses(employerFieldId('emr'))"
-              @change="onEmrSelectionChange"
-            >
-              <option value="">Select…</option>
-              <optgroup
-                v-for="groupLabel in EMR_CHARTING_GROUP_LABELS"
-                :key="groupLabel"
-                :label="groupLabel"
-              >
-                <option
-                  v-for="option in EMR_CHARTING_GROUPS[groupLabel]"
-                  :key="option"
-                  :value="option"
-                >
-                  {{ option }}
-                </option>
-              </optgroup>
-              <option :value="EMR_OTHER_OPTION">Other</option>
-            </select>
+            <EmrSystemCombobox
+              :input-id="`intake-field-${employerFieldId('emr')}`"
+              :model-value="employer.emrSystem || ''"
+              :input-class="fieldClasses(employerFieldId('emr'))"
+              :parse-highlighted="isParseHighlighted(employerFieldId('emr'))"
+              @update:model-value="onEmrSystemChange"
+            />
           </label>
-          <label
-            v-if="emrSelection === EMR_OTHER_OPTION"
-            class="block"
-            :for="`intake-field-${employerFieldId('emr-other')}`"
-          >
-            <span class="field-label-compact">Other EMR / charting system</span>
-            <input
-              :id="`intake-field-${employerFieldId('emr-other')}`"
-              :value="emrCustom"
-              type="text"
-              placeholder="e.g. Allscripts, Athena, Medhost"
-              :class="fieldClasses(employerFieldId('emr-other'))"
-              @input="onEmrCustomInput"
-            >
-          </label>
-          <p
-            v-if="emrSelection === EMR_OTHER_OPTION && !emrCustom.trim()"
-            class="text-xs text-amber-800"
-            role="status"
-          >
-            Enter the system name — required when Other is selected.
-          </p>
 
           <label class="block" :for="`intake-field-employer-${index}-scope`">
             <span class="field-label-compact">Patient scope</span>

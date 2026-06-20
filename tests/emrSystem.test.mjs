@@ -4,9 +4,11 @@ import { EMR_CHARTING_GROUP_LABELS, EMR_CHARTING_GROUPS } from '../utils/emrChar
 import {
   EMR_OTHER_OPTION,
   EMR_PRESET_OPTIONS,
+  commitEmrValue,
   emrSystemFromFields,
   isEmrComplete,
   resolveEmrFields,
+  resolveStoredEmrLabel,
 } from '../utils/emrSystem.ts'
 
 describe('EMR charting presets', () => {
@@ -56,6 +58,24 @@ describe('resolveEmrFields', () => {
       selection: EMR_OTHER_OPTION,
       custom: 'Custom EMR',
     })
+  })
+})
+
+describe('commitEmrValue', () => {
+  it('canonicalizes preset casing and legacy aliases', () => {
+    assert.equal(commitEmrValue('epic'), 'Epic')
+    assert.equal(commitEmrValue('Cerner / Millennium'), 'Cerner / Oracle Health Millennium')
+  })
+
+  it('stores trimmed custom values', () => {
+    assert.equal(commitEmrValue('  Athena  '), 'Athena')
+  })
+})
+
+describe('resolveStoredEmrLabel', () => {
+  it('returns canonical preset labels for stored values', () => {
+    assert.equal(resolveStoredEmrLabel('Homecare Homebase'), 'Homecare Homebase (HCHB)')
+    assert.equal(resolveStoredEmrLabel('Custom EMR'), 'Custom EMR')
   })
 })
 

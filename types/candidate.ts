@@ -24,6 +24,9 @@ export interface CandidateRow {
   compact_license_status: string | null
   average_patient_ratios: string | null
   specialized_medical_equipment: string | null
+  home_address: string | null
+  home_city: string | null
+  home_state: string | null
   preferred_hospital_id: string | null
   emr_system: string | null
   access_token: string | null
@@ -119,6 +122,9 @@ export interface CandidateDraftInput {
   compact_license_status?: string
   average_patient_ratios?: string
   specialized_medical_equipment?: string
+  home_address?: string
+  home_city?: string
+  home_state?: string
   preferred_hospital_id?: string
   emr_system?: string
 }

@@ -127,3 +127,11 @@ export function buildEmrSearchRows(query: string): EmrSearchRow[] {
 export function emrSearchRowId(index: number): string {
   return `emr-search-row-${index}`
 }
+
+export function emrBrowseRowId(index: number): string {
+  return `emr-browse-row-${index}`
+}
+
+export function emrCategoryOptionCount(group: EmrChartingGroupLabel): number {
+  return EMR_CHARTING_GROUPS[group].length
+}

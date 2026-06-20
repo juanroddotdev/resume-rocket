@@ -23,7 +23,7 @@ const supabase = createClient(url, serviceKey, {
 
 const { data, error } = await supabase
   .from('candidates')
-  .select('id, first_name, last_name, parse_error, parsed_resume, employers, updated_at')
+  .select('id, first_name, last_name, parse_error, parsed_resume, employers, licenses, education, credentials, license_state, license_number, updated_at')
   .not('parsed_resume', 'is', null)
   .order('updated_at', { ascending: false })
   .limit(limit)
@@ -41,6 +41,11 @@ const rows = (data ?? []).map((row) => {
     parseError: row.parse_error,
     parsedResume: row.parsed_resume,
     wizardEmployers: row.employers,
+    wizardLicenses: row.licenses,
+    wizardEducation: row.education,
+    wizardCredentials: row.credentials,
+    licenseState: row.license_state,
+    licenseNumber: row.license_number,
   })
   return {
     id: row.id,

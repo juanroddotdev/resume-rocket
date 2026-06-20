@@ -63,7 +63,10 @@ const hasAuditContent = computed(() => {
     data.value.outcome
     || data.value.audit
     || data.value.employers.length
-    || data.value.facilitiesWithoutEmployer.length,
+    || data.value.facilitiesWithoutEmployer.length
+    || data.value.certifications.length
+    || data.value.licenses.length
+    || data.value.education.length,
   )
 })
 </script>
@@ -78,7 +81,7 @@ const hasAuditContent = computed(() => {
       :aria-label="`Parse QA for ${candidateName}`"
       @click="onBackdropClick"
     >
-      <div class="flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
+      <div class="flex h-full w-full max-w-xl flex-col bg-white shadow-xl">
         <div class="flex items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <h2 class="text-lg font-semibold text-slate-900">Parse QA</h2>
@@ -211,6 +214,107 @@ const hasAuditContent = computed(() => {
                           Yes
                         </span>
                         <span v-else class="font-medium text-amber-800">Not linked</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section v-if="data.certifications.length" class="space-y-2">
+              <h3 class="text-sm font-semibold text-slate-900">Certification evidence</h3>
+              <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="min-w-full text-left text-sm">
+                  <thead class="border-b bg-slate-50 text-xs text-slate-600">
+                    <tr>
+                      <th class="px-3 py-2 font-medium">Certification</th>
+                      <th class="px-3 py-2 font-medium">Snippet</th>
+                      <th class="px-3 py-2 font-medium">Wizard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="cert in data.certifications"
+                      :key="`${cert.name}-${cert.expiry || 'none'}`"
+                      class="border-b last:border-0"
+                      :class="cert.missingSnippet || !cert.inWizard ? 'bg-amber-50/60' : ''"
+                    >
+                      <td class="px-3 py-2 align-top font-medium text-slate-900">
+                        {{ cert.name }}<span v-if="cert.expiry" class="font-normal text-slate-600"> · {{ cert.expiry }}</span>
+                      </td>
+                      <td class="px-3 py-2 align-top text-slate-700">
+                        <span v-if="cert.sourceSnippet">{{ cert.sourceSnippet }}</span>
+                        <span v-else class="text-amber-800">Missing snippet</span>
+                      </td>
+                      <td class="px-3 py-2 align-top">
+                        <span v-if="cert.inWizard" class="text-emerald-700">Yes</span>
+                        <span v-else class="font-medium text-amber-800">Not selected</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section v-if="data.licenses.length" class="space-y-2">
+              <h3 class="text-sm font-semibold text-slate-900">License evidence</h3>
+              <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="min-w-full text-left text-sm">
+                  <thead class="border-b bg-slate-50 text-xs text-slate-600">
+                    <tr>
+                      <th class="px-3 py-2 font-medium">License</th>
+                      <th class="px-3 py-2 font-medium">Snippet</th>
+                      <th class="px-3 py-2 font-medium">Wizard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="license in data.licenses"
+                      :key="license.label"
+                      class="border-b last:border-0"
+                      :class="license.missingSnippet || !license.inWizard ? 'bg-amber-50/60' : ''"
+                    >
+                      <td class="px-3 py-2 align-top font-medium text-slate-900">{{ license.label || 'License' }}</td>
+                      <td class="px-3 py-2 align-top text-slate-700">
+                        <span v-if="license.sourceSnippet">{{ license.sourceSnippet }}</span>
+                        <span v-else class="text-amber-800">Missing snippet</span>
+                      </td>
+                      <td class="px-3 py-2 align-top">
+                        <span v-if="license.inWizard" class="text-emerald-700">Yes</span>
+                        <span v-else class="font-medium text-amber-800">Not in wizard</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section v-if="data.education.length" class="space-y-2">
+              <h3 class="text-sm font-semibold text-slate-900">Education evidence</h3>
+              <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="min-w-full text-left text-sm">
+                  <thead class="border-b bg-slate-50 text-xs text-slate-600">
+                    <tr>
+                      <th class="px-3 py-2 font-medium">Education</th>
+                      <th class="px-3 py-2 font-medium">Snippet</th>
+                      <th class="px-3 py-2 font-medium">Wizard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="(entry, index) in data.education"
+                      :key="`${entry.label}-${index}`"
+                      class="border-b last:border-0"
+                      :class="entry.missingSnippet || !entry.inWizard ? 'bg-amber-50/60' : ''"
+                    >
+                      <td class="px-3 py-2 align-top font-medium text-slate-900">{{ entry.label || 'Education' }}</td>
+                      <td class="px-3 py-2 align-top text-slate-700">
+                        <span v-if="entry.sourceSnippet">{{ entry.sourceSnippet }}</span>
+                        <span v-else class="text-amber-800">Missing snippet</span>
+                      </td>
+                      <td class="px-3 py-2 align-top">
+                        <span v-if="entry.inWizard" class="text-emerald-700">Yes</span>
+                        <span v-else class="font-medium text-amber-800">Not in wizard</span>
                       </td>
                     </tr>
                   </tbody>

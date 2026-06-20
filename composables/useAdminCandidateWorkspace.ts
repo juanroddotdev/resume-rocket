@@ -10,8 +10,6 @@ import {
   type AdminSectionId,
 } from '~/utils/adminCandidateForm'
 
-const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
-
 export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
   const supabase = useSupabaseClient()
   const form = reactive(defaultCandidateForm())
@@ -203,7 +201,6 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
     resumeFilename,
     isEditable,
     intakeUrl,
-    certKeys: CERT_KEYS,
     scheduleAutosave,
     flushAutosave,
     onParsed,

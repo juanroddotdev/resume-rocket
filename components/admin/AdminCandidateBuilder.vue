@@ -25,7 +25,6 @@ const {
   loadError,
   isEditable,
   resumeFilename,
-  certKeys,
   scheduleAutosave,
   onParsed,
   flushAutosave,
@@ -430,7 +429,6 @@ watch(devFixtureRequest, (mode) => {
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
               :licenses="form.licenses"
-              :cert-keys="certKeys"
               @update:credentials="form.credentials = $event"
               @update:licenses="form.licenses = $event"
             />

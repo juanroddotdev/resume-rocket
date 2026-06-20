@@ -6,13 +6,13 @@ import {
   formatCredentialExpiryInput,
   isCompleteCredentialExpiry,
 } from '~/utils/credentialExpiry'
+import { orderedActiveCertificationKeys } from '~/utils/certificationOptions'
 
 const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { default: '' })
 
 const props = defineProps<{
   credentials: CredentialsMap
   licenses: import('~/types/candidate').LicenseEntry[]
-  certKeys: readonly string[]
 }>()
 
 const emit = defineEmits<{
@@ -24,19 +24,34 @@ const { fieldClasses, clearParseHighlight, isParseHighlighted } = useIntakePrefi
 
 const expiryErrors = ref<Record<string, string>>({})
 
+function activeCertKeys(credentials: CredentialsMap): string[] {
+  return Object.keys(credentials).filter(key => credentials[key]?.active === true)
+}
+
+const selectedCertKeys = computed(() =>
+  orderedActiveCertificationKeys(activeCertKeys(props.credentials)),
+)
+
+const selectedCertSet = computed(() => new Set(selectedCertKeys.value))
+
 function isActive(cert: string) {
   return props.credentials[cert]?.active === true
 }
 
-function toggle(cert: string) {
+function addCert(cert: string) {
+  if (isActive(cert)) return
+  clearParseHighlight(`credential-${cert}`)
+  emit('update:credentials', {
+    ...props.credentials,
+    [cert]: { active: true },
+  })
+}
+
+function removeCert(cert: string) {
   clearParseHighlight(`credential-${cert}`)
   const next = { ...props.credentials }
-  if (isActive(cert)) {
-    delete next[cert]
-    delete expiryErrors.value[cert]
-  } else {
-    next[cert] = { active: true }
-  }
+  delete next[cert]
+  delete expiryErrors.value[cert]
   emit('update:credentials', next)
 }
 
@@ -78,29 +93,41 @@ function validateExpiry(cert: string) {
   <div class="space-y-4">
     <div>
       <p class="mb-2 text-sm font-medium text-slate-700">Certifications</p>
-      <div class="flex flex-wrap gap-2">
+
+      <div v-if="selectedCertKeys.length" class="mb-3 flex flex-wrap gap-2">
         <button
-          v-for="cert in certKeys"
+          v-for="cert in selectedCertKeys"
           :key="cert"
           type="button"
-          class="rounded-full px-4 py-2 text-sm font-medium transition"
-          :class="[
-            isActive(cert) ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-700',
-            isParseHighlighted(`credential-${cert}`) && isActive(cert) ? 'ring-2 ring-brand-600/30 ring-offset-1' : null,
-          ]"
-          @click="toggle(cert)"
+          class="inline-flex items-center gap-1 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white transition"
+          :class="isParseHighlighted(`credential-${cert}`) ? 'ring-2 ring-brand-600/30 ring-offset-1' : null"
+          @click="removeCert(cert)"
         >
           {{ cert }}
+          <span aria-hidden="true">×</span>
+          <span class="sr-only">Remove {{ cert }}</span>
         </button>
       </div>
+      <p v-else class="mb-3 text-sm text-slate-600">
+        No certifications selected yet — search or browse below.
+      </p>
+
+      <CertificationPicker
+        input-id="intake-field-certification-picker"
+        :selected-keys="selectedCertSet"
+        @add="addCert"
+      />
     </div>
 
-    <div v-if="certKeys.some(isActive)" class="space-y-2">
+    <div v-if="selectedCertKeys.length" class="space-y-2">
       <p class="text-sm font-medium text-slate-700">Certification expiration (optional)</p>
+      <p class="text-xs text-slate-500">
+        Dates appear on your VMS packet next to each certification.
+      </p>
       <div
-        v-for="cert in certKeys.filter(isActive)"
+        v-for="cert in selectedCertKeys"
         :key="`exp-${cert}`"
-        class="grid grid-cols-[4rem_1fr] items-start gap-2"
+        class="grid grid-cols-[4.5rem_1fr] items-start gap-2"
       >
         <span class="pt-2 text-sm text-slate-600">{{ cert }}</span>
         <div>

@@ -4,6 +4,7 @@ import {
   inferClinicalFlagsFromHighlights,
   resolveClinicalFlagFromParse,
 } from '../../utils/employerClinicalFlags.ts'
+import { resolveCanonicalCert } from '../../utils/certificationOptions.ts'
 import {
   normalizeGraduationMonth,
   normalizeGraduationYear,
@@ -42,7 +43,7 @@ Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_expe
 
 Education: education[] with degree, school, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined)
 
-Certifications: certifications[] with name (BLS, ACLS, PALS, NIHSS, TNCC, CCRN) and optional expiry (MM/YYYY, e.g. 06/2026)
+Certifications: certifications[] with name (standard acronym, e.g. BLS, ACLS, PALS, NRP, STABLE, CCRN, CEN, TNCC, ENPC, NIHSS, RRT, CRT, ARRT, RDMS, RDCS, RVT, RCIS, RCES, MLS, MLT, CST, CRCST, CPhT, CMA, CPI, MOAB, MAB, QMHP, PBT) and optional expiry (MM/YYYY, e.g. 06/2026)
 - Split combined cert lines into one object per certification
 
 Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], charge_nurse_experience (boolean when stated), preceptor_experience (boolean when stated), source_snippet
@@ -328,11 +329,15 @@ export function mapGeminiResumeJson(
   const rawText = (parsed.raw_resume_text || rawTextFallback).slice(0, 5000)
 
   const certificationDetails = parsed.certifications
-    ?.map(c => ({
-      name: c.name?.trim().toUpperCase() || '',
-      expiry: c.expiry?.trim() || undefined,
-    }))
-    .filter(c => c.name)
+    ?.map((c) => {
+      const name = resolveCanonicalCert(c.name?.trim()) ?? c.name?.trim().toUpperCase()
+      if (!name) return null
+      return {
+        name,
+        expiry: c.expiry?.trim() || undefined,
+      }
+    })
+    .filter((c): c is { name: string, expiry: string | undefined } => c !== null)
 
   const detectedFromCerts = certificationDetails?.map(c => c.name)
   const licenses = parsed.licenses

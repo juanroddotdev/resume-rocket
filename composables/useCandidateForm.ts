@@ -13,12 +13,11 @@ import type { FinalizePhase } from '~/utils/intakeProcessing'
 import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
 import type { ParseMeta } from '~/types/parse'
 import { displayCredentialExpiry } from '~/utils/credentialExpiry'
+import { resolveCanonicalCert } from '~/utils/certificationOptions'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from '~/utils/emrSystem'
 import { legacyScalarsFromLicenses, resolveCandidateLicenses } from '~/utils/licenseRows'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
-const CERT_KEYS = ['BLS', 'ACLS', 'PALS', 'NIHSS', 'TNCC', 'CCRN'] as const
-
 export type ServerDraftResponse = {
   id: string
   status: CandidateStatus
@@ -490,7 +489,8 @@ export function useCandidateForm() {
       form.value.credentials = normalizeStoredCredentials(data.credentials)
     } else if (data.detected_credentials?.length) {
       for (const cert of data.detected_credentials) {
-        form.value.credentials[cert.toUpperCase()] = { active: true }
+        const key = resolveCanonicalCert(cert) ?? cert.toUpperCase()
+        if (key) form.value.credentials[key] = { active: true }
       }
     }
 
@@ -600,7 +600,6 @@ export function useCandidateForm() {
     saveStatus,
     form,
     parseMeta,
-    certKeys: CERT_KEYS,
     resetWizard,
     ensureDraft,
     reconcileCandidateId,

@@ -9,6 +9,7 @@ import type {
 import type { HospitalSuggestion } from '../types/hospital'
 import { employersForPatch, mapParsedEmployers } from './employerLink.ts'
 import { displayCredentialExpiry } from './credentialExpiry.ts'
+import { resolveCanonicalCert } from './certificationOptions.ts'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from './emrSystem.ts'
 import { legacyScalarsFromLicenses, resolveCandidateLicenses } from './licenseRows.ts'
 
@@ -232,7 +233,8 @@ export function applyParseResultToForm(
     form.credentials = normalizeStoredCredentials(data.credentials)
   } else if (data.detected_credentials?.length) {
     for (const cert of data.detected_credentials) {
-      form.credentials[cert.toUpperCase()] = { active: true }
+      const key = resolveCanonicalCert(cert) ?? cert.toUpperCase()
+      if (key) form.credentials[key] = { active: true }
     }
   }
 }

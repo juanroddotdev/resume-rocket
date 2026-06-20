@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   const supabase = useSupabaseAdmin()
   const { data, error } = await supabase
     .from('candidates')
-    .select('id, first_name, last_name, parse_error, parsed_resume, employers')
+    .select('id, first_name, last_name, parse_error, parsed_resume, employers, licenses, education, credentials, license_state, license_number')
     .eq('id', id)
     .single()
 
@@ -32,5 +32,10 @@ export default defineEventHandler(async (event) => {
     parseError: data.parse_error,
     parsedResume: data.parsed_resume,
     wizardEmployers: data.employers,
+    wizardLicenses: data.licenses,
+    wizardEducation: data.education,
+    wizardCredentials: data.credentials,
+    licenseState: data.license_state,
+    licenseNumber: data.license_number,
   })
 })

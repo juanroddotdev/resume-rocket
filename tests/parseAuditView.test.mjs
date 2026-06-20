@@ -68,6 +68,51 @@ describe('buildParseAuditView', () => {
     assert.equal(view.employers[1]?.missingSnippet, true)
     assert.deepEqual(view.facilitiesWithoutEmployer, ['St. Mary Medical'])
   })
+
+  it('flags certifications, licenses, and education missing from wizard or snippets', () => {
+    const view = buildParseAuditView({
+      candidateId: 'c1',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      parseError: null,
+      parsedResume: {
+        audit: {
+          suggestedCertifications: [
+            { name: 'BLS', expiry: '06/2026', sourceSnippet: 'BLS current 06/2026' },
+            { name: 'CCRN' },
+          ],
+          suggestedLicenses: [
+            { state: 'CA', number: 'RN-1', sourceSnippet: 'California RN license' },
+            { state: 'TX', number: 'RN-2' },
+          ],
+          suggestedEducation: [
+            { degree: 'BSN', school: 'State U', sourceSnippet: 'BSN State U 2016' },
+            { degree: 'MSN', school: 'Other U' },
+          ],
+          capturedAt: '2026-06-09T12:00:00.000Z',
+        },
+      },
+      wizardEmployers: [],
+      wizardLicenses: [{ state: 'CA', number: 'RN-1' }],
+      wizardEducation: [{ degree: 'BSN', school: 'State U' }],
+      wizardCredentials: {
+        BLS: { active: true, expiry: '06/2026' },
+      },
+    })
+
+    assert.equal(view.certifications[0]?.inWizard, true)
+    assert.equal(view.certifications[0]?.missingSnippet, false)
+    assert.equal(view.certifications[1]?.inWizard, false)
+    assert.equal(view.certifications[1]?.missingSnippet, true)
+
+    assert.equal(view.licenses[0]?.inWizard, true)
+    assert.equal(view.licenses[1]?.inWizard, false)
+    assert.equal(view.licenses[1]?.missingSnippet, true)
+
+    assert.equal(view.education[0]?.inWizard, true)
+    assert.equal(view.education[1]?.inWizard, false)
+    assert.equal(view.education[1]?.missingSnippet, true)
+  })
 })
 
 describe('parse fixture regression', () => {

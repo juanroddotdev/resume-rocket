@@ -54,9 +54,31 @@ export interface ParseEmployerAudit {
   sourceSnippet?: string
 }
 
+export interface ParseCertificationAudit {
+  name: string
+  expiry?: string
+  sourceSnippet?: string
+}
+
+export interface ParseLicenseAudit {
+  state?: string
+  number?: string
+  expiry?: string
+  sourceSnippet?: string
+}
+
+export interface ParseEducationAudit {
+  degree?: string
+  school?: string
+  sourceSnippet?: string
+}
+
 export interface ParseAudit {
   identifiedFacilitiesRaw?: string[]
   suggestedEmployers?: ParseEmployerAudit[]
+  suggestedCertifications?: ParseCertificationAudit[]
+  suggestedLicenses?: ParseLicenseAudit[]
+  suggestedEducation?: ParseEducationAudit[]
   capturedAt: string
 }
 
@@ -83,6 +105,33 @@ export interface ParseAuditViewEmployer {
   missingSnippet: boolean
 }
 
+export interface ParseAuditViewCertification {
+  name: string
+  expiry?: string
+  sourceSnippet?: string
+  inWizard: boolean
+  missingSnippet: boolean
+}
+
+export interface ParseAuditViewLicense {
+  label: string
+  state?: string
+  number?: string
+  expiry?: string
+  sourceSnippet?: string
+  inWizard: boolean
+  missingSnippet: boolean
+}
+
+export interface ParseAuditViewEducation {
+  label: string
+  degree?: string
+  school?: string
+  sourceSnippet?: string
+  inWizard: boolean
+  missingSnippet: boolean
+}
+
 export interface ParseAuditViewResponse {
   candidateId: string
   firstName: string | null
@@ -92,4 +141,7 @@ export interface ParseAuditViewResponse {
   audit: ParseAudit | null
   employers: ParseAuditViewEmployer[]
   facilitiesWithoutEmployer: string[]
+  certifications: ParseAuditViewCertification[]
+  licenses: ParseAuditViewLicense[]
+  education: ParseAuditViewEducation[]
 }

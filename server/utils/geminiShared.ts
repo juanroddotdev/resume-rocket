@@ -31,7 +31,7 @@ export const GEMINI_VMS_FIELD_GUIDE = `Extract all fields you can find. Use empt
 Identity: first_name, last_name, email, phone, home_address, home_city, home_state, license_number, license_state, licenses[]
 - home_address: full street address from resume header/contact block — not employer city
 - home_city / home_state: candidate residence when stated separately from employers
-- licenses[]: all active RN licenses when stated — each with state (2-letter US), number, optional expiry (MM/YYYY)
+- licenses[]: all active RN licenses when stated — each with state (2-letter US), number, optional expiry (MM/YYYY), source_snippet
 - license_number / license_state: primary active RN license when multiple appear (first or most prominent)
 
 Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_experience, compact_license_status (Yes/No/N/A when stated), average_patient_ratios, specialized_medical_equipment
@@ -41,10 +41,12 @@ Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_expe
 - average_patient_ratios: as written (e.g. "1:4", "1:5-6")
 - specialized_medical_equipment: equipment and advanced skills from summary/skills sections (ECMO, CRRT, ventilators, etc.)
 
-Education: education[] with degree, school, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined)
+Education: education[] with degree, school, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined), source_snippet
+- source_snippet: short verbatim excerpt supporting this education row (max ${PARSE_AUDIT_SNIPPET_MAX_CHARS} characters)
 
-Certifications: certifications[] with name (standard acronym, e.g. BLS, ACLS, PALS, NRP, STABLE, CCRN, CEN, TNCC, ENPC, NIHSS, RRT, CRT, ARRT, RDMS, RDCS, RVT, RCIS, RCES, MLS, MLT, CST, CRCST, CPhT, CMA, CPI, MOAB, MAB, QMHP, PBT) and optional expiry (MM/YYYY, e.g. 06/2026)
+Certifications: certifications[] with name (standard acronym, e.g. BLS, ACLS, PALS, NRP, STABLE, CCRN, CEN, TNCC, ENPC, NIHSS, RRT, CRT, ARRT, RDMS, RDCS, RVT, RCIS, RCES, MLS, MLT, CST, CRCST, CPhT, CMA, CPI, MOAB, MAB, QMHP, PBT) and optional expiry (MM/YYYY, e.g. 06/2026), source_snippet
 - Split combined cert lines into one object per certification
+- source_snippet: short verbatim excerpt supporting this certification (max ${PARSE_AUDIT_SNIPPET_MAX_CHARS} characters)
 
 Employers (suggested_employers[]): name, role, city, state, start_date, end_date, employment_type, unit_bed_count, patient_scope, floated_units[], equipment_procedures[], avg_daily_patients, patient_acuity, highlights[], charge_nurse_experience (boolean when stated), preceptor_experience (boolean when stated), source_snippet
 - One object per hospital/facility assignment; split combined job blocks into separate employers when dates or facilities differ
@@ -83,6 +85,7 @@ export function createGeminiClient() {
 export type GeminiCertificationJson = {
   name?: string
   expiry?: string
+  source_snippet?: string
 }
 
 export type GeminiEducationJson = {
@@ -90,6 +93,7 @@ export type GeminiEducationJson = {
   school?: string
   graduation_month?: string
   graduation_year?: string
+  source_snippet?: string
 }
 
 export type GeminiEmployerJson = {
@@ -116,6 +120,7 @@ export type GeminiLicenseJson = {
   state?: string
   number?: string
   expiry?: string
+  source_snippet?: string
 }
 
 export type GeminiResumeJson = {
@@ -165,6 +170,7 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
           state: { type: Type.STRING },
           number: { type: Type.STRING },
           expiry: { type: Type.STRING },
+          source_snippet: { type: Type.STRING },
         },
       },
     },
@@ -182,6 +188,7 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
           school: { type: Type.STRING },
           graduation_month: { type: Type.STRING },
           graduation_year: { type: Type.STRING },
+          source_snippet: { type: Type.STRING },
         },
       },
     },
@@ -192,6 +199,7 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
         properties: {
           name: { type: Type.STRING },
           expiry: { type: Type.STRING },
+          source_snippet: { type: Type.STRING },
         },
       },
     },
@@ -239,6 +247,15 @@ function truncateAuditSnippet(value?: string) {
   return trimmed.slice(0, PARSE_AUDIT_SNIPPET_MAX_CHARS)
 }
 
+function mapAuditEntry<T extends { sourceSnippet?: string }>(
+  entry: T | null,
+  sourceSnippet?: string,
+): T | null {
+  if (!entry) return null
+  const snippet = truncateAuditSnippet(sourceSnippet)
+  return snippet ? { ...entry, sourceSnippet: snippet } : entry
+}
+
 /** Build server-only audit payload; strips before intake API response. */
 export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
   const identifiedFacilitiesRaw = parsed.identified_facilities_raw
@@ -249,18 +266,64 @@ export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
     ?.map((employer) => {
       const name = employer.name?.trim()
       if (!name) return null
-      const sourceSnippet = truncateAuditSnippet(employer.source_snippet)
-      return sourceSnippet ? { name, sourceSnippet } : { name }
+      return mapAuditEntry({ name }, employer.source_snippet)
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
 
-  if (!identifiedFacilitiesRaw?.length && !suggestedEmployers?.length) {
+  const suggestedCertifications = parsed.certifications
+    ?.map((cert) => {
+      const name = resolveCanonicalCert(cert.name?.trim()) ?? cert.name?.trim().toUpperCase()
+      if (!name) return null
+      const expiry = cert.expiry?.trim() || undefined
+      return mapAuditEntry({ name, ...(expiry ? { expiry } : {}) }, cert.source_snippet)
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  const suggestedLicenses = parsed.licenses
+    ?.map((license) => {
+      const normalized = mapGeminiLicense(license)
+      if (!normalized) return null
+      const entry = {
+        ...(normalized.state ? { state: normalized.state } : {}),
+        ...(normalized.number ? { number: normalized.number } : {}),
+        ...(normalized.expiry ? { expiry: normalized.expiry } : {}),
+      }
+      if (!entry.state && !entry.number && !entry.expiry) return null
+      return mapAuditEntry(entry, license.source_snippet)
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  const suggestedEducation = parsed.education
+    ?.map((education) => {
+      const mapped = mapGeminiEducation(education)
+      if (!mapped) return null
+      const entry = {
+        ...(mapped.degree ? { degree: mapped.degree } : {}),
+        ...(mapped.school ? { school: mapped.school } : {}),
+      }
+      if (!entry.degree && !entry.school) return null
+      return mapAuditEntry(entry, education.source_snippet)
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  const hasContent = Boolean(
+    identifiedFacilitiesRaw?.length
+    || suggestedEmployers?.length
+    || suggestedCertifications?.length
+    || suggestedLicenses?.length
+    || suggestedEducation?.length,
+  )
+
+  if (!hasContent) {
     return null
   }
 
   return {
     ...(identifiedFacilitiesRaw?.length ? { identifiedFacilitiesRaw } : {}),
     ...(suggestedEmployers?.length ? { suggestedEmployers } : {}),
+    ...(suggestedCertifications?.length ? { suggestedCertifications } : {}),
+    ...(suggestedLicenses?.length ? { suggestedLicenses } : {}),
+    ...(suggestedEducation?.length ? { suggestedEducation } : {}),
     capturedAt: new Date().toISOString(),
   }
 }

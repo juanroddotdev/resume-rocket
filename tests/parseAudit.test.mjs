@@ -40,6 +40,28 @@ describe('buildParseAudit', () => {
   it('returns null when audit fields are empty', () => {
     assert.equal(buildParseAudit({}), null)
   })
+
+  it('captures certification, license, and education snippets', () => {
+    const audit = buildParseAudit({
+      certifications: [
+        { name: 'BLS', expiry: '06/2026', source_snippet: 'BLS certified through 06/2026' },
+      ],
+      licenses: [
+        { state: 'CA', number: 'RN-123', expiry: '06/2027', source_snippet: 'California RN 123456' },
+      ],
+      education: [
+        { degree: 'BSN', school: 'State University', source_snippet: 'BSN, State University, 2016' },
+      ],
+    })
+
+    assert.ok(audit)
+    assert.equal(audit.suggestedCertifications?.[0]?.name, 'BLS')
+    assert.equal(audit.suggestedCertifications?.[0]?.sourceSnippet, 'BLS certified through 06/2026')
+    assert.equal(audit.suggestedLicenses?.[0]?.state, 'CA')
+    assert.equal(audit.suggestedLicenses?.[0]?.sourceSnippet, 'California RN 123456')
+    assert.equal(audit.suggestedEducation?.[0]?.degree, 'BSN')
+    assert.equal(audit.suggestedEducation?.[0]?.sourceSnippet, 'BSN, State University, 2016')
+  })
 })
 
 describe('mapGeminiResumeJson audit stripping', () => {
@@ -67,5 +89,8 @@ describe('mapGeminiResumeJson audit stripping', () => {
     assert.equal('beds' in (resume.employers?.[0] ?? {}), false)
     assert.equal('traumaLevel' in (resume.employers?.[0] ?? {}), false)
     assert.equal('identifiedFacilitiesRaw' in resume, false)
+    assert.equal('sourceSnippet' in (resume.certificationDetails?.[0] ?? {}), false)
+    assert.equal('sourceSnippet' in (resume.licenses?.[0] ?? {}), false)
+    assert.equal('sourceSnippet' in (resume.education?.[0] ?? {}), false)
   })
 })

@@ -2,6 +2,7 @@ import {
   EMR_CHARTING_GROUPS,
   EMR_CHARTING_GROUP_LABELS,
 } from './emrChartingSystems.ts'
+import { findCanonicalEmrPreset } from './emrSearch.ts'
 
 export { EMR_CHARTING_GROUPS, EMR_CHARTING_GROUP_LABELS }
 
@@ -25,6 +26,20 @@ const EMR_LEGACY_ALIASES: Record<string, string> = {
 
 function normalizeStoredEmr(value: string): string {
   return EMR_LEGACY_ALIASES[value] ?? value
+}
+
+/** Resolve stored/custom EMR text to a canonical preset label when possible. */
+export function resolveStoredEmrLabel(emrSystem: string | null | undefined): string {
+  const value = normalizeStoredEmr((emrSystem || '').trim())
+  if (!value) return ''
+  return findCanonicalEmrPreset(value) ?? value
+}
+
+/** Normalize user input before persisting (aliases, preset casing, trimmed custom). */
+export function commitEmrValue(raw: string): string {
+  const trimmed = normalizeStoredEmr(raw.trim())
+  if (!trimmed) return ''
+  return findCanonicalEmrPreset(trimmed) ?? trimmed
 }
 
 export function resolveEmrFields(emrSystem: string | null | undefined) {

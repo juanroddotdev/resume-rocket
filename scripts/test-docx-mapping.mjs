@@ -84,6 +84,19 @@ const OPTIONAL_EMPTY = new Set([
   'facility_types_trauma_levels', // trauma shown per employer only
   'experience_facility_type', // trauma not duplicated on title line
   'experience_role_details', // omitted when redundant with unit specialty
+  // New template snapshot lines — populated in Phase 2 (professional_snapshot JSONB)
+  'snapshot_specialty',
+  'snapshot_years_experience',
+  'snapshot_travel_experience',
+  'snapshot_trauma_experience',
+  'snapshot_teaching_facility_experience',
+  'snapshot_magnet_facility_experience',
+  'snapshot_charge_nurse_experience',
+  'snapshot_preceptor_experience',
+  'snapshot_float_experience',
+  'snapshot_emr_systems',
+  'snapshot_patient_ratios_managed',
+  'snapshot_equipment_skills',
 ])
 
 function flatten(obj, prefix = '') {

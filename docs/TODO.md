@@ -6,7 +6,7 @@ Living task list for Resume Rocket. Epic context: [#16 hardening sprint](https:/
 
 **Related:** [MVP-PLAN.md](./MVP-PLAN.md) (historical spec) · [VMS-FIELD-MANIFEST.md](./VMS-FIELD-MANIFEST.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) · **Archived plans:** [archive/](./archive/)
 
-**Quick nav:** [What's next](#whats-next) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports)
+**Quick nav:** [What's next](#whats-next) · [New template & Professional Snapshot](#new-template--professional-snapshot) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports)
 
 One concern per PR when implementing. Check items off when merged (optionally add PR number inline).
 
@@ -14,18 +14,54 @@ One concern per PR when implementing. Check items off when merged (optionally ad
 
 ## What's next
 
-Prioritized remaining work (updated 2026-06-13). VMS template + wizard core is **done**; focus shifts to **test automation**, release smoke, and admin polish.
+Prioritized remaining work (updated 2026-07-11). New contract template landed; **snapshot wiring** unblocks CI before broader test automation.
 
 | Priority | Track | Open items |
 | --- | --- | --- |
+| **0** | **New template** | [`New template & Professional Snapshot`](#new-template--professional-snapshot) — snapshot `docxBuilder` stubs, manifest reconcile, smoke; then JSONB + admin editor + Gemini bucket |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
-| **0** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
+| **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
 | **A** | Intake polish | Track A shipped (#76–#82) — see [Candidate intake UX](#candidate-intake-ux) |
 | **B** | Step 4 | DOCX preview shipped (#89–#91); Phase 2 admin per-employment DOCX layout deferred |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
 | **D** | Optional | Storage upload filenames |
 | **Defer** | — | `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
+
+---
+
+## New template & Professional Snapshot
+
+New contract [`server/assets/template.docx`](../server/assets/template.docx) (July 2026) adds a **PROFESSIONAL SNAPSHOT** section (12 `snapshot_*` tags) and a slimmer layout that drops several previously mapped tags. Parse and wizard still collect removed fields for a future **supplemental bucket** (admin-only).
+
+### Phase 1 — Template contract (blocking)
+
+- [x] Fix `{education_degreee}` typo → `{education_degree}`
+- [x] **Wire 12 `snapshot_*` tags in docxBuilder** — `snapshot_specialty`, `snapshot_years_experience`, `snapshot_travel_experience`, `snapshot_trauma_experience`, `snapshot_teaching_facility_experience`, `snapshot_magnet_facility_experience`, `snapshot_charge_nurse_experience`, `snapshot_preceptor_experience`, `snapshot_float_experience`, `snapshot_emr_systems`, `snapshot_patient_ratios_managed`, `snapshot_equipment_skills` ([`docxBuilder.ts`](../server/utils/docxBuilder.ts)); empty strings OK until snapshot data exists — `inventory-template-tags.mjs` must exit 0
+- [ ] **Reconcile manifest with new template** — update [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md): add snapshot section; mark removed tags (`active_licenses_list`, `compact_license_status`, `core_clinical_competencies`, `emr_software_proficiencies`, `experience_highlights`, `experience_floated_units_list`, `experience_equipment_procedures_list`, `experience_employment_type`, `experience_unit_specialty`, `primary_specialty_unit`, `specialized_medical_equipment`, `total_years_nursing_experience`, …) as **template-removed** (data still collected)
+- [ ] **Smoke new template** — preview + download DOCX (parse-heavy + manual profiles); open in Word; no literal `undefined`, no broken loops
+
+### Phase 2 — Snapshot data + derivation (no Gemini)
+
+- [ ] **`professional_snapshot` JSONB** on `candidates` — per-line `{ value, included, source?, sourceSnippet? }` for the 12 keys; migration + types + PATCH schema
+- [ ] **`buildProfessionalSnapshotFromCandidate()`** — derive defaults from existing data: specialty (`specialties[0]`), years, EMR union, equipment, teaching/charge/preceptor any-Yes, travel Yes + contract count, trauma levels joined (`Level I & II`), float units union; magnet stays empty
+- [ ] **docxBuilder reads approved snapshot** — only lines with `included: true` render
+
+### Phase 3 — Admin snapshot editor
+
+- [ ] **“Professional snapshot” builder section** — per-line include checkbox + editable value; **Reset from wizard** action ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue))
+- [ ] **Mismatch warnings** — flag when snapshot contradicts structured data (e.g. charge Yes with no employer flag)
+
+### Phase 4 — Gemini propose + supplemental bucket
+
+- [ ] **Gemini snapshot proposal** — extend parse schema (or separate admin endpoint) with snapshot lines + `source_snippet` per line (server-only, audit-style); covers magnet, travel nuance, resume-only trauma/equipment
+- [ ] **“Regenerate snapshot from resume”** admin action — proposals never auto-include; admin approves each line
+- [ ] **Supplemental data bucket** — `buildSupplementalBucket()`: fields Gemini/wizard capture that the new template no longer renders (licenses, highlights, employment type, compact status, per-job ratios); admin panel “Available data (not in packet layout)” with Copy / Apply-to-snapshot-line
+- [ ] **Keep full Gemini parse schema** — template narrowing must not trim parse; only DOCX output narrows
+- [ ] **Revisit gap review** — stop blocking submit on fields no longer in template (or downgrade to optional)
+- [ ] **Optional: Parse QA snapshot evidence** — snapshot lines with snippets like cert/license/education tables
+
+**PR split:** (1) snapshot tags + manifest → (2) JSONB + derivation → (3) admin editor → (4) Gemini propose + bucket. Phase labels: A = 1, B = 2–3, C = 4.
 
 ---
 

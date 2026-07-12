@@ -205,6 +205,24 @@ function mapCertificationsForDocx(credentials: CredentialsMap | null | undefined
   }))
 }
 
+/** Professional Snapshot lines — stubs until `professional_snapshot` JSONB + derivation land. */
+function professionalSnapshotStubs(): Record<string, string> {
+  return {
+    snapshot_specialty: '',
+    snapshot_years_experience: '',
+    snapshot_travel_experience: '',
+    snapshot_trauma_experience: '',
+    snapshot_teaching_facility_experience: '',
+    snapshot_magnet_facility_experience: '',
+    snapshot_charge_nurse_experience: '',
+    snapshot_preceptor_experience: '',
+    snapshot_float_experience: '',
+    snapshot_emr_systems: '',
+    snapshot_patient_ratios_managed: '',
+    snapshot_equipment_skills: '',
+  }
+}
+
 export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const employers = candidate.employers || []
   const emrUnion = employerEmrProficienciesUnion(employers)
@@ -254,6 +272,8 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     PALS_certification_expiration_date: certExpiry(credentials, 'PALS'),
 
     education: mapEducation(candidate.education),
+
+    ...professionalSnapshotStubs(),
 
     professional_experiences: employers.map(e =>
       mapEmployerToExperience(e, primarySpecialty, candidate.emr_system || ''),

@@ -205,6 +205,14 @@ function mapCertificationsForDocx(credentials: CredentialsMap | null | undefined
   }))
 }
 
+function mapLicensesForDocx(licenses: LicenseEntry[]) {
+  return licenses
+    .map(row => ({
+      rn_license_state_and_expiry: formatLicenseRowForDocx(row),
+    }))
+    .filter(row => row.rn_license_state_and_expiry.length > 0)
+}
+
 /** Professional Snapshot lines — stubs until `professional_snapshot` JSONB + derivation land. */
 function professionalSnapshotStubs(): Record<string, string> {
   return {
@@ -235,7 +243,6 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const primary = primaryLicense(licenses)
   const licenseState = primary?.state || candidate.license_state
   const licenseNumber = primary?.number || candidate.license_number
-  const licenseExpiry = primary?.expiry
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
   const activeCerts = orderedActiveCertificationKeys(activeCertKeys(credentials))
@@ -263,9 +270,8 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     core_life_support_certifications: activeCerts.join(', '),
     certifications_list: mapCertificationsForDocx(credentials),
 
-    rn_license_state_and_expiry: primary
-      ? formatLicenseRowForDocx(primary)
-      : formatLicenseStateAndExpiry(licenseState, licenseNumber, licenseExpiry),
+    licenses_list: mapLicensesForDocx(licenses),
+
     compact_license_status: candidate.compact_license_status || '',
     BLS_certification_expiration_date: certExpiry(credentials, 'BLS'),
     ACLS_certification_expiration_date: certExpiry(credentials, 'ACLS'),

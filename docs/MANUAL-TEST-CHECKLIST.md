@@ -26,6 +26,7 @@ npm run test
 npm run build
 node scripts/test-gemini-parse-map.mjs
 node scripts/test-docx-mapping.mjs
+node scripts/smoke-docx-template.mjs
 node scripts/test-normalize-candidate.mjs
 # Optional — requires .env + seeded hospitals:
 node --env-file=.env scripts/test-hospital-match.mjs
@@ -188,6 +189,46 @@ Run once end-to-end as baseline:
 
 ---
 
+## I. July 2026 template smoke (Professional Snapshot)
+
+After [`template.docx`](../server/assets/template.docx) changes. **Word is not required** — use **Pages** (macOS) or **LibreOffice Writer** for the visual pass.
+
+### Automated (run first)
+
+```bash
+node scripts/inventory-template-tags.mjs   # every contract tag mapped in docxBuilder
+node scripts/test-docx-mapping.mjs         # full fixture mapping + /tmp/resume-rocket-test.docx
+node scripts/smoke-docx-template.mjs       # XML checks — no undefined, no leftover {tags}
+# Optional custom output path:
+node scripts/smoke-docx-template.mjs --out ~/Desktop/resume-rocket-smoke.docx
+```
+
+- [ ] All three exit 0
+- [ ] Note output path printed by `smoke-docx-template.mjs` (default `/tmp/resume-rocket-smoke.docx`)
+
+### Visual pass — Pages or LibreOffice (~5 min)
+
+Open the smoke DOCX (or complete a real intake download) and confirm:
+
+- [ ] **Header** — name, phone, email, address, city/state render (no `undefined`)
+- [ ] **Professional Snapshot** — static labels visible (`Specialty:`, `Years of Experience:`, …); **values blank** until Phase 2 (expected)
+- [ ] **Licenses & certifications** — primary license line + cert loop (name | expiry or Current)
+- [ ] **Education** — degree | school | graduation
+- [ ] **Professional experience** — one block per employer; hospital, location, dates, beds/trauma/teaching/EMR/scope
+- [ ] **No raw `{tag}`** or broken loop markers anywhere
+- [ ] **Layout** — sections in sensible order; not obviously broken spacing
+
+### Optional — live app profiles
+
+If automated passes but you want extra confidence before release:
+
+- [ ] **Parse-heavy** — upload PDF → light edits → download DOCX → same checks as visual pass
+- [ ] **Manual-heavy** — Continue manually → fill wizard → download DOCX → required fields populated
+
+Previous template archived at [`server/assets/archive/template-pre-july-2026.docx`](../server/assets/archive/template-pre-july-2026.docx). Field inventory: [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md).
+
+---
+
 ## Suggested order (~45–90 min)
 
 1. Prerequisites + automated scripts (5 min)
@@ -197,7 +238,8 @@ Run once end-to-end as baseline:
 5. **D** Step 2 hospital linking + reorder (15 min)
 6. **E** Gap review + success (10 min)
 7. **C/D** Draft refresh + re-upload confirm (10 min)
-8. **G** Deploy smoke if shipping to Render (5 min)
+8. **I** Template smoke — automated scripts + Pages eyeball after template edits (5 min)
+9. **G** Deploy smoke if shipping to Render (5 min)
 
 ---
 

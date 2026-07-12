@@ -134,7 +134,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
   })
 
-  it('maps multi-license rows with expiry in active_licenses_list', () => {
+  it('maps multi-license rows with expiry in licenses_list', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',
       last_name: 'Doe',
@@ -150,7 +150,10 @@ describe('mapCandidateToTemplateData', () => {
       'CA · RN-1 · 06/2027',
       'TX · RN-2',
     ])
-    assert.equal(data.rn_license_state_and_expiry, 'CA · RN-1 · 06/2027')
+    assert.deepEqual(data.licenses_list, [
+      { rn_license_state_and_expiry: 'CA · RN-1 · 06/2027' },
+      { rn_license_state_and_expiry: 'TX · RN-2' },
+    ])
   })
 
   it('appends PRN schedule to employment type in DOCX', () => {

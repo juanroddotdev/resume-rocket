@@ -32,7 +32,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 
 ## New template & Professional Snapshot
 
-New contract [`server/assets/template.docx`](../server/assets/template.docx) (July 2026) adds a **PROFESSIONAL SNAPSHOT** section (12 `snapshot_*` tags) and a slimmer layout that drops several previously mapped tags. Parse and wizard still collect removed fields for a future **supplemental bucket** (admin-only).
+New contract [`server/assets/template.docx`](../server/assets/template.docx) (July 2026) adds a **PROFESSIONAL SNAPSHOT** section (12 `snapshot_*` tags) and a slimmer layout that drops several previously mapped tags. Parse and wizard still collect removed fields for a future **supplemental bucket** (admin-only). Previous layout archived at [`server/assets/archive/template-pre-july-2026.docx`](../server/assets/archive/template-pre-july-2026.docx).
 
 ### Phase 1 — Template contract (blocking)
 

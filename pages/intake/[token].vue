@@ -647,6 +647,7 @@ async function onReviewPreview() {
         <HospitalAutocomplete
           ref="hospitalAutocompleteRef"
           :employers="form.employers"
+          :legacy-emr-system="form.emr_system"
           :persist-immediate="flushAutosave"
           @update:employers="form.employers = $event"
         />

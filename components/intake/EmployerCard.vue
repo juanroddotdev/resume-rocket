@@ -7,6 +7,7 @@ import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
+import { formatEmployerMetricsLine } from '~/utils/employerMetricsLine'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -19,6 +20,8 @@ const props = defineProps<{
   /** Deck list spacing: gap below expanded card, overlap among other collapsed headers. */
   deckCollapseStyle?: 'none' | 'overlap' | 'gap'
   persistImmediate?: () => void | Promise<void>
+  /** Legacy candidate-level EMR when employer row has none (matches DOCX fallback). */
+  legacyEmrSystem?: string
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
@@ -81,6 +84,13 @@ const dateSummary = computed(() => {
   if (!start && !end) return 'Dates not set'
   return `${start || '—'} – ${end || 'Present'}`
 })
+
+/** Live DOCX-style metrics stamp (unit beds • hospital beds • trauma • teaching • EMR • scope). */
+const metricsLine = computed(() =>
+  formatEmployerMetricsLine(props.employer, {
+    legacyEmrSystem: props.legacyEmrSystem,
+  }),
+)
 
 watch(
   () => props.requestLinkSearch,
@@ -269,6 +279,19 @@ function onTraumaLevelChange(event: Event) {
         </p>
         <p v-if="employer.city || employer.state" class="mt-0.5 text-xs text-slate-400">
           {{ [employer.city, employer.state].filter(Boolean).join(', ') }}
+        </p>
+        <p
+          v-if="metricsLine"
+          class="mt-1.5 text-xs font-medium text-slate-700"
+          :aria-label="`Packet metrics line: ${metricsLine}`"
+        >
+          {{ metricsLine }}
+        </p>
+        <p
+          v-else-if="isExpanded"
+          class="mt-1.5 text-xs text-slate-400"
+        >
+          Packet metrics appear here as beds, trauma, teaching, EMR, and scope are filled
         </p>
       </component>
       <div class="flex shrink-0 items-center gap-1 self-center pr-2">

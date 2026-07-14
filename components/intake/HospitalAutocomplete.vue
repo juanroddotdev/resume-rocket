@@ -7,6 +7,8 @@ const props = defineProps<{
   employers: EmployerEntry[]
   deckMode?: 'single' | 'multi'
   persistImmediate?: () => void | Promise<void>
+  /** Candidate-level EMR fallback for metrics stamp when a job row has none. */
+  legacyEmrSystem?: string
 }>()
 
 const emit = defineEmits<{
@@ -251,6 +253,7 @@ defineExpose({ openEmployerField })
         :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"
         :persist-immediate="persistImmediate"
+        :legacy-emr-system="legacyEmrSystem"
         @update="patchEmployer(index, $event)"
         @remove="removeEmployer(index)"
         @move-up="moveEmployer(index, -1)"

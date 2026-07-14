@@ -503,6 +503,7 @@ watch(devFixtureRequest, (mode) => {
               ref="hospitalAutocompleteRef"
               deck-mode="multi"
               :employers="form.employers"
+              :legacy-emr-system="form.emr_system"
               :persist-immediate="flushAutosave"
               @update:employers="form.employers = $event"
             />

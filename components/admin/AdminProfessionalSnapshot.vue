@@ -190,7 +190,7 @@ async function regenerateFromResume() {
       class="text-sm text-amber-800"
       role="status"
     >
-      Upload a resume on the Resume section to enable regenerate from resume.
+      Upload a resume via the sidebar to enable regenerate from resume.
     </p>
 
     <ul class="space-y-3">

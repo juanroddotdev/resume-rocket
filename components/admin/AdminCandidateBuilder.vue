@@ -291,15 +291,9 @@ watch(devFixtureRequest, (mode) => {
             <span class="font-normal capitalize text-slate-500"> · {{ candidate.status }}</span>
           </p>
           <div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-            <button
-              v-if="resumeFilename"
-              type="button"
-              class="max-w-full truncate text-left hover:text-slate-800 hover:underline"
-              :title="`Open Extra details for ${resumeFilename}`"
-              @click="openExtraDetails"
-            >
+            <span v-if="resumeFilename" class="max-w-[14rem] truncate sm:max-w-xs" :title="resumeFilename">
               {{ resumeFilename }}
-            </button>
+            </span>
             <span v-else-if="isEditable">No resume uploaded</span>
             <span
               v-if="parseSuccessChip"
@@ -308,19 +302,24 @@ watch(devFixtureRequest, (mode) => {
             >
               ✨ {{ parseFieldsFound }} field{{ parseFieldsFound === 1 ? '' : 's' }}
             </span>
+            <span
+              v-if="resumeFilename || (!resumeFilename && isEditable) || parseSuccessChip"
+              class="text-slate-300"
+              aria-hidden="true"
+            >|</span>
+            <button
+              type="button"
+              class="shrink-0 font-medium text-brand-700 hover:underline disabled:opacity-50"
+              :disabled="devPrefilling"
+              @click="openExtraDetails"
+            >
+              View extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
+            </button>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <IntakeSaveStatus :status="saveStatus" />
           <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
-              :disabled="devPrefilling"
-              @click="openExtraDetails"
-            >
-              Extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
-            </button>
             <button
               type="button"
               class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
@@ -364,10 +363,10 @@ watch(devFixtureRequest, (mode) => {
             Loading fixture…
           </p>
         </div>
-          <!-- Resume -->
-          <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
+          <!-- Identity (upload/parse notices live here — no Resume tab) -->
+          <section id="admin-section-identity" class="scroll-mt-4 space-y-4">
             <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually in Identity and other sections.
+              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually below.
             </p>
             <ParseNoticeBanner
               :meta="parseMeta"
@@ -376,10 +375,6 @@ watch(devFixtureRequest, (mode) => {
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
-          </section>
-
-          <!-- Identity -->
-          <section id="admin-section-identity" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
             <h2 class="text-lg font-semibold text-slate-900">Identity</h2>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">

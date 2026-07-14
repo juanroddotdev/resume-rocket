@@ -15,7 +15,7 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
   const form = reactive(defaultCandidateForm())
   const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const parseMeta = ref<ParseMeta | null>(null)
-  const activeSection = ref<AdminSectionId>('resume')
+  const activeSection = ref<AdminSectionId>('identity')
   const loading = ref(false)
   const loadError = ref<string | null>(null)
   const candidateStatus = ref<string>('draft')
@@ -38,7 +38,7 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
     Object.assign(form, defaultCandidateForm())
     parseMeta.value = null
     saveStatus.value = 'idle'
-    activeSection.value = 'resume'
+    activeSection.value = 'identity'
     loadError.value = null
     candidateStatus.value = 'draft'
     resumeFilename.value = null

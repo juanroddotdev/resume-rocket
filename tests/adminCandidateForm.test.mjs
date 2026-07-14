@@ -9,7 +9,7 @@ import {
 
 describe('adminSectionForStep', () => {
   it('maps wizard steps to admin sections', () => {
-    assert.equal(adminSectionForStep(0), 'resume')
+    assert.equal(adminSectionForStep(0), 'identity')
     assert.equal(adminSectionForStep(1), 'identity')
     assert.equal(adminSectionForStep(2), 'employment')
     assert.equal(adminSectionForStep(3), 'credentials')

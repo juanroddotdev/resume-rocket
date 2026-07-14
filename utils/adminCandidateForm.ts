@@ -19,10 +19,9 @@ import {
   resolveProfessionalSnapshotForEdit,
 } from './professionalSnapshot.ts'
 
-export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'snapshot' | 'review'
+export type AdminSectionId = 'identity' | 'employment' | 'credentials' | 'snapshot' | 'review'
 
 export const ADMIN_SECTIONS: Array<{ id: AdminSectionId; label: string }> = [
-  { id: 'resume', label: 'Resume' },
   { id: 'identity', label: 'Identity' },
   { id: 'snapshot', label: 'Snapshot' },
   { id: 'employment', label: 'Employment' },
@@ -31,8 +30,7 @@ export const ADMIN_SECTIONS: Array<{ id: AdminSectionId; label: string }> = [
 ]
 
 export function adminSectionForStep(step: number): AdminSectionId {
-  if (step === 0) return 'resume'
-  if (step === 1) return 'identity'
+  if (step === 0 || step === 1) return 'identity'
   if (step === 2) return 'employment'
   if (step === 3) return 'credentials'
   return 'review'

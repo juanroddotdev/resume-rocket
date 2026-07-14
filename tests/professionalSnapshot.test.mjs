@@ -169,4 +169,26 @@ describe('mapCandidateToTemplateData snapshot wiring', () => {
     assert.equal(data.snapshot_magnet_facility_experience, '')
     assert.match(String(data.snapshot_emr_systems), /Epic/)
   })
+
+  it('omits unchecked snapshot lines from rendered DOCX text', async () => {
+    const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
+    const PizZip = (await import('pizzip')).default
+    const buffer = await buildResumeDocx({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['ICU'],
+      years_nursing_experience: '8',
+      professional_snapshot: {
+        snapshot_specialty: { value: 'ICU', included: true },
+        snapshot_years_experience: { value: '8', included: false },
+        snapshot_travel_experience: { value: 'Yes', included: false },
+      },
+    })
+    const zip = new PizZip(buffer)
+    const xml = zip.file('word/document.xml').asText()
+    const text = xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    assert.match(text, /Specialty:\s*ICU/)
+    assert.equal(text.includes('Years of Experience:'), false)
+    assert.equal(text.includes('Travel Experience:'), false)
+  })
 })

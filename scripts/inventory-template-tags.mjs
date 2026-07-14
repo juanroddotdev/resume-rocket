@@ -166,7 +166,10 @@ function main() {
 
   const inTemplateNotBuilder = templateScalars.filter(t => !builder.scalar.has(t))
   const inBuilderNotTemplate = builderScalars.filter(t => !template.tags.includes(t))
-  const loopsInTemplateNotBuilder = templateLoops.filter(l => !builder.loops.has(l))
+  // Boolean/truthy sections (#tag) reuse a scalar key — not array loops.
+  const loopsInTemplateNotBuilder = templateLoops.filter(
+    l => !builder.loops.has(l) && !builder.scalar.has(l),
+  )
   const loopsInBuilderNotTemplate = builderLoops.filter(l => !template.loops.includes(l))
 
   const report = {

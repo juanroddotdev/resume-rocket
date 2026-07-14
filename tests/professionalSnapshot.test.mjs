@@ -6,12 +6,45 @@ import { describe, it } from 'node:test'
 import {
   buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
+  formatExperienceFlagValue,
+  isSnapshotExperienceFlag,
   normalizeProfessionalSnapshot,
+  parseExperienceFlagValue,
   professionalSnapshotToLines,
   professionalSnapshotToTemplateData,
   resolveProfessionalSnapshotForDocx,
 } from '../utils/professionalSnapshot.ts'
 import { mapCandidateToTemplateData } from '../server/utils/docxBuilder.ts'
+
+describe('parseExperienceFlagValue / formatExperienceFlagValue', () => {
+  it('round-trips Yes with detail', () => {
+    assert.deepEqual(parseExperienceFlagValue('Yes — Level I'), {
+      answer: 'yes',
+      detail: 'Level I',
+    })
+    assert.equal(formatExperienceFlagValue('yes', 'Level I'), 'Yes — Level I')
+  })
+
+  it('parses bare Yes/No and legacy free text as Yes+detail', () => {
+    assert.deepEqual(parseExperienceFlagValue('Yes'), { answer: 'yes', detail: '' })
+    assert.deepEqual(parseExperienceFlagValue('No'), { answer: 'no', detail: '' })
+    assert.deepEqual(parseExperienceFlagValue('Level I & II'), {
+      answer: 'yes',
+      detail: 'Level I & II',
+    })
+    assert.deepEqual(parseExperienceFlagValue(''), { answer: '', detail: '' })
+  })
+
+  it('formats empty answer as blank and No without detail', () => {
+    assert.equal(formatExperienceFlagValue('', 'ignored'), '')
+    assert.equal(formatExperienceFlagValue('no', 'should drop'), 'No')
+  })
+
+  it('classifies flag keys', () => {
+    assert.equal(isSnapshotExperienceFlag('snapshot_travel_experience'), true)
+    assert.equal(isSnapshotExperienceFlag('snapshot_specialty'), false)
+  })
+})
 
 describe('buildProfessionalSnapshotFromCandidate', () => {
   it('derives specialty, years, EMR, trauma, travel, clinical flags', () => {
@@ -51,7 +84,7 @@ describe('buildProfessionalSnapshotFromCandidate', () => {
     assert.equal(snapshot.snapshot_specialty?.included, true)
     assert.equal(snapshot.snapshot_years_experience?.value, '8')
     assert.equal(snapshot.snapshot_travel_experience?.value, 'Yes — 2 travel contracts')
-    assert.equal(snapshot.snapshot_trauma_experience?.value, 'Level I & II')
+    assert.equal(snapshot.snapshot_trauma_experience?.value, 'Yes — Level I & II')
     assert.equal(snapshot.snapshot_teaching_facility_experience?.value, 'Yes')
     assert.equal(snapshot.snapshot_magnet_facility_experience?.value, '')
     assert.equal(snapshot.snapshot_magnet_facility_experience?.included, false)
@@ -165,7 +198,7 @@ describe('mapCandidateToTemplateData snapshot wiring', () => {
     assert.ok(texts.some(t => t === 'Specialty: ICU'))
     assert.ok(texts.some(t => t === 'Years of Experience: 8'))
     assert.ok(texts.some(t => t.startsWith('Travel Experience:')))
-    assert.ok(texts.some(t => t === 'Trauma Experience: Level I'))
+    assert.ok(texts.some(t => t === 'Trauma Experience: Yes — Level I'))
     assert.ok(texts.some(t => t === 'Teaching Facility Experience: Yes'))
     assert.ok(texts.some(t => t === 'Charge Nurse Experience: Yes'))
     assert.equal(texts.some(t => t.startsWith('Magnet Facility Experience:')), false)

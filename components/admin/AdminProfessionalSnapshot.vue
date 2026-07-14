@@ -4,6 +4,7 @@ import type {
   ProfessionalSnapshot,
   ProfessionalSnapshotKey,
   ProfessionalSnapshotLine,
+  SnapshotExperienceAnswer,
   SnapshotProposals,
 } from '~/utils/professionalSnapshot'
 import {
@@ -13,6 +14,9 @@ import {
   buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
   ensureProfessionalSnapshotLines,
+  formatExperienceFlagValue,
+  isSnapshotExperienceFlag,
+  parseExperienceFlagValue,
 } from '~/utils/professionalSnapshot'
 
 const model = defineModel<ProfessionalSnapshot>({ default: () => ({}) })
@@ -95,6 +99,33 @@ function onValueInput(key: ProfessionalSnapshotKey, event: Event) {
     included: current.included || Boolean(value.trim()),
   }
   model.value = { ...next }
+}
+
+function flagParts(key: ProfessionalSnapshotKey) {
+  return parseExperienceFlagValue(lines.value[key]?.value)
+}
+
+function setFlagAnswer(key: ProfessionalSnapshotKey, answer: SnapshotExperienceAnswer) {
+  const { detail } = parseExperienceFlagValue(lines.value[key]?.value)
+  const value = formatExperienceFlagValue(answer, answer === 'yes' ? detail : '')
+  patchLine(key, {
+    value,
+    included: Boolean(value.trim()) || lines.value[key]?.included,
+  })
+}
+
+function setFlagDetail(key: ProfessionalSnapshotKey, detail: string) {
+  const { answer } = parseExperienceFlagValue(lines.value[key]?.value)
+  const nextAnswer: SnapshotExperienceAnswer = answer || (detail.trim() ? 'yes' : '')
+  const value = formatExperienceFlagValue(nextAnswer, detail)
+  patchLine(key, {
+    value,
+    included: Boolean(value.trim()) || lines.value[key]?.included,
+  })
+}
+
+function clearFlag(key: ProfessionalSnapshotKey) {
+  patchLine(key, { value: '', included: false })
 }
 
 function resetFromWizard() {
@@ -211,17 +242,69 @@ async function regenerateFromResume() {
             >
             Include
           </label>
-          <label class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1">
             <span class="field-label-compact">{{ PROFESSIONAL_SNAPSHOT_LABELS[key] }}</span>
+
+            <template v-if="isSnapshotExperienceFlag(key)">
+              <div
+                class="mt-1 flex min-w-0 flex-wrap items-center gap-2"
+                role="group"
+                :aria-label="PROFESSIONAL_SNAPSHOT_LABELS[key]"
+              >
+                <button
+                  type="button"
+                  class="shrink-0 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                  :class="flagParts(key).answer === 'yes'
+                    ? 'border-brand-600 bg-brand-50 text-brand-800'
+                    : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-50'"
+                  :aria-pressed="flagParts(key).answer === 'yes'"
+                  :disabled="disabled"
+                  @click="setFlagAnswer(key, 'yes')"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                  :class="flagParts(key).answer === 'no'
+                    ? 'border-slate-600 bg-slate-100 text-slate-900'
+                    : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-50'"
+                  :aria-pressed="flagParts(key).answer === 'no'"
+                  :disabled="disabled"
+                  @click="setFlagAnswer(key, 'no')"
+                >
+                  No
+                </button>
+                <input
+                  type="text"
+                  class="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm disabled:bg-slate-100"
+                  :value="flagParts(key).detail"
+                  :disabled="disabled || flagParts(key).answer !== 'yes'"
+                  placeholder="Optional detail"
+                  :aria-label="`${PROFESSIONAL_SNAPSHOT_LABELS[key]} detail`"
+                  @input="setFlagDetail(key, ($event.target as HTMLInputElement).value)"
+                >
+                <button
+                  v-if="flagParts(key).answer"
+                  type="button"
+                  class="shrink-0 text-xs font-medium text-slate-600 underline hover:no-underline disabled:opacity-50"
+                  :disabled="disabled"
+                  @click="clearFlag(key)"
+                >
+                  Clear
+                </button>
+              </div>
+            </template>
+
             <input
+              v-else
               type="text"
               class="mt-0.5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
               :value="lines[key].value"
               :disabled="disabled"
-              :placeholder="key === 'snapshot_magnet_facility_experience' ? 'Often filled via Regenerate from resume' : ''"
               @input="onValueInput(key, $event)"
             >
-          </label>
+          </div>
         </div>
         <p
           v-if="lines[key].source"

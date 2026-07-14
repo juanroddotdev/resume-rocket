@@ -86,20 +86,20 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 
 | Template tag | Planned source | Parse (Gemini) | Wizard / admin | Required | Status |
 |--------------|----------------|----------------|----------------|----------|--------|
-| `snapshot_specialty` | `specialties[0]` | Partial | Admin editor (Phase 3) | TBD | Derived |
-| `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin editor | TBD | Derived |
-| `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin editor | TBD | Derived |
-| `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin editor | TBD | Derived |
-| `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin editor | TBD | Derived |
-| `snapshot_magnet_facility_experience` | Resume / facility metadata | Phase 4 Gemini | Admin editor | TBD | Placeholder |
-| `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin editor | TBD | Derived |
-| `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin editor | TBD | Derived |
-| `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin editor | TBD | Derived |
-| `snapshot_emr_systems` | Union of `employers[].emrSystem` (fallback: `emr_system`) | No | Admin editor | TBD | Derived |
-| `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin editor | TBD | Derived |
-| `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin editor | TBD | Derived |
+| `snapshot_specialty` | `specialties[0]` | Partial | **Admin Snapshot section** (+ Reset from wizard) | TBD | Derived / Live |
+| `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_magnet_facility_experience` | Resume / facility metadata | Phase 4 Gemini | Admin Snapshot | TBD | Placeholder |
+| `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_emr_systems` | Union of `employers[].emrSystem` (fallback: `emr_system`) | No | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin Snapshot | TBD | Derived / Live |
+| `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin Snapshot | TBD | Derived / Live |
 
-Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; refreshed on PATCH of feed fields; DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render.
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`.
 
 ---
 

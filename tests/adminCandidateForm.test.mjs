@@ -22,25 +22,39 @@ describe('candidateFormSnapshot', () => {
     const form = defaultCandidateForm()
     form.first_name = 'Jane'
     form.employers = [{ name: 'Metro Hospital' }]
+    form.professional_snapshot = {
+      snapshot_specialty: { value: 'ICU', included: true },
+    }
     const snapshot = candidateFormSnapshot(form)
     assert.equal(snapshot.first_name, 'Jane')
     assert.equal(snapshot.employers?.[0]?.name, 'Metro Hospital')
+    assert.equal(snapshot.professional_snapshot?.snapshot_specialty?.value, 'ICU')
+    assert.equal(snapshot.professional_snapshot?.snapshot_specialty?.included, true)
   })
 })
 
 describe('applyParseResultToForm', () => {
-  it('applies parse API fields onto form', () => {
+  it('applies parse API fields onto form and rebuilds snapshot', () => {
     const form = defaultCandidateForm()
     applyParseResultToForm(form, {
       first_name: 'Jane',
       last_name: 'Doe',
       emr_system: 'Epic',
-      suggested_employers: [{ name: 'Metro Hospital', employer_hospital_suggestions: [] }],
+      specialties: ['ICU'],
+      suggested_employers: [{
+        name: 'Metro Hospital',
+        employmentType: 'Travel',
+        chargeNurseExperience: true,
+        employer_hospital_suggestions: [],
+      }],
       credentials: { BLS: { active: true, expiry: '2026-06-01' } },
     })
     assert.equal(form.first_name, 'Jane')
     assert.equal(form.emr_system, 'Epic')
     assert.equal(form.employers[0]?.name, 'Metro Hospital')
     assert.equal(form.credentials.BLS?.expiry, '06/2026')
+    assert.equal(form.professional_snapshot.snapshot_specialty?.value, 'ICU')
+    assert.equal(form.professional_snapshot.snapshot_travel_experience?.value, 'Yes — 1 travel contract')
+    assert.equal(form.professional_snapshot.snapshot_charge_nurse_experience?.value, 'Yes')
   })
 })

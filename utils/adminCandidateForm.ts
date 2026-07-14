@@ -12,12 +12,19 @@ import { displayCredentialExpiry } from './credentialExpiry.ts'
 import { resolveCanonicalCert } from './certificationOptions.ts'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from './emrSystem.ts'
 import { legacyScalarsFromLicenses, resolveCandidateLicenses } from './licenseRows.ts'
+import type { ProfessionalSnapshot } from './professionalSnapshot.ts'
+import {
+  buildProfessionalSnapshotFromCandidate,
+  normalizeProfessionalSnapshot,
+  resolveProfessionalSnapshotForEdit,
+} from './professionalSnapshot.ts'
 
-export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'review'
+export type AdminSectionId = 'resume' | 'identity' | 'employment' | 'credentials' | 'snapshot' | 'review'
 
 export const ADMIN_SECTIONS: Array<{ id: AdminSectionId; label: string }> = [
   { id: 'resume', label: 'Resume' },
   { id: 'identity', label: 'Identity' },
+  { id: 'snapshot', label: 'Snapshot' },
   { id: 'employment', label: 'Employment' },
   { id: 'credentials', label: 'Credentials' },
   { id: 'review', label: 'Review' },
@@ -68,6 +75,7 @@ export function defaultCandidateForm() {
     average_patient_ratios: '',
     specialized_medical_equipment: '',
     education: [] as EducationEntry[],
+    professional_snapshot: {} as ProfessionalSnapshot,
   }
 }
 
@@ -106,6 +114,7 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     average_patient_ratios: form.average_patient_ratios || undefined,
     specialized_medical_equipment: form.specialized_medical_equipment || undefined,
     education: form.education.length ? form.education : undefined,
+    professional_snapshot: normalizeProfessionalSnapshot(form.professional_snapshot),
   }
 }
 
@@ -129,6 +138,7 @@ export type AdminDraftResponse = {
   compact_license_status?: string | null
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
+  professional_snapshot?: ProfessionalSnapshot | null
   home_address?: string | null
   home_city?: string | null
   home_state?: string | null
@@ -169,6 +179,15 @@ export function applyAdminDraftToForm(
     average_patient_ratios: row.average_patient_ratios ?? '',
     specialized_medical_equipment: row.specialized_medical_equipment ?? '',
     education: row.education ?? [],
+    professional_snapshot: resolveProfessionalSnapshotForEdit({
+      specialties: row.specialties ?? [],
+      years_nursing_experience: row.years_nursing_experience,
+      average_patient_ratios: row.average_patient_ratios,
+      specialized_medical_equipment: row.specialized_medical_equipment,
+      emr_system: row.emr_system,
+      employers,
+      professional_snapshot: row.professional_snapshot,
+    }),
   })
 }
 
@@ -237,4 +256,12 @@ export function applyParseResultToForm(
       if (key) form.credentials[key] = { active: true }
     }
   }
+  form.professional_snapshot = buildProfessionalSnapshotFromCandidate({
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience,
+    average_patient_ratios: form.average_patient_ratios,
+    specialized_medical_equipment: form.specialized_medical_equipment,
+    emr_system: form.emr_system,
+    employers: form.employers,
+  })
 }

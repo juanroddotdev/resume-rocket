@@ -40,7 +40,7 @@ New contract [`server/assets/template.docx`](../server/assets/template.docx) (Ju
 - [x] **Wire 12 `snapshot_*` tags in docxBuilder** — `snapshot_specialty`, `snapshot_years_experience`, `snapshot_travel_experience`, `snapshot_trauma_experience`, `snapshot_teaching_facility_experience`, `snapshot_magnet_facility_experience`, `snapshot_charge_nurse_experience`, `snapshot_preceptor_experience`, `snapshot_float_experience`, `snapshot_emr_systems`, `snapshot_patient_ratios_managed`, `snapshot_equipment_skills` ([`docxBuilder.ts`](../server/utils/docxBuilder.ts)); empty strings OK until snapshot data exists — `inventory-template-tags.mjs` must exit 0
 - [x] **Reconcile manifest with new template** — update [`VMS-FIELD-MANIFEST.md`](./VMS-FIELD-MANIFEST.md): add snapshot section; mark removed tags (`active_licenses_list`, `compact_license_status`, `core_clinical_competencies`, `emr_software_proficiencies`, `experience_highlights`, `experience_floated_units_list`, `experience_equipment_procedures_list`, `experience_employment_type`, `experience_unit_specialty`, `primary_specialty_unit`, `specialized_medical_equipment`, `total_years_nursing_experience`, …) as **template-removed** (data still collected)
 - [x] **Automated template smoke** — `scripts/smoke-docx-template.mjs` in `npm run test`; see [`MANUAL-TEST-CHECKLIST.md`](./MANUAL-TEST-CHECKLIST.md) § I
-- [ ] **Visual template smoke** — open smoke DOCX in Pages or LibreOffice; layout + sections per § I (~5 min)
+- [x] **Visual template smoke** — open smoke DOCX in Pages or LibreOffice; layout + sections per § I (~5 min)
 
 ### Phase 2 — Snapshot data + derivation (no Gemini)
 

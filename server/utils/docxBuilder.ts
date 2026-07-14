@@ -7,6 +7,10 @@ import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 import { employerEmrProficienciesUnion } from '../../utils/emrSystem.ts'
+import {
+  employerMetricsLineFields,
+  formatEmployerMetricsLine,
+} from '../../utils/employerMetricsLine.ts'
 import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
 import {
   activeLicensesListForDocx,
@@ -82,10 +86,6 @@ export function sanitizeDocxTemplateData(value: unknown): unknown {
   return ''
 }
 
-function traumaLevel(employer: DocxEmployer): string {
-  return employer.traumaLevel || ''
-}
-
 function activeCertKeys(credentials: CredentialsMap | null | undefined): string[] {
   return activeCredentialKeys(credentials)
 }
@@ -149,12 +149,6 @@ function resolveCandidateLocation(candidate: DocxCandidate) {
   return { city: '', state: '' }
 }
 
-function teachingFacilityLabel(employer: DocxEmployer): string {
-  if (employer.teachingStatus === true) return 'Yes'
-  if (employer.teachingStatus === false) return 'No'
-  return ''
-}
-
 function mapEducation(education: EducationEntry[] | null | undefined) {
   return (education || []).map(entry => ({
     education_degree: entry.degree || '',
@@ -175,10 +169,10 @@ function mapEmployerToExperience(
   primarySpecialty: string,
   legacyEmrSystem: string,
 ) {
-  const trauma = traumaLevel(employer)
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const dates = [employer.startDate, employer.endDate].filter(Boolean)
   const unitSpecialty = employer.role?.trim() || primarySpecialty
+  const metrics = employerMetricsLineFields(employer, { legacyEmrSystem })
 
   return {
     experience_unit_specialty: unitSpecialty,
@@ -189,12 +183,14 @@ function mapEmployerToExperience(
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
     experience_employment_type: formatEmploymentTypeForDocx(employer),
     experience_role_details: roleDetailsForDocx(employer.role, unitSpecialty),
-    experience_unit_bed_count: employer.unitBedCount || '',
-    experience_hospital_total_beds: employer.beds != null ? String(employer.beds) : '',
-    experience_trauma_level: trauma,
-    experience_is_teaching_facility: teachingFacilityLabel(employer),
-    experience_emr_system: employer.emrSystem || legacyEmrSystem || '',
-    experience_patient_scope: employer.patientScope || '',
+    /** Joined labeled metrics (omits empties — avoids orphan ` • ` in DOCX). */
+    experience_metrics_line: formatEmployerMetricsLine(employer, { legacyEmrSystem }),
+    experience_unit_bed_count: metrics.unitBedCount,
+    experience_hospital_total_beds: metrics.hospitalBeds,
+    experience_trauma_level: metrics.traumaLevel,
+    experience_is_teaching_facility: metrics.teachingFacility,
+    experience_emr_system: metrics.emrSystem,
+    experience_patient_scope: metrics.patientScope,
     experience_floated_units_list: docxStringList(employer.floatedUnits),
     experience_equipment_procedures_list: docxStringList(employer.equipmentProcedures),
     experience_average_daily_patients: employer.avgDailyPatients || '',

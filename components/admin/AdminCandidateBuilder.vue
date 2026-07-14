@@ -39,7 +39,10 @@ const {
 } = workspace
 
 const { fieldClasses, markParsePrefillFromApi, clearParseHighlight } = useIntakePrefillHighlight()
-const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
+const hospitalAutocompleteRef = ref<{
+  openEmployerField: (fieldId: string) => boolean | Promise<boolean>
+  openCard: (index: number) => void | Promise<void>
+} | null>(null)
 const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => boolean } | null>(null)
 const { devFixtureRequest } = useAdminHubMenu()
 
@@ -54,6 +57,8 @@ const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const skipAutosave = ref(true)
 const extraDetailsOpen = ref(false)
+const employersJumpOpen = ref(false)
+const employersActiveIndex = ref(0)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
@@ -160,10 +165,25 @@ function closePreview() {
 
 function openExtraDetails() {
   extraDetailsOpen.value = true
+  employersJumpOpen.value = false
 }
 
 function closeExtraDetails() {
   extraDetailsOpen.value = false
+}
+
+function openEmployersJump() {
+  employersJumpOpen.value = true
+  extraDetailsOpen.value = false
+}
+
+function closeEmployersJump() {
+  employersJumpOpen.value = false
+}
+
+async function onEmployerJumpSelect(index: number) {
+  employersActiveIndex.value = index
+  await hospitalAutocompleteRef.value?.openCard(index)
 }
 
 function applyExtraDetailToSnapshot(payload: { key: ProfessionalSnapshotKey; value: string }) {
@@ -258,6 +278,8 @@ watch(loading, (isLoading) => {
 
 watch(() => props.candidate.id, () => {
   extraDetailsOpen.value = false
+  employersJumpOpen.value = false
+  employersActiveIndex.value = 0
 })
 
 watch(devFixtureRequest, (mode) => {
@@ -351,8 +373,10 @@ watch(devFixtureRequest, (mode) => {
       <div
         ref="canvasRef"
         data-admin-builder-canvas
-        class="relative flex-1 space-y-10 overflow-y-auto p-4 sm:p-6"
+        class="relative min-h-0 flex-1 overflow-y-auto"
       >
+        <!-- Padding on inner wrapper (not the scrollport) so sticky employers sit flush under section tabs. -->
+        <div class="relative space-y-10 p-4 sm:p-6">
         <div
           v-if="devPrefilling"
           class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
@@ -492,7 +516,18 @@ watch(devFixtureRequest, (mode) => {
 
           <!-- Employment -->
           <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Employment</h2>
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 class="text-lg font-semibold text-slate-900">Employment</h2>
+              <button
+                v-if="form.employers.length >= 2"
+                type="button"
+                class="text-sm font-medium text-brand-700 hover:underline disabled:opacity-50"
+                :disabled="devPrefilling"
+                @click="openEmployersJump"
+              >
+                View employers ({{ form.employers.length }})
+              </button>
+            </div>
             <SpecialtyChipInput
               v-model="form.specialties"
               label="Specialties / units"
@@ -501,10 +536,12 @@ watch(devFixtureRequest, (mode) => {
             />
             <HospitalAutocomplete
               ref="hospitalAutocompleteRef"
-              deck-mode="multi"
               :employers="form.employers"
+              :legacy-emr-system="form.emr_system"
+              :sticky-chrome-offset-px="0"
               :persist-immediate="flushAutosave"
               @update:employers="form.employers = $event"
+              @active-change="employersActiveIndex = $event"
             />
             <p v-if="!employersEmrComplete && form.employers.length" class="text-sm text-amber-800" role="status">
               Select an EMR / charting system on each employer card. If you choose Other, enter the system name — required before download.
@@ -561,6 +598,7 @@ watch(devFixtureRequest, (mode) => {
               </button>
             </div>
           </section>
+        </div>
       </div>
     </div>
 
@@ -587,6 +625,16 @@ watch(devFixtureRequest, (mode) => {
       @close="closeExtraDetails"
       @apply="applyExtraDetailToSnapshot"
       @go-to-snapshot="scrollToSectionPaused('snapshot')"
+    />
+
+    <EmployersJumpDrawer
+      :open="employersJumpOpen"
+      :employers="form.employers"
+      :active-index="employersActiveIndex"
+      :legacy-emr-system="form.emr_system"
+      :candidate-name="displayName"
+      @close="closeEmployersJump"
+      @select="onEmployerJumpSelect"
     />
 
     <div

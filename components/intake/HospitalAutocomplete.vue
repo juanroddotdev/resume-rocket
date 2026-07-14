@@ -7,10 +7,19 @@ const props = defineProps<{
   employers: EmployerEntry[]
   deckMode?: 'single' | 'multi'
   persistImmediate?: () => void | Promise<void>
+  /** Candidate-level EMR fallback for metrics stamp when a job row has none. */
+  legacyEmrSystem?: string
+  /**
+   * Sticky top offset for expanded card headers (admin canvas: 0; intake under layout header: 56).
+   */
+  stickyChromeOffsetPx?: number
+  /** Show a "View employers" control that opens the jump drawer (intake). Admin wires its own link. */
+  showEmployersJumpLink?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:employers': [value: EmployerEntry[]]
+  'active-change': [index: number]
 }>()
 
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
@@ -23,18 +32,25 @@ const manualName = ref('')
 const manualCity = ref('')
 const manualState = ref('')
 const manualError = ref<string | null>(null)
+const employersJumpOpen = ref(false)
 const isMultiDeck = computed(() => props.deckMode === 'multi')
+const cardStickyTopPx = computed(() => props.stickyChromeOffsetPx ?? 0)
+const showJumpLink = computed(
+  () => props.showEmployersJumpLink === true && props.employers.length >= 2,
+)
 
 watch(
   () => props.employers.length,
   async (len, prevLen) => {
     if (len > prevLen) {
       activeCardIndex.value = len - 1
+      emit('active-change', activeCardIndex.value)
       if (len - prevLen === 1) {
         await scrollCardToTop(len - 1)
       }
     } else if (activeCardIndex.value >= len) {
       activeCardIndex.value = Math.max(0, len - 1)
+      emit('active-change', activeCardIndex.value)
     }
   },
 )
@@ -123,10 +139,14 @@ async function scrollCardToTop(index: number) {
 }
 
 async function openCard(index: number) {
-  if (activeCardIndex.value === index) return
+  if (!isMultiDeck.value && activeCardIndex.value === index) {
+    emit('active-change', index)
+    return
+  }
   linkSearchRequested.value = null
-  await scrollCardToTop(index)
   activeCardIndex.value = index
+  emit('active-change', index)
+  await scrollCardToTop(index)
 }
 
 async function openEmployerField(fieldId: string): boolean {
@@ -151,13 +171,27 @@ function deckCollapseStyle(index: number): 'none' | 'overlap' | 'gap' {
   return 'none'
 }
 
-defineExpose({ openEmployerField })
+defineExpose({
+  openEmployerField,
+  openCard,
+  activeCardIndex,
+})
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="relative space-y-4">
     <div>
-      <label class="field-label">Search facilities</label>
+      <div class="flex flex-wrap items-end justify-between gap-2">
+        <label class="field-label mb-0" for="intake-field-employers">Search facilities</label>
+        <button
+          v-if="showJumpLink"
+          type="button"
+          class="text-sm font-medium text-brand-700 hover:underline"
+          @click="employersJumpOpen = true"
+        >
+          View employers ({{ employers.length }})
+        </button>
+      </div>
       <input
         id="intake-field-employers"
         v-model="query"
@@ -251,6 +285,8 @@ defineExpose({ openEmployerField })
         :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"
         :persist-immediate="persistImmediate"
+        :legacy-emr-system="legacyEmrSystem"
+        :sticky-top-offset-px="cardStickyTopPx"
         @update="patchEmployer(index, $event)"
         @remove="removeEmployer(index)"
         @move-up="moveEmployer(index, -1)"
@@ -261,5 +297,16 @@ defineExpose({ openEmployerField })
     <p v-else class="text-xs text-amber-800">
       Add at least one hospital where you worked — search above or add manually.
     </p>
+
+    <EmployersJumpDrawer
+      v-if="showEmployersJumpLink"
+      :open="employersJumpOpen"
+      :employers="employers"
+      :active-index="activeCardIndex"
+      :legacy-emr-system="legacyEmrSystem"
+      panel-class="fixed bottom-3 right-3 top-16 z-40"
+      @close="employersJumpOpen = false"
+      @select="openCard"
+    />
   </div>
 </template>

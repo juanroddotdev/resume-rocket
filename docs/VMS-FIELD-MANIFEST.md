@@ -121,14 +121,12 @@ Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and 
 |--------------|----------------|----------------|-------------|----------|--------|
 | `experience_hospital_name` | `employers[].name` | Yes | 2 — Employment | Yes | Live |
 | `experience_facility_location` | `employers[].city`, `state` | Partial | 2 — Employment | Yes | Live |
-| `experience_hospital_total_beds` | `employers[].beds` | No (hospital DB) | 2 — Employment | No | Live |
-| `experience_trauma_level` | `employers[].traumaLevel` | No (hospital DB) | 2 — Employment | No | Live |
 | `experience_facility_type` | Derived trauma label (stub — empty in output) | — | — | No | Derived |
-| `experience_unit_bed_count` | `employers[].unitBedCount` | Yes | 2 — Employer detail | No | Live |
 | `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 | Yes | Live |
-| `experience_emr_system` | `employers[].emrSystem` (fallback: `candidates.emr_system`) | No | 2 — Employer card | Yes | Live |
-| `experience_is_teaching_facility` | `employers[].teachingStatus` | No (hospital DB) | 2 — Employment | No | Live |
-| `experience_patient_scope` | `employers[].patientScope` | Yes | 2 — Employer detail | Yes | Live |
+| `experience_unit_specialty` | `employers[].role` / specialties | Yes | 2 | Yes | Live |
+| `experience_metrics_line` | Joined labeled unit beds / hospital beds / trauma / teaching / EMR / scope (empties omitted) | — | 2 — Employment | No | Live |
+
+Former per-slot metrics tags (`experience_unit_bed_count`, `experience_hospital_total_beds`, `experience_trauma_level`, `experience_is_teaching_facility`, `experience_emr_system`, `experience_patient_scope`) still map in `docxBuilder` for supplemental use but the contract prints **one** `{experience_metrics_line}` so blank slots cannot leave orphan ` • ` separators.
 
 ---
 

@@ -7,6 +7,7 @@ import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
+import { formatEmployerMetricsLine } from '~/utils/employerMetricsLine'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -19,10 +20,19 @@ const props = defineProps<{
   /** Deck list spacing: gap below expanded card, overlap among other collapsed headers. */
   deckCollapseStyle?: 'none' | 'overlap' | 'gap'
   persistImmediate?: () => void | Promise<void>
+  /** Legacy candidate-level EMR when employer row has none (matches DOCX fallback). */
+  legacyEmrSystem?: string
+  /** Sticky header offset in px (accounts for layout chrome + employer jump list). */
+  stickyTopOffsetPx?: number
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
 const isExpanded = computed(() => isPanel.value || props.expanded)
+const stickyTopStyle = computed(() => {
+  if (!isExpanded.value) return undefined
+  const top = props.stickyTopOffsetPx ?? (isPanel.value ? 0 : 56)
+  return { top: `${top}px` }
+})
 
 const deckRowMarginClass = computed(() => {
   if (isPanel.value || props.expanded) return 'mt-0'
@@ -81,6 +91,13 @@ const dateSummary = computed(() => {
   if (!start && !end) return 'Dates not set'
   return `${start || '—'} – ${end || 'Present'}`
 })
+
+/** Live DOCX-style metrics stamp (unit beds • hospital beds • trauma • teaching • EMR • scope). */
+const metricsLine = computed(() =>
+  formatEmployerMetricsLine(props.employer, {
+    legacyEmrSystem: props.legacyEmrSystem,
+  }),
+)
 
 watch(
   () => props.requestLinkSearch,
@@ -241,17 +258,29 @@ function onTraumaLevelChange(event: Event) {
       isPanel ? 'py-3' : expanded ? 'z-30 py-8' : 'z-10 py-0',
       !isPanel && deckRowMarginClass,
     ]"
+    :style="stickyTopOffsetPx != null ? { scrollMarginTop: `${stickyTopOffsetPx + 8}px` } : undefined"
   >
     <div
       :id="`employer-card-${index}`"
-      class="employer-card-surface overflow-hidden rounded-lg border bg-white"
+      class="employer-card-surface rounded-lg border bg-white"
       :class="[
         isExpanded
           ? 'border-brand-200 border-l-4 border-l-brand-600 shadow-md'
           : 'border-slate-200 shadow-sm',
       ]"
     >
-    <div class="flex items-start gap-1">
+    <!--
+      Sticky only while expanded: pin name + metrics while scrolling fields.
+      Drops with this card when the next employer enters — no JS handoff.
+      overflow-hidden removed from surface so sticky is not clipped.
+    -->
+    <div
+      class="flex items-start gap-1"
+      :class="isExpanded
+        ? 'sticky z-20 border-b border-brand-100 bg-brand-50 shadow-sm'
+        : 'rounded-t-lg bg-white'"
+      :style="stickyTopStyle"
+    >
       <component
         :is="isPanel ? 'div' : 'button'"
         :id="`employer-card-header-${index}`"
@@ -269,6 +298,19 @@ function onTraumaLevelChange(event: Event) {
         </p>
         <p v-if="employer.city || employer.state" class="mt-0.5 text-xs text-slate-400">
           {{ [employer.city, employer.state].filter(Boolean).join(', ') }}
+        </p>
+        <p
+          v-if="metricsLine"
+          class="mt-1.5 text-xs font-medium text-slate-700"
+          :aria-label="`Packet metrics line: ${metricsLine}`"
+        >
+          {{ metricsLine }}
+        </p>
+        <p
+          v-else-if="isExpanded"
+          class="mt-1.5 text-xs text-slate-400"
+        >
+          Packet metrics appear here as beds, trauma, teaching, EMR, and scope are filled
         </p>
       </component>
       <div class="flex shrink-0 items-center gap-1 self-center pr-2">

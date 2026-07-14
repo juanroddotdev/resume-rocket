@@ -214,3 +214,112 @@ export function professionalSnapshotToTemplateData(
   }
   return out
 }
+
+export const PROFESSIONAL_SNAPSHOT_LABELS: Record<ProfessionalSnapshotKey, string> = {
+  snapshot_specialty: 'Specialty',
+  snapshot_years_experience: 'Years of experience',
+  snapshot_travel_experience: 'Travel experience',
+  snapshot_trauma_experience: 'Trauma experience',
+  snapshot_teaching_facility_experience: 'Teaching facility experience',
+  snapshot_magnet_facility_experience: 'Magnet facility experience',
+  snapshot_charge_nurse_experience: 'Charge nurse experience',
+  snapshot_preceptor_experience: 'Preceptor experience',
+  snapshot_float_experience: 'Float experience',
+  snapshot_emr_systems: 'EMR systems',
+  snapshot_patient_ratios_managed: 'Patient ratios managed',
+  snapshot_equipment_skills: 'Equipment / skills',
+}
+
+/** Ensure all 12 lines exist for admin editor binding. */
+export function ensureProfessionalSnapshotLines(
+  snapshot: ProfessionalSnapshot | null | undefined,
+): Record<ProfessionalSnapshotKey, ProfessionalSnapshotLine> {
+  const normalized = normalizeProfessionalSnapshot(snapshot)
+  const out = {} as Record<ProfessionalSnapshotKey, ProfessionalSnapshotLine>
+  for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
+    out[key] = normalized[key]
+      ? { ...normalized[key]! }
+      : { value: '', included: false }
+  }
+  return out
+}
+
+function saysYes(value: string | undefined): boolean {
+  return Boolean(value?.trim() && /^yes\b/i.test(value.trim()))
+}
+
+export interface SnapshotMismatch {
+  key: ProfessionalSnapshotKey
+  message: string
+}
+
+/** Soft warnings when included snapshot lines contradict wizard structured data. */
+export function computeSnapshotMismatches(
+  snapshot: ProfessionalSnapshot,
+  candidate: SnapshotCandidateInput,
+): SnapshotMismatch[] {
+  const employers = candidate.employers || []
+  const warnings: SnapshotMismatch[] = []
+  const lines = ensureProfessionalSnapshotLines(snapshot)
+
+  if (lines.snapshot_charge_nurse_experience.included && saysYes(lines.snapshot_charge_nurse_experience.value)) {
+    if (!employers.some(e => e.chargeNurseExperience === true)) {
+      warnings.push({
+        key: 'snapshot_charge_nurse_experience',
+        message: 'Snapshot says Yes, but no employer has charge nurse marked. Update Employment or edit this line.',
+      })
+    }
+  }
+
+  if (lines.snapshot_preceptor_experience.included && saysYes(lines.snapshot_preceptor_experience.value)) {
+    if (!employers.some(e => e.preceptorExperience === true)) {
+      warnings.push({
+        key: 'snapshot_preceptor_experience',
+        message: 'Snapshot says Yes, but no employer has preceptor marked. Update Employment or edit this line.',
+      })
+    }
+  }
+
+  if (
+    lines.snapshot_teaching_facility_experience.included
+    && saysYes(lines.snapshot_teaching_facility_experience.value)
+  ) {
+    if (!employers.some(e => e.teachingStatus === true)) {
+      warnings.push({
+        key: 'snapshot_teaching_facility_experience',
+        message: 'Snapshot says Yes, but no employer is marked as a teaching facility.',
+      })
+    }
+  }
+
+  if (lines.snapshot_travel_experience.included && saysYes(lines.snapshot_travel_experience.value)) {
+    if (!employers.some(e => normalizeEmploymentType(e.employmentType) === 'Travel')) {
+      warnings.push({
+        key: 'snapshot_travel_experience',
+        message: 'Snapshot says Yes, but no employer has employment type Travel.',
+      })
+    }
+  }
+
+  const specialty = lines.snapshot_specialty.value.trim()
+  if (lines.snapshot_specialty.included && specialty) {
+    const specialties = (candidate.specialties || []).map(s => s.trim().toLowerCase())
+    if (specialties.length && !specialties.includes(specialty.toLowerCase())) {
+      warnings.push({
+        key: 'snapshot_specialty',
+        message: `Specialty “${specialty}” is not in the specialties list on Employment.`,
+      })
+    }
+  }
+
+  return warnings
+}
+
+/** Prefer stored snapshot when populated; otherwise derive for editing. */
+export function resolveProfessionalSnapshotForEdit(
+  candidate: SnapshotCandidateInput & {
+    professional_snapshot?: ProfessionalSnapshot | null
+  },
+): ProfessionalSnapshot {
+  return ensureProfessionalSnapshotLines(resolveProfessionalSnapshotForDocx(candidate))
+}

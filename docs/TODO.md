@@ -18,7 +18,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 
 | Priority | Track | Open items |
 | --- | --- | --- |
-| **0** | **New template** | Phase 2 snapshot derivation shipped — next: [Phase 3 admin snapshot editor](#new-template--professional-snapshot); then Gemini + supplemental bucket |
+| **0** | **New template** | Phase 3 admin snapshot editor shipped — next: [Phase 4 Gemini + supplemental bucket](#new-template--professional-snapshot) |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
@@ -50,8 +50,8 @@ New contract [`server/assets/template.docx`](../server/assets/template.docx) (Ju
 
 ### Phase 3 — Admin snapshot editor
 
-- [ ] **“Professional snapshot” builder section** — per-line include checkbox + editable value; **Reset from wizard** action ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue))
-- [ ] **Mismatch warnings** — flag when snapshot contradicts structured data (e.g. charge Yes with no employer flag)
+- [x] **“Professional snapshot” builder section** — per-line include checkbox + editable value; **Reset from wizard** action ([`AdminCandidateBuilder.vue`](../components/admin/AdminCandidateBuilder.vue) + [`AdminProfessionalSnapshot.vue`](../components/admin/AdminProfessionalSnapshot.vue))
+- [x] **Mismatch warnings** — flag when snapshot contradicts structured data (e.g. charge Yes with no employer flag)
 
 ### Phase 4 — Gemini propose + supplemental bucket
 
@@ -62,7 +62,16 @@ New contract [`server/assets/template.docx`](../server/assets/template.docx) (Ju
 - [ ] **Revisit gap review** — stop blocking submit on fields no longer in template (or downgrade to optional)
 - [ ] **Optional: Parse QA snapshot evidence** — snapshot lines with snippets like cert/license/education tables
 
-**PR split:** (1) snapshot tags + manifest → (2) JSONB + derivation → (3) admin editor → (4) Gemini propose + bucket. Phase labels: A = 1, B = 2–3, C = 4.
+### Later — Custom snapshot lines (defer until UAT asks)
+
+Only if recruiters need bullets beyond the fixed 12 contract tags. Prefer one PR that ships DB + DOCX together (UI-only custom lines that never print will confuse users).
+
+- [ ] **`custom_lines[]` in `professional_snapshot` JSONB** — `{ id, label, value, included, source?, sourceSnippet? }[]` beside the 12 `snapshot_*` keys; normalize + PATCH; do **not** invent ad-hoc `snapshot_*` keys
+- [ ] **Template loop** — `{#snapshot_custom_lines}{snapshot_custom_label}: {snapshot_custom_value}{/snapshot_custom_lines}` (or equivalent) under PROFESSIONAL SNAPSHOT in [`template.docx`](../server/assets/template.docx); wire in [`docxBuilder.ts`](../server/utils/docxBuilder.ts); re-run inventory + smoke
+- [ ] **Admin “Add snapshot line”** — label + value + include; remove line; keep Reset from wizard on the fixed 12 only
+- [ ] **Optional: Gemini → custom_lines** — Phase 4 proposals for magnet/nuance can land in `custom_lines` (or fill `snapshot_magnet_*`) so admin Add and AI share one bucket
+
+**PR split:** (1) snapshot tags + manifest → (2) JSONB + derivation → (3) admin editor → (4) Gemini propose + bucket → (5) custom lines if needed. Phase labels: A = 1, B = 2–3, C = 4.
 
 ---
 

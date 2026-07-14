@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   buildProfessionalSnapshotFromCandidate,
+  computeSnapshotMismatches,
   normalizeProfessionalSnapshot,
   professionalSnapshotToTemplateData,
   resolveProfessionalSnapshotForDocx,
@@ -109,6 +110,33 @@ describe('normalizeProfessionalSnapshot', () => {
     })
     assert.equal(normalized.snapshot_specialty?.value, 'ICU')
     assert.equal('junk' in normalized, false)
+  })
+})
+
+describe('computeSnapshotMismatches', () => {
+  it('flags charge Yes when no employer has the flag', () => {
+    const warnings = computeSnapshotMismatches(
+      {
+        snapshot_charge_nurse_experience: { value: 'Yes', included: true },
+      },
+      {
+        employers: [{ name: 'Metro', chargeNurseExperience: false }],
+      },
+    )
+    assert.equal(warnings.length, 1)
+    assert.equal(warnings[0]?.key, 'snapshot_charge_nurse_experience')
+  })
+
+  it('is quiet when charge Yes matches an employer flag', () => {
+    const warnings = computeSnapshotMismatches(
+      {
+        snapshot_charge_nurse_experience: { value: 'Yes', included: true },
+      },
+      {
+        employers: [{ name: 'Metro', chargeNurseExperience: true }],
+      },
+    )
+    assert.equal(warnings.length, 0)
   })
 })
 

@@ -401,6 +401,22 @@ watch(devFixtureRequest, (mode) => {
             </div>
           </section>
 
+          <!-- Professional snapshot -->
+          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
+            <h2 class="text-lg font-semibold text-slate-900">Professional snapshot</h2>
+            <AdminProfessionalSnapshot
+              v-model="form.professional_snapshot"
+              :specialties="form.specialties"
+              :years-nursing-experience="form.years_nursing_experience"
+              :average-patient-ratios="form.average_patient_ratios"
+              :specialized-medical-equipment="form.specialized_medical_equipment"
+              :emr-system="form.emr_system"
+              :employers="form.employers"
+              :disabled="!isEditable"
+              @go-to-employment="scrollToSectionPaused('employment')"
+            />
+          </section>
+
           <!-- Employment -->
           <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
             <h2 class="text-lg font-semibold text-slate-900">Employment</h2>

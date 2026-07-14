@@ -74,7 +74,7 @@ onUnmounted(() => {
 
       <div class="shrink-0 space-y-2 border-b border-brand-100/80 px-5 py-3">
         <p class="text-sm text-slate-600">
-          Already in this profile from the resume or intake. Not included in the download unless you copy them or apply onto a Snapshot line (then check Include).
+          Not in the download until you add them — copy anywhere, or apply to a suggested field (Snapshot still needs Include).
         </p>
         <p
           v-if="applyNotice"

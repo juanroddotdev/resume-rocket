@@ -39,6 +39,8 @@ export const completeDocxFixture = {
       startDate: '2020-01',
       endDate: '2024-06',
       employmentType: 'Staff',
+      chargeNurseExperience: true,
+      preceptorExperience: true,
       unitBedCount: '24',
       patientScope: 'Adult ICU — critical care',
       avgDailyPatients: '2-3',

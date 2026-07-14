@@ -1,4 +1,5 @@
 import type { ParseAudit, ParseOutcome, ParsedResume } from '~/types/parse'
+import { buildProfessionalSnapshotFromCandidate } from '~/utils/professionalSnapshot'
 
 const MAX_BYTES = 10 * 1024 * 1024
 
@@ -158,6 +159,13 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
       ...(normalizedJsonb.credentials && Object.keys(normalizedJsonb.credentials).length
         ? { credentials: normalizedJsonb.credentials }
         : {}),
+      professional_snapshot: buildProfessionalSnapshotFromCandidate({
+        specialties: parsed.specialties,
+        years_nursing_experience: parsed.yearsNursingExperience,
+        average_patient_ratios: parsed.averagePatientRatios,
+        specialized_medical_equipment: parsed.specializedMedicalEquipment,
+        employers: normalizedJsonb.employers,
+      }),
     })
   }
 

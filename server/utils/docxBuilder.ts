@@ -16,6 +16,11 @@ import {
 } from '../../utils/licenseRows.ts'
 import { orderedActiveCertificationKeys } from '../../utils/certificationOptions.ts'
 import { activeCredentialKeys } from './normalizeCandidate.ts'
+import type { ProfessionalSnapshot } from '../../utils/professionalSnapshot.ts'
+import {
+  professionalSnapshotToTemplateData,
+  resolveProfessionalSnapshotForDocx,
+} from '../../utils/professionalSnapshot.ts'
 
 interface DocxEmployer extends EmployerEntry {}
 
@@ -39,6 +44,7 @@ export interface DocxCandidate {
   compact_license_status?: string | null
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
+  professional_snapshot?: ProfessionalSnapshot | null
 }
 
 /** Coerce template scalars so docxtemplater never renders the literal "undefined". */
@@ -213,22 +219,18 @@ function mapLicensesForDocx(licenses: LicenseEntry[]) {
     .filter(row => row.rn_license_state_and_expiry.length > 0)
 }
 
-/** Professional Snapshot lines — stubs until `professional_snapshot` JSONB + derivation land. */
-function professionalSnapshotStubs(): Record<string, string> {
-  return {
-    snapshot_specialty: '',
-    snapshot_years_experience: '',
-    snapshot_travel_experience: '',
-    snapshot_trauma_experience: '',
-    snapshot_teaching_facility_experience: '',
-    snapshot_magnet_facility_experience: '',
-    snapshot_charge_nurse_experience: '',
-    snapshot_preceptor_experience: '',
-    snapshot_float_experience: '',
-    snapshot_emr_systems: '',
-    snapshot_patient_ratios_managed: '',
-    snapshot_equipment_skills: '',
-  }
+/** Professional Snapshot — derived or stored; only included lines render. */
+function mapProfessionalSnapshot(candidate: DocxCandidate): Record<string, string> {
+  const snapshot = resolveProfessionalSnapshotForDocx({
+    specialties: candidate.specialties,
+    years_nursing_experience: candidate.years_nursing_experience,
+    average_patient_ratios: candidate.average_patient_ratios,
+    specialized_medical_equipment: candidate.specialized_medical_equipment,
+    emr_system: candidate.emr_system,
+    employers: candidate.employers,
+    professional_snapshot: candidate.professional_snapshot,
+  })
+  return professionalSnapshotToTemplateData(snapshot)
 }
 
 export function mapCandidateToTemplateData(candidate: DocxCandidate) {
@@ -279,7 +281,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
 
     education: mapEducation(candidate.education),
 
-    ...professionalSnapshotStubs(),
+    ...mapProfessionalSnapshot(candidate),
 
     professional_experiences: employers.map(e =>
       mapEmployerToExperience(e, primarySpecialty, candidate.emr_system || ''),

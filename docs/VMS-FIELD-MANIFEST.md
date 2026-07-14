@@ -47,7 +47,7 @@ Server normalizes on parse write, PATCH ingress, and DOCX read via `server/utils
 | `compact_license_status` | `candidates.compact_license_status` TEXT — **template-removed** |
 | `average_patient_ratios` | `candidates.average_patient_ratios` TEXT — **template-removed**; feeds snapshot (Phase 2) |
 | `specialized_medical_equipment` | `candidates.specialized_medical_equipment` TEXT — **template-removed**; feeds snapshot (Phase 2) |
-| `professional_snapshot` | *Planned Phase 2* — `{ [key]: { value, included, source?, sourceSnippet? } }` for 12 `snapshot_*` lines |
+| `professional_snapshot` | `{ [snapshot_*]: { value, included, source?, sourceSnippet? } }` — column `candidates.professional_snapshot` JSONB |
 | Extended `employers[]` | `employmentType`, `emrSystem`, `prnSchedule`, `unitBedCount`, `patientScope`, `floatedUnits[]`, `equipmentProcedures[]`, `avgDailyPatients`, `patientAcuity`, `highlights[]` — several **template-removed** at employer level |
 
 Verify: `node scripts/test-normalize-candidate.mjs`
@@ -86,18 +86,20 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 
 | Template tag | Planned source | Parse (Gemini) | Wizard / admin | Required | Status |
 |--------------|----------------|----------------|----------------|----------|--------|
-| `snapshot_specialty` | `specialties[0]` | Partial | Admin editor (Phase 3) | TBD | Placeholder |
-| `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin editor | TBD | Placeholder |
-| `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin editor | TBD | Placeholder |
+| `snapshot_specialty` | `specialties[0]` | Partial | Admin editor (Phase 3) | TBD | Derived |
+| `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin editor | TBD | Derived |
+| `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin editor | TBD | Derived |
+| `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin editor | TBD | Derived |
+| `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin editor | TBD | Derived |
 | `snapshot_magnet_facility_experience` | Resume / facility metadata | Phase 4 Gemini | Admin editor | TBD | Placeholder |
-| `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_emr_systems` | Union of `employers[].emrSystem` (fallback: `emr_system`) | No | Admin editor | TBD | Placeholder |
-| `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin editor | TBD | Placeholder |
-| `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin editor | TBD | Placeholder |
+| `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin editor | TBD | Derived |
+| `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin editor | TBD | Derived |
+| `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin editor | TBD | Derived |
+| `snapshot_emr_systems` | Union of `employers[].emrSystem` (fallback: `emr_system`) | No | Admin editor | TBD | Derived |
+| `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin editor | TBD | Derived |
+| `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin editor | TBD | Derived |
+
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; refreshed on PATCH of feed fields; DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render.
 
 ---
 

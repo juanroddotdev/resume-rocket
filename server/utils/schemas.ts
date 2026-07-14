@@ -5,6 +5,7 @@ import {
   normalizeEmployers,
 } from '~/server/utils/normalizeCandidate'
 import { legacyScalarsFromLicenses, normalizeLicenses } from '~/utils/licenseRows'
+import { normalizeProfessionalSnapshot } from '~/utils/professionalSnapshot'
 
 const stringArrayInput = z.array(z.union([z.string(), z.number()])).optional()
 
@@ -98,6 +99,10 @@ export const candidatePatchSchema = z.object({
   compact_license_status: compactLicenseSchema,
   average_patient_ratios: z.string().optional(),
   specialized_medical_equipment: z.string().optional(),
+  professional_snapshot: z
+    .record(z.unknown())
+    .optional()
+    .transform(s => (s !== undefined ? normalizeProfessionalSnapshot(s) : undefined)),
   home_address: z.string().optional(),
   home_city: z.string().optional(),
   home_state: z.string().optional(),

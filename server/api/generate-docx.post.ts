@@ -54,6 +54,9 @@ export default defineEventHandler(async (event) => {
     home_address: candidate.home_address as string | null,
     home_city: candidate.home_city as string | null,
     home_state: candidate.home_state as string | null,
+    professional_snapshot: candidate.professional_snapshot as
+      | import('../../utils/professionalSnapshot').ProfessionalSnapshot
+      | null,
   })
 
   const filename = buildResumeDownloadFilename({

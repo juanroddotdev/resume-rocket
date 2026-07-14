@@ -8,6 +8,8 @@ import {
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 import { normalizeLicense, normalizeLicenses, resolveCandidateLicenses } from '../../utils/licenseRows.ts'
 import { normalizeTraumaLevel } from '../../utils/traumaLevel.ts'
+import { normalizeProfessionalSnapshot } from '../../utils/professionalSnapshot.ts'
+import type { ProfessionalSnapshot } from '../../utils/professionalSnapshot.ts'
 
 function optionalString(value: unknown): string | undefined {
   if (value == null) return undefined
@@ -208,18 +210,23 @@ export function normalizeCandidateJsonbFields(fields: {
   credentials?: unknown
   education?: unknown
   licenses?: unknown
+  professional_snapshot?: unknown
 }) {
   const out: {
     employers?: EmployerEntry[]
     credentials?: CredentialsMap
     education?: EducationEntry[]
     licenses?: LicenseEntry[]
+    professional_snapshot?: ProfessionalSnapshot
   } = {}
 
   if (fields.employers !== undefined) out.employers = normalizeEmployers(fields.employers)
   if (fields.credentials !== undefined) out.credentials = normalizeCredentials(fields.credentials)
   if (fields.education !== undefined) out.education = normalizeEducation(fields.education)
   if (fields.licenses !== undefined) out.licenses = normalizeLicenses(fields.licenses)
+  if (fields.professional_snapshot !== undefined) {
+    out.professional_snapshot = normalizeProfessionalSnapshot(fields.professional_snapshot)
+  }
 
   return out
 }
@@ -236,5 +243,6 @@ export function normalizeCandidateRow<T extends Record<string, unknown>>(row: T)
     credentials: normalizeCredentials(row.credentials),
     education: normalizeEducation(row.education),
     licenses,
+    professional_snapshot: normalizeProfessionalSnapshot(row.professional_snapshot),
   }
 }

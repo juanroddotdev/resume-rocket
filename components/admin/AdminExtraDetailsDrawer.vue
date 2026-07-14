@@ -123,14 +123,12 @@ onUnmounted(() => {
 <style scoped>
 .extra-details-card-enter-active,
 .extra-details-card-leave-active {
-  transition:
-    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 200ms ease-out;
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
 }
 
 .extra-details-card-enter-from,
 .extra-details-card-leave-to {
-  transform: translate3d(1.25rem, 0, 0);
-  opacity: 0;
+  transform: translate3d(calc(100% + 1.5rem), 0, 0);
 }
 </style>

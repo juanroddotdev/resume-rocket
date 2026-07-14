@@ -18,7 +18,7 @@ import { orderedActiveCertificationKeys } from '../../utils/certificationOptions
 import { activeCredentialKeys } from './normalizeCandidate.ts'
 import type { ProfessionalSnapshot } from '../../utils/professionalSnapshot.ts'
 import {
-  professionalSnapshotToTemplateData,
+  professionalSnapshotToLines,
   resolveProfessionalSnapshotForDocx,
 } from '../../utils/professionalSnapshot.ts'
 
@@ -219,8 +219,10 @@ function mapLicensesForDocx(licenses: LicenseEntry[]) {
     .filter(row => row.rn_license_state_and_expiry.length > 0)
 }
 
-/** Professional Snapshot — derived or stored; only included lines render. */
-function mapProfessionalSnapshot(candidate: DocxCandidate): Record<string, string> {
+/** Professional Snapshot — only included lines (no empty bullet placeholders). */
+function mapProfessionalSnapshot(candidate: DocxCandidate): {
+  snapshot_lines: Array<{ snapshot_line: string }>
+} {
   const snapshot = resolveProfessionalSnapshotForDocx({
     specialties: candidate.specialties,
     years_nursing_experience: candidate.years_nursing_experience,
@@ -230,7 +232,7 @@ function mapProfessionalSnapshot(candidate: DocxCandidate): Record<string, strin
     employers: candidate.employers,
     professional_snapshot: candidate.professional_snapshot,
   })
-  return professionalSnapshotToTemplateData(snapshot)
+  return { snapshot_lines: professionalSnapshotToLines(snapshot) }
 }
 
 export function mapCandidateToTemplateData(candidate: DocxCandidate) {

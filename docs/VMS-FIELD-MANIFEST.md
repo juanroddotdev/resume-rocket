@@ -82,9 +82,9 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 
 ## Professional Snapshot
 
-Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder stubs (empty). **Phase 2:** `professional_snapshot` JSONB + `buildProfessionalSnapshotFromCandidate()`. **Phase 4:** Gemini propose + admin include/edit.
+Static labels + values via `{#snapshot_lines}{snapshot_line}{/snapshot_lines}` (included lines only). **Phase 1:** docxBuilder stubs (empty). **Phase 2:** `professional_snapshot` JSONB + `buildProfessionalSnapshotFromCandidate()`. **Phase 4:** Gemini propose + admin include/edit.
 
-| Template tag | Planned source | Parse (Gemini) | Wizard / admin | Required | Status |
+| Former scalar tag (source key) | Planned source | Parse (Gemini) | Wizard / admin | Required | Status |
 |--------------|----------------|----------------|----------------|----------|--------|
 | `snapshot_specialty` | `specialties[0]` | Partial | **Admin Snapshot section** (+ Reset from wizard) | TBD | Derived / Live |
 | `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin Snapshot | TBD | Derived / Live |
@@ -99,7 +99,7 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 | `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin Snapshot | TBD | Derived / Live |
 
-Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`. Supplemental: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts).
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX renders `{#snapshot_lines}` from `professionalSnapshotToLines()` — only `included: true` rows, so unchecked lines do not leave empty bullets. Mismatch helpers: `computeSnapshotMismatches()`. Extra profile details: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts) via admin non-modal right panel [`AdminExtraDetailsDrawer.vue`](../components/admin/AdminExtraDetailsDrawer.vue).
 
 ---
 
@@ -134,7 +134,7 @@ Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and 
 
 ## Collected but not in contract (supplemental bucket)
 
-These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Admin **Available data (not in packet layout)** panel: Copy / Apply-to-snapshot. Gap review no longer blocks submit on template-removed employment/clinical summary fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
+These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Admin **Extra details** non-modal right panel: Copy / Apply-to-snapshot. Gap review no longer blocks submit on template-removed employment/clinical summary fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
 
 | Former template tag | DB / JSON path | Still collected | Notes |
 |---------------------|----------------|-----------------|-------|

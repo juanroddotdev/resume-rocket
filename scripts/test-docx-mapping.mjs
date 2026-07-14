@@ -17,7 +17,7 @@ const OPTIONAL_EMPTY = new Set([
   'facility_types_trauma_levels', // trauma shown per employer only
   'experience_facility_type', // trauma not duplicated on title line
   'experience_role_details', // omitted when redundant with unit specialty
-  // Magnet has no wizard source until Phase 4 Gemini
+  // Magnet has no wizard source until Phase 4 Gemini — may be absent from snapshot_lines
   'snapshot_magnet_facility_experience',
 ])
 

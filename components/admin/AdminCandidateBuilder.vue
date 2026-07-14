@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
+import type { ProfessionalSnapshotKey } from '~/utils/professionalSnapshot'
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/utils/adminCandidateForm'
 import { allEmployersEmrComplete } from '~/utils/emrSystem'
+import { applySupplementalValueToSnapshot } from '~/utils/professionalSnapshot'
+import { buildSupplementalBucket } from '~/utils/supplementalBucket'
 
 const props = defineProps<{
   candidate: CandidateRow
@@ -50,10 +53,37 @@ const previewOpen = ref(false)
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const skipAutosave = ref(true)
+const extraDetailsOpen = ref(false)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
 const employersEmrComplete = computed(() => allEmployersEmrComplete(form.employers))
+const hasResumeFile = computed(() =>
+  Boolean(resumeFilename.value || props.candidate.resume_storage_path),
+)
+const extraDetailsItems = computed(() =>
+  buildSupplementalBucket({
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience,
+    compact_license_status: form.compact_license_status,
+    average_patient_ratios: form.average_patient_ratios,
+    specialized_medical_equipment: form.specialized_medical_equipment,
+    emr_system: form.emr_system,
+    employers: form.employers,
+    licenses: form.licenses,
+    license_state: form.license_state,
+    license_number: form.license_number,
+  }),
+)
+
+const parseFieldsFound = computed(() => parseMeta.value?.fields_found ?? 0)
+const parseHasWarning = computed(() =>
+  Boolean(parseMeta.value?.document_scan || parseMeta.value?.partial_parse),
+)
+/** Happy-path prefill only — warnings keep a full canvas banner. */
+const parseSuccessChip = computed(() =>
+  Boolean(parseFieldsFound.value > 0 && !parseHasWarning.value),
+)
 
 const hasExistingFormData = computed(() =>
   Boolean(
@@ -126,6 +156,22 @@ async function openPreview() {
 
 function closePreview() {
   previewOpen.value = false
+}
+
+function openExtraDetails() {
+  extraDetailsOpen.value = true
+}
+
+function closeExtraDetails() {
+  extraDetailsOpen.value = false
+}
+
+function applyExtraDetailToSnapshot(payload: { key: ProfessionalSnapshotKey; value: string }) {
+  form.professional_snapshot = applySupplementalValueToSnapshot(
+    form.professional_snapshot,
+    payload.key,
+    payload.value,
+  )
 }
 
 async function onReviewPreview() {
@@ -210,6 +256,10 @@ watch(loading, (isLoading) => {
   }
 })
 
+watch(() => props.candidate.id, () => {
+  extraDetailsOpen.value = false
+})
+
 watch(devFixtureRequest, (mode) => {
   if (!mode) return
   devFixtureRequest.value = null
@@ -233,11 +283,39 @@ watch(devFixtureRequest, (mode) => {
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
-        class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
+        class="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
       >
-        <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-slate-900">{{ displayName }}</p>
-          <p class="text-xs capitalize text-slate-500">{{ candidate.status }}</p>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold text-slate-900">
+            {{ displayName }}
+            <span class="font-normal capitalize text-slate-500"> · {{ candidate.status }}</span>
+          </p>
+          <div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+            <span v-if="resumeFilename" class="max-w-[14rem] truncate sm:max-w-xs" :title="resumeFilename">
+              {{ resumeFilename }}
+            </span>
+            <span v-else-if="isEditable">No resume uploaded</span>
+            <span
+              v-if="parseSuccessChip"
+              class="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800"
+              role="status"
+            >
+              ✨ {{ parseFieldsFound }} field{{ parseFieldsFound === 1 ? '' : 's' }}
+            </span>
+            <span
+              v-if="resumeFilename || (!resumeFilename && isEditable) || parseSuccessChip"
+              class="text-slate-300"
+              aria-hidden="true"
+            >|</span>
+            <button
+              type="button"
+              class="shrink-0 font-medium text-brand-700 hover:underline disabled:opacity-50"
+              :disabled="devPrefilling"
+              @click="openExtraDetails"
+            >
+              View extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
+            </button>
+          </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <IntakeSaveStatus :status="saveStatus" />
@@ -285,28 +363,18 @@ watch(devFixtureRequest, (mode) => {
             Loading fixture…
           </p>
         </div>
-          <!-- Resume -->
-          <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900">Resume</h2>
-              <p class="mt-1 text-sm text-slate-600">
-                Parsed fields appear below. Use <span class="font-medium">Re-upload resume</span> in the sidebar to replace the file.
-              </p>
-            </div>
-            <p v-if="resumeFilename" class="text-sm text-slate-600">
-              Current file: <span class="font-medium">{{ resumeFilename }}</span>
+          <!-- Identity (upload/parse notices live here — no Resume tab) -->
+          <section id="admin-section-identity" class="scroll-mt-4 space-y-4">
+            <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
+              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually below.
             </p>
-            <p v-else-if="isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Use the sidebar to upload, or continue manually in Identity and other sections.
-            </p>
-            <ParseNoticeBanner :meta="parseMeta" show-fields-found />
+            <ParseNoticeBanner
+              :meta="parseMeta"
+              :show-fields-found="parseHasWarning"
+            />
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
-          </section>
-
-          <!-- Identity -->
-          <section id="admin-section-identity" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
             <h2 class="text-lg font-semibold text-slate-900">Identity</h2>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
@@ -410,17 +478,15 @@ watch(devFixtureRequest, (mode) => {
               :years-nursing-experience="form.years_nursing_experience"
               :average-patient-ratios="form.average_patient_ratios"
               :specialized-medical-equipment="form.specialized_medical_equipment"
-              :compact-license-status="form.compact_license_status"
               :emr-system="form.emr_system"
               :employers="form.employers"
-              :licenses="form.licenses"
-              :license-state="form.license_state"
-              :license-number="form.license_number"
               :candidate-id="candidate.id"
               :get-auth-headers="authHeaders"
-              :has-resume="Boolean(resumeFilename || candidate.resume_storage_path)"
+              :has-resume="hasResumeFile"
+              :extra-details-count="extraDetailsItems.length"
               :disabled="!isEditable"
               @go-to-employment="scrollToSectionPaused('employment')"
+              @open-extra-details="openExtraDetails"
             />
           </section>
 
@@ -510,6 +576,17 @@ watch(devFixtureRequest, (mode) => {
       download-label="Download draft DOCX"
       @close="closePreview"
       @download="onDownloadDraft"
+    />
+
+    <AdminExtraDetailsDrawer
+      :open="extraDetailsOpen"
+      :items="extraDetailsItems"
+      :candidate-name="displayName"
+      :has-resume="hasResumeFile"
+      :disabled="!isEditable"
+      @close="closeExtraDetails"
+      @apply="applyExtraDetailToSnapshot"
+      @go-to-snapshot="scrollToSectionPaused('snapshot')"
     />
 
     <div

@@ -26,8 +26,30 @@ const docxError = ref<string | null>(null)
 const intakeOpenError = ref<string | null>(null)
 const newPacketModalOpen = ref(false)
 const builderReloadKey = ref(0)
+const SIDEBAR_COLLAPSED_KEY = 'rr-admin-sidebar-collapsed'
+const sidebarCollapsed = ref(false)
 
 const { hasSelectedCandidate, parseQaTrigger, devFixtureRequest } = useAdminHubMenu()
+
+onMounted(() => {
+  try {
+    sidebarCollapsed.value = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'
+  } catch {
+    /* ignore */
+  }
+})
+
+watch(sidebarCollapsed, (collapsed) => {
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+})
+
+function toggleSidebarCollapsed() {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+}
 
 const parseQaCandidateName = computed(() => {
   if (!selectedCandidate.value) return 'Candidate'
@@ -215,85 +237,152 @@ function openCandidateIntake(candidate: CandidateRow) {
         </div>
 
         <div class="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <aside class="flex w-[280px] shrink-0 flex-col border-r border-slate-200 bg-slate-50">
-            <div class="shrink-0 space-y-3 border-b border-slate-200 p-3">
-              <div
-                class="relative grid grid-cols-2 rounded-lg border border-slate-200 bg-white p-0.5"
-                role="tablist"
-                aria-label="Dashboard view"
+          <aside
+            class="flex shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+            :class="sidebarCollapsed ? 'w-12' : 'w-[280px]'"
+            :aria-expanded="!sidebarCollapsed"
+            aria-label="Candidate list"
+          >
+            <div
+              class="flex h-11 shrink-0 items-center border-b border-slate-200"
+              :class="sidebarCollapsed ? 'justify-center' : 'justify-between gap-2 px-2'"
+            >
+              <p
+                v-if="!sidebarCollapsed"
+                class="truncate px-1 text-xs font-medium uppercase tracking-wide text-slate-500"
               >
-                <span
-                  aria-hidden="true"
-                  class="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-md bg-slate-100 shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none"
-                  :class="adminView === 'table' ? 'translate-x-full' : 'translate-x-0'"
-                />
-                <button
-                  type="button"
-                  role="tab"
-                  class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
-                  :class="adminView === 'builder' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-                  :aria-selected="adminView === 'builder'"
-                  @click="setAdminView('builder')"
-                >
-                  Builder
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
-                  :class="adminView === 'table' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-                  :aria-selected="adminView === 'table'"
-                  @click="setAdminView('table')"
-                >
-                  All candidates
-                </button>
-              </div>
+                Candidates
+              </p>
               <button
                 type="button"
-                class="w-full rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+                class="rounded-md p-1.5 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
+                :aria-label="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
+                :title="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
+                @click="toggleSidebarCollapsed"
+              >
+                <svg
+                  class="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    v-if="sidebarCollapsed"
+                    fill-rule="evenodd"
+                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                    clip-rule="evenodd"
+                  />
+                  <path
+                    v-else
+                    fill-rule="evenodd"
+                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div
+              v-show="sidebarCollapsed"
+              class="flex flex-1 flex-col items-center gap-2 p-2"
+            >
+              <button
+                type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-lg font-semibold leading-none text-white hover:bg-brand-700"
+                title="New candidate packet"
+                aria-label="New candidate packet"
                 @click="newPacketModalOpen = true"
               >
-                + New candidate packet
+                +
               </button>
-              <FileDropZone
-                v-if="selectedCandidate && isSelectedDraft && sidebarParseUrl"
-                variant="admin-sidebar"
-                :candidate-id="selectedCandidate.id"
-                :parse-url="sidebarParseUrl"
-                :auth-headers="adminAuthHeaders"
-                :has-existing-data="true"
-                @parsed="onSidebarParsed"
-              />
-              <div class="flex flex-wrap items-center gap-2">
-                <input
-                  v-model="search"
-                  type="search"
-                  placeholder="Search…"
-                  class="field min-w-0 flex-1 text-sm"
-                >
-                <label class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-600">
-                  <input v-model="showAll" type="checkbox">
-                  Drafts
-                </label>
-              </div>
+              <p class="sr-only">
+                Candidate list is collapsed. Expand to search and select candidates.
+              </p>
             </div>
-            <div class="min-h-0 flex-1 overflow-y-auto p-3">
-              <div
-                v-if="candidatesError"
-                class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-              >
-                {{ candidatesError }}
-                <button type="button" class="ml-1 underline" @click="loadCandidates()">Retry</button>
+
+            <div
+              v-show="!sidebarCollapsed"
+              class="flex min-h-0 min-w-[280px] flex-1 flex-col"
+            >
+              <div class="shrink-0 space-y-3 border-b border-slate-200 p-3">
+                <div
+                  class="relative grid grid-cols-2 rounded-lg border border-slate-200 bg-white p-0.5"
+                  role="tablist"
+                  aria-label="Dashboard view"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-md bg-slate-100 shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none"
+                    :class="adminView === 'table' ? 'translate-x-full' : 'translate-x-0'"
+                  />
+                  <button
+                    type="button"
+                    role="tab"
+                    class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
+                    :class="adminView === 'builder' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
+                    :aria-selected="adminView === 'builder'"
+                    @click="setAdminView('builder')"
+                  >
+                    Builder
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
+                    :class="adminView === 'table' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
+                    :aria-selected="adminView === 'table'"
+                    @click="setAdminView('table')"
+                  >
+                    All candidates
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+                  @click="newPacketModalOpen = true"
+                >
+                  + New candidate packet
+                </button>
+                <FileDropZone
+                  v-if="selectedCandidate && isSelectedDraft && sidebarParseUrl"
+                  variant="admin-sidebar"
+                  :candidate-id="selectedCandidate.id"
+                  :parse-url="sidebarParseUrl"
+                  :auth-headers="adminAuthHeaders"
+                  :has-existing-data="true"
+                  @parsed="onSidebarParsed"
+                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <input
+                    v-model="search"
+                    type="search"
+                    placeholder="Search…"
+                    class="field min-w-0 flex-1 text-sm"
+                  >
+                  <label class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-600">
+                    <input v-model="showAll" type="checkbox">
+                    Drafts
+                  </label>
+                </div>
               </div>
-              <AdminCandidateList
-                v-else
-                :candidates="candidates"
-                :search="search"
-                :show-all="showAll"
-                :loading="loadingCandidates"
-                :selected-id="selectedCandidate?.id ?? null"
-                @select="selectCandidate"
-              />
+              <div class="min-h-0 flex-1 overflow-y-auto p-3">
+                <div
+                  v-if="candidatesError"
+                  class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                >
+                  {{ candidatesError }}
+                  <button type="button" class="ml-1 underline" @click="loadCandidates()">Retry</button>
+                </div>
+                <AdminCandidateList
+                  v-else
+                  :candidates="candidates"
+                  :search="search"
+                  :show-all="showAll"
+                  :loading="loadingCandidates"
+                  :selected-id="selectedCandidate?.id ?? null"
+                  @select="selectCandidate"
+                />
+              </div>
             </div>
           </aside>
 

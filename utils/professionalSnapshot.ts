@@ -215,6 +215,41 @@ export function professionalSnapshotToTemplateData(
   return out
 }
 
+/** Labels matching the July 2026 contract wording (Title Case). */
+export const PROFESSIONAL_SNAPSHOT_DOCX_LABELS: Record<ProfessionalSnapshotKey, string> = {
+  snapshot_specialty: 'Specialty',
+  snapshot_years_experience: 'Years of Experience',
+  snapshot_travel_experience: 'Travel Experience',
+  snapshot_trauma_experience: 'Trauma Experience',
+  snapshot_teaching_facility_experience: 'Teaching Facility Experience',
+  snapshot_magnet_facility_experience: 'Magnet Facility Experience',
+  snapshot_charge_nurse_experience: 'Charge Nurse Experience',
+  snapshot_preceptor_experience: 'Preceptor Experience',
+  snapshot_float_experience: 'Float Experience',
+  snapshot_emr_systems: 'EMR Systems',
+  snapshot_patient_ratios_managed: 'Patient Ratios Managed',
+  snapshot_equipment_skills: 'Equipment/Skills',
+}
+
+/**
+ * Included snapshot rows only — drives `{#snapshot_lines}` so unchecked lines
+ * never leave empty bullet paragraphs in Word.
+ */
+export function professionalSnapshotToLines(
+  snapshot: ProfessionalSnapshot,
+): Array<{ snapshot_line: string }> {
+  const lines: Array<{ snapshot_line: string }> = []
+  for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
+    const entry = snapshot[key]
+    const value = entry?.included && entry.value.trim() ? entry.value.trim() : ''
+    if (!value) continue
+    lines.push({
+      snapshot_line: `${PROFESSIONAL_SNAPSHOT_DOCX_LABELS[key]}: ${value}`,
+    })
+  }
+  return lines
+}
+
 export const PROFESSIONAL_SNAPSHOT_LABELS: Record<ProfessionalSnapshotKey, string> = {
   snapshot_specialty: 'Specialty',
   snapshot_years_experience: 'Years of experience',

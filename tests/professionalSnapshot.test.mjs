@@ -7,6 +7,7 @@ import {
   buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
   normalizeProfessionalSnapshot,
+  professionalSnapshotToLines,
   professionalSnapshotToTemplateData,
   resolveProfessionalSnapshotForDocx,
 } from '../utils/professionalSnapshot.ts'
@@ -141,7 +142,7 @@ describe('computeSnapshotMismatches', () => {
 })
 
 describe('mapCandidateToTemplateData snapshot wiring', () => {
-  it('fills snapshot tags from derived employer data', () => {
+  it('emits snapshot_lines from derived employer data', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',
       last_name: 'Doe',
@@ -160,17 +161,18 @@ describe('mapCandidateToTemplateData snapshot wiring', () => {
         },
       ],
     })
-    assert.equal(data.snapshot_specialty, 'ICU')
-    assert.equal(data.snapshot_years_experience, '8')
-    assert.equal(data.snapshot_travel_experience, 'Yes — 1 travel contract')
-    assert.equal(data.snapshot_trauma_experience, 'Level I')
-    assert.equal(data.snapshot_teaching_facility_experience, 'Yes')
-    assert.equal(data.snapshot_charge_nurse_experience, 'Yes')
-    assert.equal(data.snapshot_magnet_facility_experience, '')
-    assert.match(String(data.snapshot_emr_systems), /Epic/)
+    const texts = (data.snapshot_lines || []).map(row => row.snapshot_line)
+    assert.ok(texts.some(t => t === 'Specialty: ICU'))
+    assert.ok(texts.some(t => t === 'Years of Experience: 8'))
+    assert.ok(texts.some(t => t.startsWith('Travel Experience:')))
+    assert.ok(texts.some(t => t === 'Trauma Experience: Level I'))
+    assert.ok(texts.some(t => t === 'Teaching Facility Experience: Yes'))
+    assert.ok(texts.some(t => t === 'Charge Nurse Experience: Yes'))
+    assert.equal(texts.some(t => t.startsWith('Magnet Facility Experience:')), false)
+    assert.ok(texts.some(t => /EMR Systems:.*Epic/.test(t)))
   })
 
-  it('omits unchecked snapshot lines from rendered DOCX text', async () => {
+  it('omits unchecked snapshot lines from rendered DOCX with no empty bullets', async () => {
     const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
     const PizZip = (await import('pizzip')).default
     const buffer = await buildResumeDocx({
@@ -182,13 +184,33 @@ describe('mapCandidateToTemplateData snapshot wiring', () => {
         snapshot_specialty: { value: 'ICU', included: true },
         snapshot_years_experience: { value: '8', included: false },
         snapshot_travel_experience: { value: 'Yes', included: false },
+        snapshot_equipment_skills: { value: 'ECMO', included: true },
       },
     })
     const zip = new PizZip(buffer)
     const xml = zip.file('word/document.xml').asText()
     const text = xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
     assert.match(text, /Specialty:\s*ICU/)
+    assert.match(text, /Equipment\/Skills:\s*ECMO/)
     assert.equal(text.includes('Years of Experience:'), false)
     assert.equal(text.includes('Travel Experience:'), false)
+    // Only included snapshot bullets after the heading (no empty list paragraphs)
+    const after = xml.split('PROFESSIONAL SNAPSHOT')[1]?.split('LICENSES')[0] || ''
+    const bulletParas = after.match(/<w:numPr>/g) || []
+    assert.equal(bulletParas.length, 2)
+  })
+})
+
+describe('professionalSnapshotToLines', () => {
+  it('keeps include order and skips excluded', () => {
+    const lines = professionalSnapshotToLines({
+      snapshot_specialty: { value: 'ICU', included: true },
+      snapshot_years_experience: { value: '8', included: false },
+      snapshot_equipment_skills: { value: 'ECMO', included: true },
+    })
+    assert.deepEqual(
+      lines.map(l => l.snapshot_line),
+      ['Specialty: ICU', 'Equipment/Skills: ECMO'],
+    )
   })
 })

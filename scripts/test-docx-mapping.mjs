@@ -17,19 +17,8 @@ const OPTIONAL_EMPTY = new Set([
   'facility_types_trauma_levels', // trauma shown per employer only
   'experience_facility_type', // trauma not duplicated on title line
   'experience_role_details', // omitted when redundant with unit specialty
-  // New template snapshot lines — populated in Phase 2 (professional_snapshot JSONB)
-  'snapshot_specialty',
-  'snapshot_years_experience',
-  'snapshot_travel_experience',
-  'snapshot_trauma_experience',
-  'snapshot_teaching_facility_experience',
+  // Magnet has no wizard source until Phase 4 Gemini
   'snapshot_magnet_facility_experience',
-  'snapshot_charge_nurse_experience',
-  'snapshot_preceptor_experience',
-  'snapshot_float_experience',
-  'snapshot_emr_systems',
-  'snapshot_patient_ratios_managed',
-  'snapshot_equipment_skills',
 ])
 
 function flatten(obj, prefix = '') {
@@ -88,7 +77,7 @@ const checks = [
   ['experience_employment_type', exp0?.experience_employment_type, 'Staff'],
   ['experience_patient_scope', exp0?.experience_patient_scope, 'Adult ICU — critical care'],
   ['experience_patient_acuity_level', exp0?.experience_patient_acuity_level, 'High acuity'],
-  ['experience_highlights', exp0?.experience_highlights?.length, 2],
+  ['experience_highlights', exp0?.experience_highlights?.length, 4],
 ]
 
 for (const [label, actual, expected] of checks) {

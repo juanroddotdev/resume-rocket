@@ -18,7 +18,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 
 | Priority | Track | Open items |
 | --- | --- | --- |
-| **0** | **New template** | [`New template & Professional Snapshot`](#new-template--professional-snapshot) — snapshot `docxBuilder` stubs, manifest reconcile, smoke; then JSONB + admin editor + Gemini bucket |
+| **0** | **New template** | Phase 2 snapshot derivation shipped — next: [Phase 3 admin snapshot editor](#new-template--professional-snapshot); then Gemini + supplemental bucket |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
@@ -44,9 +44,9 @@ New contract [`server/assets/template.docx`](../server/assets/template.docx) (Ju
 
 ### Phase 2 — Snapshot data + derivation (no Gemini)
 
-- [ ] **`professional_snapshot` JSONB** on `candidates` — per-line `{ value, included, source?, sourceSnippet? }` for the 12 keys; migration + types + PATCH schema
-- [ ] **`buildProfessionalSnapshotFromCandidate()`** — derive defaults from existing data: specialty (`specialties[0]`), years, EMR union, equipment, teaching/charge/preceptor any-Yes, travel Yes + contract count, trauma levels joined (`Level I & II`), float units union; magnet stays empty
-- [ ] **docxBuilder reads approved snapshot** — only lines with `included: true` render
+- [x] **`professional_snapshot` JSONB** on `candidates` — per-line `{ value, included, source?, sourceSnippet? }` for the 12 keys; migration + types + PATCH schema
+- [x] **`buildProfessionalSnapshotFromCandidate()`** — derive defaults from existing data: specialty (`specialties[0]`), years, EMR union, equipment, teaching/charge/preceptor any-Yes, travel Yes + contract count, trauma levels joined (`Level I & II`), float units union; magnet stays empty
+- [x] **docxBuilder reads approved snapshot** — only lines with `included: true` render; empty stored snapshot falls back to live derivation
 
 ### Phase 3 — Admin snapshot editor
 

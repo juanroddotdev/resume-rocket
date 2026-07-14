@@ -24,6 +24,8 @@ export interface CandidateRow {
   compact_license_status: string | null
   average_patient_ratios: string | null
   specialized_medical_equipment: string | null
+  /** Approved Professional Snapshot lines for DOCX (12 snapshot_* keys). */
+  professional_snapshot?: ProfessionalSnapshot | null
   home_address: string | null
   home_city: string | null
   home_state: string | null
@@ -65,6 +67,9 @@ export interface LicenseEntry {
 }
 
 import type { HospitalSuggestion } from '~/types/hospital'
+import type { ProfessionalSnapshot } from '~/utils/professionalSnapshot'
+
+export type { ProfessionalSnapshot, ProfessionalSnapshotLine, ProfessionalSnapshotKey } from '~/utils/professionalSnapshot'
 
 export interface EmployerEntry {
   name: string
@@ -122,6 +127,7 @@ export interface CandidateDraftInput {
   compact_license_status?: string
   average_patient_ratios?: string
   specialized_medical_equipment?: string
+  professional_snapshot?: ProfessionalSnapshot
   home_address?: string
   home_city?: string
   home_state?: string

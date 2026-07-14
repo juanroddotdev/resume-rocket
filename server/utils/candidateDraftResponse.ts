@@ -4,6 +4,7 @@ import {
   normalizeEmployers,
 } from '~/server/utils/normalizeCandidate'
 import { resolveCandidateLicenses } from '~/utils/licenseRows'
+import { normalizeProfessionalSnapshot } from '~/utils/professionalSnapshot'
 
 export const CANDIDATE_DRAFT_SELECT = [
   'id',
@@ -24,6 +25,7 @@ export const CANDIDATE_DRAFT_SELECT = [
   'compact_license_status',
   'average_patient_ratios',
   'specialized_medical_equipment',
+  'professional_snapshot',
   'home_address',
   'home_city',
   'home_state',
@@ -65,6 +67,9 @@ export function buildCandidateDraftResponse(row: Record<string, unknown>) {
     compact_license_status: row.compact_license_status,
     average_patient_ratios: row.average_patient_ratios,
     specialized_medical_equipment: row.specialized_medical_equipment,
+    professional_snapshot: row.professional_snapshot
+      ? normalizeProfessionalSnapshot(row.professional_snapshot)
+      : null,
     home_address: row.home_address,
     home_city: row.home_city,
     home_state: row.home_state,

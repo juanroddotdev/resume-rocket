@@ -46,6 +46,8 @@ const REQUIRED_SNIPPETS = [
   'PROFESSIONAL SNAPSHOT',
   'Specialty:',
   'Years of Experience:',
+  'Travel Experience:',
+  'Yes — 1 travel contract',
   'LICENSES',
   'CERTIFICATIONS',
   'CA · RN-123456',

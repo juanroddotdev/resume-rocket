@@ -18,3 +18,16 @@ export async function uploadResumeFile(
   if (error) throw error
   return path
 }
+
+export async function downloadResumeFile(path: string): Promise<Buffer> {
+  const supabase = useSupabaseAdmin()
+  const { data, error } = await supabase.storage.from('resumes').download(path)
+  if (error || !data) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Resume file not found in storage',
+    })
+  }
+  const arrayBuffer = await data.arrayBuffer()
+  return Buffer.from(arrayBuffer)
+}

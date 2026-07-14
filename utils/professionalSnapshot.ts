@@ -323,3 +323,78 @@ export function resolveProfessionalSnapshotForEdit(
 ): ProfessionalSnapshot {
   return ensureProfessionalSnapshotLines(resolveProfessionalSnapshotForDocx(candidate))
 }
+
+export type SnapshotProposalLine = {
+  value: string
+  sourceSnippet?: string
+  source?: string
+}
+
+export type SnapshotProposals = Partial<Record<ProfessionalSnapshotKey, SnapshotProposalLine>>
+
+const SNAPSHOT_PROPOSAL_SNIPPET_MAX = 200
+
+/**
+ * Map Gemini propose JSON (`source_snippet`) onto SnapshotProposals.
+ * Keeps known snapshot keys only.
+ */
+export function mapGeminiSnapshotProposals(
+  raw: Partial<
+    Record<ProfessionalSnapshotKey, { value?: string; source_snippet?: string }>
+  >,
+): SnapshotProposals {
+  const out: SnapshotProposals = {}
+  for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
+    const entry = raw[key]
+    const value = entry?.value?.trim()
+    if (!value) continue
+    const snippet = entry?.source_snippet?.trim()
+    out[key] = {
+      value,
+      source: 'gemini',
+      ...(snippet
+        ? { sourceSnippet: snippet.slice(0, SNAPSHOT_PROPOSAL_SNIPPET_MAX) }
+        : {}),
+    }
+  }
+  return out
+}
+
+/**
+ * Merge AI proposals into the editor snapshot.
+ * Never sets included: true — admin must re-approve each line.
+ */
+export function applySnapshotProposals(
+  current: ProfessionalSnapshot | null | undefined,
+  proposals: SnapshotProposals,
+): ProfessionalSnapshot {
+  const next = ensureProfessionalSnapshotLines(current)
+  for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
+    const proposal = proposals[key]
+    const value = proposal?.value?.trim()
+    if (!value) continue
+    const sourceSnippet = proposal.sourceSnippet?.trim()
+    next[key] = {
+      value,
+      included: false,
+      source: proposal.source?.trim() || 'gemini',
+      ...(sourceSnippet
+        ? { sourceSnippet: sourceSnippet.slice(0, SNAPSHOT_PROPOSAL_SNIPPET_MAX) }
+        : {}),
+    }
+  }
+  return { ...next }
+}
+
+/** Apply one supplemental value onto a snapshot line (never auto-include). */
+export function applySupplementalValueToSnapshot(
+  current: ProfessionalSnapshot | null | undefined,
+  key: ProfessionalSnapshotKey,
+  value: string,
+): ProfessionalSnapshot {
+  const trimmed = value.trim()
+  if (!trimmed) return ensureProfessionalSnapshotLines(current)
+  return applySnapshotProposals(current, {
+    [key]: { value: trimmed, source: 'supplemental' },
+  })
+}

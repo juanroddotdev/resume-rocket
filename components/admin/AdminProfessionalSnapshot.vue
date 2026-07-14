@@ -4,14 +4,18 @@ import type {
   ProfessionalSnapshot,
   ProfessionalSnapshotKey,
   ProfessionalSnapshotLine,
+  SnapshotProposals,
 } from '~/utils/professionalSnapshot'
 import {
   PROFESSIONAL_SNAPSHOT_KEYS,
   PROFESSIONAL_SNAPSHOT_LABELS,
+  applySnapshotProposals,
+  applySupplementalValueToSnapshot,
   buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
   ensureProfessionalSnapshotLines,
 } from '~/utils/professionalSnapshot'
+import { buildSupplementalBucket } from '~/utils/supplementalBucket'
 
 const model = defineModel<ProfessionalSnapshot>({ default: () => ({}) })
 
@@ -20,14 +24,25 @@ const props = defineProps<{
   yearsNursingExperience: string
   averagePatientRatios: string
   specializedMedicalEquipment: string
+  compactLicenseStatus?: string
   emrSystem: string
   employers: EmployerEntry[]
+  licenses?: import('~/types/candidate').LicenseEntry[]
+  licenseState?: string
+  licenseNumber?: string
+  candidateId?: string
+  getAuthHeaders?: () => Promise<Record<string, string>>
+  hasResume?: boolean
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{
   'go-to-employment': []
 }>()
+
+const proposing = ref(false)
+const proposeError = ref<string | null>(null)
+const proposeNotice = ref<string | null>(null)
 
 const lines = computed({
   get: () => ensureProfessionalSnapshotLines(model.value),
@@ -54,6 +69,21 @@ const mismatchByKey = computed(() => {
   }
   return map
 })
+
+const supplementalItems = computed(() =>
+  buildSupplementalBucket({
+    specialties: props.specialties,
+    years_nursing_experience: props.yearsNursingExperience,
+    compact_license_status: props.compactLicenseStatus,
+    average_patient_ratios: props.averagePatientRatios,
+    specialized_medical_equipment: props.specializedMedicalEquipment,
+    emr_system: props.emrSystem,
+    employers: props.employers,
+    licenses: props.licenses,
+    license_state: props.licenseState,
+    license_number: props.licenseNumber,
+  }),
+)
 
 function patchLine(key: ProfessionalSnapshotKey, patch: Partial<ProfessionalSnapshotLine>) {
   const next = ensureProfessionalSnapshotLines(model.value)
@@ -87,6 +117,8 @@ function onValueInput(key: ProfessionalSnapshotKey, event: Event) {
 }
 
 function resetFromWizard() {
+  proposeError.value = null
+  proposeNotice.value = null
   model.value = ensureProfessionalSnapshotLines(
     buildProfessionalSnapshotFromCandidate({
       specialties: props.specialties,
@@ -98,90 +130,153 @@ function resetFromWizard() {
     }),
   )
 }
+
+function applySupplemental(payload: { key: ProfessionalSnapshotKey; value: string }) {
+  model.value = applySupplementalValueToSnapshot(model.value, payload.key, payload.value)
+  proposeNotice.value = `Applied to ${PROFESSIONAL_SNAPSHOT_LABELS[payload.key]} — check Include to use in the packet.`
+}
+
+async function regenerateFromResume() {
+  if (!props.candidateId || proposing.value) return
+  proposing.value = true
+  proposeError.value = null
+  proposeNotice.value = null
+  try {
+    const headers = props.getAuthHeaders ? await props.getAuthHeaders() : {}
+    const res = await $fetch<{
+      proposals: SnapshotProposals
+      proposal_count: number
+    }>(`/api/admin/candidates/${props.candidateId}/propose-snapshot`, {
+      method: 'POST',
+      headers,
+    })
+    model.value = applySnapshotProposals(model.value, res.proposals || {})
+    const count = res.proposal_count ?? Object.keys(res.proposals || {}).length
+    proposeNotice.value = count
+      ? `Filled ${count} line${count === 1 ? '' : 's'} from the resume. Review snippets and check Include — nothing is auto-included.`
+      : 'No snapshot lines found in the resume text. You can still edit manually or use Extra details below.'
+  } catch (e: unknown) {
+    const err = e as { data?: { statusMessage?: string }; statusMessage?: string; message?: string }
+    proposeError.value =
+      err?.data?.statusMessage
+      || err?.statusMessage
+      || err?.message
+      || 'Could not regenerate Snapshot from resume.'
+  } finally {
+    proposing.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <p class="text-sm font-medium text-slate-800">
-          Lines included below appear in the VMS packet Professional Snapshot.
-        </p>
-        <p class="mt-1 text-sm text-slate-600">
-          Uncheck to omit a line. Magnet stays empty until resume propose (Phase 4).
-        </p>
+  <div class="space-y-4">
+    <div class="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-medium text-slate-800">
+            Lines included below appear in the VMS packet Professional Snapshot.
+          </p>
+          <p class="mt-1 text-sm text-slate-600">
+            Uncheck to omit a line. AI propose never auto-includes — you approve each line.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+            :disabled="disabled || proposing"
+            @click="resetFromWizard"
+          >
+            Reset from wizard
+          </button>
+          <button
+            type="button"
+            class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+            :disabled="disabled || proposing || !candidateId || hasResume === false"
+            @click="regenerateFromResume"
+          >
+            {{ proposing ? 'Proposing…' : 'Regenerate from resume' }}
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-        :disabled="disabled"
-        @click="resetFromWizard"
+
+      <p v-if="proposeError" class="text-sm text-red-700" role="alert">{{ proposeError }}</p>
+      <p v-else-if="proposeNotice" class="text-sm text-slate-700" role="status">{{ proposeNotice }}</p>
+      <p
+        v-if="hasResume === false"
+        class="text-sm text-amber-800"
+        role="status"
       >
-        Reset from wizard
-      </button>
+        Upload a resume on the Resume section to enable regenerate from resume.
+      </p>
+
+      <ul class="space-y-3">
+        <li
+          v-for="key in PROFESSIONAL_SNAPSHOT_KEYS"
+          :key="key"
+          class="rounded-md border border-slate-200 bg-white p-3"
+        >
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex shrink-0 items-center gap-2 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                class="rounded border-slate-300"
+                :checked="lines[key].included"
+                :disabled="disabled"
+                :aria-label="`Include ${PROFESSIONAL_SNAPSHOT_LABELS[key]}`"
+                @change="patchLine(key, { included: ($event.target as HTMLInputElement).checked })"
+              >
+              Include
+            </label>
+            <label class="min-w-0 flex-1">
+              <span class="field-label-compact">{{ PROFESSIONAL_SNAPSHOT_LABELS[key] }}</span>
+              <input
+                type="text"
+                class="mt-0.5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
+                :value="lines[key].value"
+                :disabled="disabled"
+                :placeholder="key === 'snapshot_magnet_facility_experience' ? 'Often filled via Regenerate from resume' : ''"
+                @input="onValueInput(key, $event)"
+              >
+            </label>
+          </div>
+          <p
+            v-if="lines[key].source"
+            class="mt-1.5 text-xs text-slate-500"
+          >
+            Source: {{ lines[key].source }}
+            <span v-if="lines[key].sourceSnippet"> — “{{ lines[key].sourceSnippet }}”</span>
+          </p>
+          <p
+            v-if="mismatchByKey[key]"
+            class="mt-2 text-sm text-amber-800"
+            role="status"
+          >
+            {{ mismatchByKey[key] }}
+            <button
+              v-if="key === 'snapshot_charge_nurse_experience' || key === 'snapshot_preceptor_experience' || key === 'snapshot_teaching_facility_experience' || key === 'snapshot_travel_experience' || key === 'snapshot_specialty'"
+              type="button"
+              class="ml-1 font-medium underline hover:no-underline"
+              @click="emit('go-to-employment')"
+            >
+              Go to Employment
+            </button>
+          </p>
+        </li>
+      </ul>
+
+      <p
+        v-if="mismatches.length"
+        class="text-sm text-amber-800"
+        role="status"
+      >
+        {{ mismatches.length }} snapshot {{ mismatches.length === 1 ? 'line does' : 'lines do' }} not match Employment data — review before download.
+      </p>
     </div>
 
-    <ul class="space-y-3">
-      <li
-        v-for="key in PROFESSIONAL_SNAPSHOT_KEYS"
-        :key="key"
-        class="rounded-md border border-slate-200 bg-white p-3"
-      >
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="flex shrink-0 items-center gap-2 text-sm text-slate-800">
-            <input
-              type="checkbox"
-              class="rounded border-slate-300"
-              :checked="lines[key].included"
-              :disabled="disabled"
-              :aria-label="`Include ${PROFESSIONAL_SNAPSHOT_LABELS[key]}`"
-              @change="patchLine(key, { included: ($event.target as HTMLInputElement).checked })"
-            >
-            Include
-          </label>
-          <label class="min-w-0 flex-1">
-            <span class="field-label-compact">{{ PROFESSIONAL_SNAPSHOT_LABELS[key] }}</span>
-            <input
-              type="text"
-              class="mt-0.5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
-              :value="lines[key].value"
-              :disabled="disabled"
-              :placeholder="key === 'snapshot_magnet_facility_experience' ? 'No structured source yet' : ''"
-              @input="onValueInput(key, $event)"
-            >
-          </label>
-        </div>
-        <p
-          v-if="lines[key].source"
-          class="mt-1.5 text-xs text-slate-500"
-        >
-          Source: {{ lines[key].source }}
-          <span v-if="lines[key].sourceSnippet"> — “{{ lines[key].sourceSnippet }}”</span>
-        </p>
-        <p
-          v-if="mismatchByKey[key]"
-          class="mt-2 text-sm text-amber-800"
-          role="status"
-        >
-          {{ mismatchByKey[key] }}
-          <button
-            v-if="key === 'snapshot_charge_nurse_experience' || key === 'snapshot_preceptor_experience' || key === 'snapshot_teaching_facility_experience' || key === 'snapshot_travel_experience' || key === 'snapshot_specialty'"
-            type="button"
-            class="ml-1 font-medium underline hover:no-underline"
-            @click="emit('go-to-employment')"
-          >
-            Go to Employment
-          </button>
-        </p>
-      </li>
-    </ul>
-
-    <p
-      v-if="mismatches.length"
-      class="text-sm text-amber-800"
-      role="status"
-    >
-      {{ mismatches.length }} snapshot {{ mismatches.length === 1 ? 'line does' : 'lines do' }} not match Employment data — review before download.
-    </p>
+    <AdminSupplementalBucket
+      :items="supplementalItems"
+      @apply="applySupplemental"
+    />
   </div>
 </template>

@@ -99,7 +99,7 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 | `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin Snapshot | TBD | Derived / Live |
 
-Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`. Supplemental: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts).
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`. Extra profile details: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts) via admin right drawer [`AdminExtraDetailsDrawer.vue`](../components/admin/AdminExtraDetailsDrawer.vue).
 
 ---
 
@@ -134,7 +134,7 @@ Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and 
 
 ## Collected but not in contract (supplemental bucket)
 
-These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Admin **Available data (not in packet layout)** panel: Copy / Apply-to-snapshot. Gap review no longer blocks submit on template-removed employment/clinical summary fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
+These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Admin **Extra details** right drawer: Copy / Apply-to-snapshot. Gap review no longer blocks submit on template-removed employment/clinical summary fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
 
 | Former template tag | DB / JSON path | Still collected | Notes |
 |---------------------|----------------|-----------------|-------|

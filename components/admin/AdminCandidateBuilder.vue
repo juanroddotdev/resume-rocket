@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { CandidateRow } from '~/types/candidate'
+import type { ProfessionalSnapshotKey } from '~/utils/professionalSnapshot'
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/utils/adminCandidateForm'
 import { allEmployersEmrComplete } from '~/utils/emrSystem'
+import { applySupplementalValueToSnapshot } from '~/utils/professionalSnapshot'
+import { buildSupplementalBucket } from '~/utils/supplementalBucket'
 
 const props = defineProps<{
   candidate: CandidateRow
@@ -50,10 +53,28 @@ const previewOpen = ref(false)
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const skipAutosave = ref(true)
+const extraDetailsOpen = ref(false)
 
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
 const employersEmrComplete = computed(() => allEmployersEmrComplete(form.employers))
+const hasResumeFile = computed(() =>
+  Boolean(resumeFilename.value || props.candidate.resume_storage_path),
+)
+const extraDetailsItems = computed(() =>
+  buildSupplementalBucket({
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience,
+    compact_license_status: form.compact_license_status,
+    average_patient_ratios: form.average_patient_ratios,
+    specialized_medical_equipment: form.specialized_medical_equipment,
+    emr_system: form.emr_system,
+    employers: form.employers,
+    licenses: form.licenses,
+    license_state: form.license_state,
+    license_number: form.license_number,
+  }),
+)
 
 const hasExistingFormData = computed(() =>
   Boolean(
@@ -126,6 +147,22 @@ async function openPreview() {
 
 function closePreview() {
   previewOpen.value = false
+}
+
+function openExtraDetails() {
+  extraDetailsOpen.value = true
+}
+
+function closeExtraDetails() {
+  extraDetailsOpen.value = false
+}
+
+function applyExtraDetailToSnapshot(payload: { key: ProfessionalSnapshotKey; value: string }) {
+  form.professional_snapshot = applySupplementalValueToSnapshot(
+    form.professional_snapshot,
+    payload.key,
+    payload.value,
+  )
 }
 
 async function onReviewPreview() {
@@ -210,6 +247,10 @@ watch(loading, (isLoading) => {
   }
 })
 
+watch(() => props.candidate.id, () => {
+  extraDetailsOpen.value = false
+})
+
 watch(devFixtureRequest, (mode) => {
   if (!mode) return
   devFixtureRequest.value = null
@@ -242,6 +283,14 @@ watch(devFixtureRequest, (mode) => {
         <div class="flex flex-wrap items-center gap-3">
           <IntakeSaveStatus :status="saveStatus" />
           <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              :disabled="devPrefilling"
+              @click="openExtraDetails"
+            >
+              Extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
+            </button>
             <button
               type="button"
               class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
@@ -295,6 +344,13 @@ watch(devFixtureRequest, (mode) => {
             </div>
             <p v-if="resumeFilename" class="text-sm text-slate-600">
               Current file: <span class="font-medium">{{ resumeFilename }}</span>
+              <button
+                type="button"
+                class="ml-2 font-medium text-brand-700 underline hover:no-underline"
+                @click="openExtraDetails"
+              >
+                Extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
+              </button>
             </p>
             <p v-else-if="isEditable" class="text-sm text-slate-600">
               No resume uploaded yet. Use the sidebar to upload, or continue manually in Identity and other sections.
@@ -410,17 +466,15 @@ watch(devFixtureRequest, (mode) => {
               :years-nursing-experience="form.years_nursing_experience"
               :average-patient-ratios="form.average_patient_ratios"
               :specialized-medical-equipment="form.specialized_medical_equipment"
-              :compact-license-status="form.compact_license_status"
               :emr-system="form.emr_system"
               :employers="form.employers"
-              :licenses="form.licenses"
-              :license-state="form.license_state"
-              :license-number="form.license_number"
               :candidate-id="candidate.id"
               :get-auth-headers="authHeaders"
-              :has-resume="Boolean(resumeFilename || candidate.resume_storage_path)"
+              :has-resume="hasResumeFile"
+              :extra-details-count="extraDetailsItems.length"
               :disabled="!isEditable"
               @go-to-employment="scrollToSectionPaused('employment')"
+              @open-extra-details="openExtraDetails"
             />
           </section>
 
@@ -510,6 +564,17 @@ watch(devFixtureRequest, (mode) => {
       download-label="Download draft DOCX"
       @close="closePreview"
       @download="onDownloadDraft"
+    />
+
+    <AdminExtraDetailsDrawer
+      :open="extraDetailsOpen"
+      :items="extraDetailsItems"
+      :candidate-name="displayName"
+      :has-resume="hasResumeFile"
+      :disabled="!isEditable"
+      @close="closeExtraDetails"
+      @apply="applyExtraDetailToSnapshot"
+      @go-to-snapshot="scrollToSectionPaused('snapshot')"
     />
 
     <div

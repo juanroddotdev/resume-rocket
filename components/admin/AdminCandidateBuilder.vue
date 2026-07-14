@@ -76,6 +76,15 @@ const extraDetailsItems = computed(() =>
   }),
 )
 
+const parseFieldsFound = computed(() => parseMeta.value?.fields_found ?? 0)
+const parseHasWarning = computed(() =>
+  Boolean(parseMeta.value?.document_scan || parseMeta.value?.partial_parse),
+)
+/** Happy-path prefill only — warnings keep a full canvas banner. */
+const parseSuccessChip = computed(() =>
+  Boolean(parseFieldsFound.value > 0 && !parseHasWarning.value),
+)
+
 const hasExistingFormData = computed(() =>
   Boolean(
     form.first_name?.trim()
@@ -274,18 +283,39 @@ watch(devFixtureRequest, (mode) => {
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
-        class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
+        class="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
       >
-        <div class="min-w-0">
-          <p class="truncate text-sm font-semibold text-slate-900">{{ displayName }}</p>
-          <p class="text-xs capitalize text-slate-500">{{ candidate.status }}</p>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold text-slate-900">
+            {{ displayName }}
+            <span class="font-normal capitalize text-slate-500"> · {{ candidate.status }}</span>
+          </p>
+          <div class="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+            <button
+              v-if="resumeFilename"
+              type="button"
+              class="max-w-full truncate text-left hover:text-slate-800 hover:underline"
+              :title="`Open Extra details for ${resumeFilename}`"
+              @click="openExtraDetails"
+            >
+              {{ resumeFilename }}
+            </button>
+            <span v-else-if="isEditable">No resume uploaded</span>
+            <span
+              v-if="parseSuccessChip"
+              class="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800"
+              role="status"
+            >
+              ✨ {{ parseFieldsFound }} field{{ parseFieldsFound === 1 ? '' : 's' }}
+            </span>
+          </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <IntakeSaveStatus :status="saveStatus" />
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
               :disabled="devPrefilling"
               @click="openExtraDetails"
             >
@@ -336,26 +366,13 @@ watch(devFixtureRequest, (mode) => {
         </div>
           <!-- Resume -->
           <section id="admin-section-resume" class="scroll-mt-4 space-y-4">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900">Resume</h2>
-              <p class="mt-1 text-sm text-slate-600">
-                Parsed fields appear below. Use <span class="font-medium">Re-upload resume</span> in the sidebar to replace the file.
-              </p>
-            </div>
-            <p v-if="resumeFilename" class="text-sm text-slate-600">
-              Current file: <span class="font-medium">{{ resumeFilename }}</span>
-              <button
-                type="button"
-                class="ml-2 font-medium text-brand-700 underline hover:no-underline"
-                @click="openExtraDetails"
-              >
-                Extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
-              </button>
+            <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
+              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually in Identity and other sections.
             </p>
-            <p v-else-if="isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Use the sidebar to upload, or continue manually in Identity and other sections.
-            </p>
-            <ParseNoticeBanner :meta="parseMeta" show-fields-found />
+            <ParseNoticeBanner
+              :meta="parseMeta"
+              :show-fields-found="parseHasWarning"
+            />
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>

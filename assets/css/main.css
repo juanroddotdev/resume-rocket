@@ -34,7 +34,8 @@ body {
 
   .employer-deck-row {
     @apply bg-slate-50 transition-[padding,margin] duration-300 ease-in-out motion-reduce:transition-none;
-    scroll-margin-top: 0.5rem;
+    /* Clear intake sticky chrome (layout header ~3.5rem) when scrolling to a card */
+    scroll-margin-top: 4rem;
   }
 
   .employer-card-surface {

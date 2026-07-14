@@ -648,6 +648,8 @@ async function onReviewPreview() {
           ref="hospitalAutocompleteRef"
           :employers="form.employers"
           :legacy-emr-system="form.emr_system"
+          :sticky-chrome-offset-px="56"
+          show-employers-jump-link
           :persist-immediate="flushAutosave"
           @update:employers="form.employers = $event"
         />

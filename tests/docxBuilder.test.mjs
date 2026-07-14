@@ -97,8 +97,8 @@ describe('mapCandidateToTemplateData', () => {
       ],
     })
 
-    assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
-    assert.equal(data.professional_experiences[1].experience_emr_system, 'Cerner')
+    assert.equal(data.professional_experiences[0].experience_emr_system, 'EMR Epic')
+    assert.equal(data.professional_experiences[1].experience_emr_system, 'EMR Cerner')
     assert.equal(data.emr_software_proficiencies, 'Epic, Cerner')
   })
 
@@ -131,7 +131,7 @@ describe('mapCandidateToTemplateData', () => {
     })
 
     assert.equal(data.emr_software_proficiencies, 'Epic')
-    assert.equal(data.professional_experiences[0].experience_emr_system, 'Epic')
+    assert.equal(data.professional_experiences[0].experience_emr_system, 'EMR Epic')
   })
 
   it('maps multi-license rows with expiry in licenses_list', () => {
@@ -190,8 +190,8 @@ describe('mapCandidateToTemplateData', () => {
     })
 
     const exp = data.professional_experiences[0]
-    assert.equal(exp.experience_trauma_level, 'III')
-    assert.equal(exp.experience_is_teaching_facility, 'No')
+    assert.equal(exp.experience_trauma_level, 'Trauma III')
+    assert.equal(exp.experience_is_teaching_facility, 'Teaching No')
     assert.equal(data.facility_types_trauma_levels, '')
   })
 
@@ -209,6 +209,23 @@ describe('mapCandidateToTemplateData', () => {
 
     assert.equal(data.professional_experiences[0].experience_unit_specialty, 'PICU RN')
     assert.equal(data.professional_experiences[0].experience_role_details, '')
+  })
+
+  it('omits empty metric slots from experience_metrics_line', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      employers: [{
+        name: 'Metro Hospital',
+        unitBedCount: '24',
+        traumaLevel: 'I',
+        emrSystem: 'Epic',
+      }],
+    })
+
+    const line = data.professional_experiences[0].experience_metrics_line
+    assert.equal(line, '24 unit beds • Trauma I • EMR Epic')
+    assert.equal(line.includes(' •  • '), false)
   })
 
   it('never leaves undefined template values for sparse candidates', () => {
@@ -246,6 +263,32 @@ describe('mapCandidateToTemplateData', () => {
 })
 
 describe('buildResumeDocx smoke', () => {
+  it('renders experience metrics without orphan bullet separators', async () => {
+    const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
+    const PizZip = (await import('pizzip')).default
+    const buffer = await buildResumeDocx({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['ICU'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'ICU RN',
+        city: 'Austin',
+        state: 'TX',
+        startDate: '2020-01',
+        endDate: '2024-06',
+        unitBedCount: '24',
+        traumaLevel: 'I',
+        emrSystem: 'Epic',
+      }],
+    })
+    const zip = new PizZip(buffer)
+    const text = zip.file('word/document.xml').asText().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    assert.match(text, /24 unit beds • Trauma I • EMR Epic/)
+    assert.equal(text.includes(' •  • '), false)
+    assert.equal(text.includes('{experience_'), false)
+  })
+
   it('generates a non-empty DOCX buffer', async () => {
     const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
     const buffer = await buildResumeDocx({

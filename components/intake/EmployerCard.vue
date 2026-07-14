@@ -22,10 +22,17 @@ const props = defineProps<{
   persistImmediate?: () => void | Promise<void>
   /** Legacy candidate-level EMR when employer row has none (matches DOCX fallback). */
   legacyEmrSystem?: string
+  /** Sticky header offset in px (accounts for layout chrome + employer jump list). */
+  stickyTopOffsetPx?: number
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
 const isExpanded = computed(() => isPanel.value || props.expanded)
+const stickyTopStyle = computed(() => {
+  if (!isExpanded.value) return undefined
+  const top = props.stickyTopOffsetPx ?? (isPanel.value ? 0 : 56)
+  return { top: `${top}px` }
+})
 
 const deckRowMarginClass = computed(() => {
   if (isPanel.value || props.expanded) return 'mt-0'
@@ -251,17 +258,29 @@ function onTraumaLevelChange(event: Event) {
       isPanel ? 'py-3' : expanded ? 'z-30 py-8' : 'z-10 py-0',
       !isPanel && deckRowMarginClass,
     ]"
+    :style="stickyTopOffsetPx != null ? { scrollMarginTop: `${stickyTopOffsetPx + 8}px` } : undefined"
   >
     <div
       :id="`employer-card-${index}`"
-      class="employer-card-surface overflow-hidden rounded-lg border bg-white"
+      class="employer-card-surface rounded-lg border bg-white"
       :class="[
         isExpanded
           ? 'border-brand-200 border-l-4 border-l-brand-600 shadow-md'
           : 'border-slate-200 shadow-sm',
       ]"
     >
-    <div class="flex items-start gap-1">
+    <!--
+      Sticky only while expanded: pin name + metrics while scrolling fields.
+      Drops with this card when the next employer enters — no JS handoff.
+      overflow-hidden removed from surface so sticky is not clipped.
+    -->
+    <div
+      class="flex items-start gap-1"
+      :class="isExpanded
+        ? 'sticky z-20 border-b border-brand-100 bg-brand-50 shadow-sm'
+        : 'rounded-t-lg bg-white'"
+      :style="stickyTopStyle"
+    >
       <component
         :is="isPanel ? 'div' : 'button'"
         :id="`employer-card-header-${index}`"

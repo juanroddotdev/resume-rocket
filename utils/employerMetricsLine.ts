@@ -13,36 +13,91 @@ export type EmployerMetricsLineInput = Pick<
   | 'patientScope'
 >
 
+export type EmployerMetricsLineFields = {
+  unitBedCount: string
+  hospitalBeds: string
+  traumaLevel: string
+  teachingFacility: string
+  emrSystem: string
+  patientScope: string
+}
+
+/** Labeled teaching segment for metrics line / DOCX (`Teaching Yes`). */
 export function teachingFacilityLabelForMetrics(
   teachingStatus: boolean | undefined,
 ): string {
-  if (teachingStatus === true) return 'Yes'
-  if (teachingStatus === false) return 'No'
+  if (teachingStatus === true) return 'Teaching Yes'
+  if (teachingStatus === false) return 'Teaching No'
   return ''
 }
 
+function labeledUnitBeds(raw: string | null | undefined): string {
+  const value = (raw || '').trim()
+  if (!value) return ''
+  if (/unit beds?\b/i.test(value)) return value
+  return `${value} unit beds`
+}
+
+function labeledHospitalBeds(beds: number | null | undefined): string {
+  if (beds == null || Number.isNaN(beds)) return ''
+  return `${beds} hospital beds`
+}
+
+function labeledTrauma(raw: string | null | undefined): string {
+  const value = (raw || '').trim()
+  if (!value) return ''
+  if (/^trauma\b/i.test(value) || /^level\b/i.test(value)) return value
+  return `Trauma ${value}`
+}
+
+function labeledEmr(raw: string | null | undefined): string {
+  const value = (raw || '').trim()
+  if (!value) return ''
+  if (/^emr\b/i.test(value)) return value
+  return `EMR ${value}`
+}
+
 /**
- * Ordered segments matching the Professional Experience metrics line:
- * unit beds • hospital beds • trauma • teaching • EMR • patient scope
+ * Labeled values for each DOCX metrics tag (same strings used in the live stamp).
+ * Order: unit beds → hospital beds → trauma → teaching → EMR → patient scope
+ */
+export function employerMetricsLineFields(
+  employer: EmployerMetricsLineInput,
+  options?: { legacyEmrSystem?: string },
+): EmployerMetricsLineFields {
+  const emrRaw = (employer.emrSystem || options?.legacyEmrSystem || '').trim()
+  return {
+    unitBedCount: labeledUnitBeds(employer.unitBedCount),
+    hospitalBeds: labeledHospitalBeds(employer.beds),
+    traumaLevel: labeledTrauma(employer.traumaLevel),
+    teachingFacility: teachingFacilityLabelForMetrics(employer.teachingStatus),
+    emrSystem: labeledEmr(emrRaw),
+    patientScope: (employer.patientScope || '').trim(),
+  }
+}
+
+/**
+ * Ordered segments matching the Professional Experience metrics line.
+ * Empty slots kept for index alignment with DOCX tags.
  */
 export function employerMetricsLineParts(
   employer: EmployerMetricsLineInput,
   options?: { legacyEmrSystem?: string },
 ): string[] {
-  const emr = (employer.emrSystem || options?.legacyEmrSystem || '').trim()
+  const fields = employerMetricsLineFields(employer, options)
   return [
-    (employer.unitBedCount || '').trim(),
-    employer.beds != null && !Number.isNaN(employer.beds) ? String(employer.beds) : '',
-    (employer.traumaLevel || '').trim(),
-    teachingFacilityLabelForMetrics(employer.teachingStatus),
-    emr,
-    (employer.patientScope || '').trim(),
+    fields.unitBedCount,
+    fields.hospitalBeds,
+    fields.traumaLevel,
+    fields.teachingFacility,
+    fields.emrSystem,
+    fields.patientScope,
   ]
 }
 
 /**
- * Live packet-style metrics string. Omits empty slots so the stamp stays readable
- * (DOCX template still emits separators for blank tags until a follow-up).
+ * Packet-style metrics string for UI stamp and mental model of DOCX output.
+ * Omits empty slots (DOCX template still emits separators for blank tags until a follow-up).
  */
 export function formatEmployerMetricsLine(
   employer: EmployerMetricsLineInput,

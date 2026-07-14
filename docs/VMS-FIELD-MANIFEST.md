@@ -91,7 +91,7 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 | `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin Snapshot | TBD | Derived / Live |
-| `snapshot_magnet_facility_experience` | Resume / facility metadata | Phase 4 Gemini | Admin Snapshot | TBD | Placeholder |
+| `snapshot_magnet_facility_experience` | Resume / facility metadata | Yes (admin propose) | Admin Snapshot + Regenerate from resume | TBD | Live (propose) |
 | `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin Snapshot | TBD | Derived / Live |
@@ -99,7 +99,7 @@ Static labels in Word; values from `snapshot_*` tags. **Phase 1:** docxBuilder s
 | `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin Snapshot | TBD | Derived / Live |
 
-Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`.
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX uses stored snapshot when populated, else live derive. Only `included: true` lines render. Mismatch helpers: `computeSnapshotMismatches()`. Supplemental: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts).
 
 ---
 
@@ -134,7 +134,7 @@ Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and 
 
 ## Collected but not in contract (supplemental bucket)
 
-These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Planned admin “Available data (not in packet layout)” UI in Phase 4. Gap review should be relaxed for these fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
+These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do **not** appear in the July 2026 `template.docx`. Admin **Available data (not in packet layout)** panel: Copy / Apply-to-snapshot. Gap review no longer blocks submit on template-removed employment/clinical summary fields (see [TODO — New template](./TODO.md#new-template--professional-snapshot)).
 
 | Former template tag | DB / JSON path | Still collected | Notes |
 |---------------------|----------------|-----------------|-------|
@@ -179,10 +179,10 @@ These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do
 
 ## Next implementation steps
 
-Phase 1 (this manifest): **complete** except manual template smoke. Remaining [New template & Professional Snapshot](./TODO.md#new-template--professional-snapshot) work:
+Phases 1–4 for Professional Snapshot are **shipped**. Remaining optional backlog:
 
-1. **Phase 2** — `professional_snapshot` JSONB + derivation + docxBuilder reads approved lines
-2. **Phase 3** — Admin snapshot editor
-3. **Phase 4** — Gemini propose, supplemental bucket, gap-review narrowing
+1. **Parse QA snapshot evidence** (optional) — surface propose snippets in Parse QA tables
+2. **Custom snapshot lines** — deferred until UAT demand
+3. Packet layout presets — separate epic if needed
 
 Status summary: [`VMS-FULL-COVERAGE-PLAN.md`](VMS-FULL-COVERAGE-PLAN.md). Historical build plan: [`archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md`](./archive/VMS-FULL-COVERAGE-PLAN-2026-05-EXECUTION.md).

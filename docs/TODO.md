@@ -18,7 +18,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 
 | Priority | Track | Open items |
 | --- | --- | --- |
-| **0** | **New template** | Phase 3 admin snapshot editor shipped — next: [Phase 4 Gemini + supplemental bucket](#new-template--professional-snapshot) |
+| **0** | **New template** | Phase 4 Gemini propose + supplemental bucket shipped — optional Parse QA snapshot evidence; custom lines deferred until UAT |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
@@ -55,11 +55,11 @@ New contract [`server/assets/template.docx`](../server/assets/template.docx) (Ju
 
 ### Phase 4 — Gemini propose + supplemental bucket
 
-- [ ] **Gemini snapshot proposal** — extend parse schema (or separate admin endpoint) with snapshot lines + `source_snippet` per line (server-only, audit-style); covers magnet, travel nuance, resume-only trauma/equipment
-- [ ] **“Regenerate snapshot from resume”** admin action — proposals never auto-include; admin approves each line
-- [ ] **Supplemental data bucket** — `buildSupplementalBucket()`: fields Gemini/wizard capture that the new template no longer renders (licenses, highlights, employment type, compact status, per-job ratios); admin panel “Available data (not in packet layout)” with Copy / Apply-to-snapshot-line
-- [ ] **Keep full Gemini parse schema** — template narrowing must not trim parse; only DOCX output narrows
-- [ ] **Revisit gap review** — stop blocking submit on fields no longer in template (or downgrade to optional)
+- [x] **Gemini snapshot proposal** — separate admin propose path (`propose-snapshot`) with snapshot lines + `source_snippet`; leaves full intake parse schema unchanged
+- [x] **“Regenerate snapshot from resume”** admin action — proposals never auto-include; admin Approves via Include checkbox ([`AdminProfessionalSnapshot.vue`](../components/admin/AdminProfessionalSnapshot.vue))
+- [x] **Supplemental data bucket** — [`buildSupplementalBucket()`](../utils/supplementalBucket.ts); admin panel Copy / Apply-to-snapshot-line
+- [x] **Keep full Gemini parse schema** — template narrowing must not trim parse; only DOCX output narrows
+- [x] **Revisit gap review** — stop blocking submit on template-removed fields (role, employment type, highlights, beds, years, compact, equipment)
 - [ ] **Optional: Parse QA snapshot evidence** — snapshot lines with snippets like cert/license/education tables
 
 ### Later — Custom snapshot lines (defer until UAT asks)

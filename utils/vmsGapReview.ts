@@ -1,8 +1,7 @@
-import type { CandidateDraftInput, EducationEntry, EmployerEntry, LicenseEntry } from '~/types/candidate'
-import { normalizeGraduationMonth } from '~/utils/educationGraduation'
-import { hasCompleteLicense, resolveCandidateLicenses } from '~/utils/licenseRows'
-import { isStoredEmrComplete } from '~/utils/emrSystem'
-import { normalizeEmploymentType } from '~/utils/employmentType'
+import type { CandidateDraftInput, EducationEntry, EmployerEntry, LicenseEntry } from '../types/candidate'
+import { normalizeGraduationMonth } from './educationGraduation.ts'
+import { hasCompleteLicense, resolveCandidateLicenses } from './licenseRows.ts'
+import { isStoredEmrComplete } from './emrSystem.ts'
 
 export interface MissingTemplateField {
   id: string
@@ -34,32 +33,17 @@ function hasText(value?: string | null) {
 function employerMissing(employer: EmployerEntry, index: number): MissingTemplateField[] {
   const missing: MissingTemplateField[] = []
   const prefix = `Employer ${index + 1}`
-  if (!hasText(employer.role)) {
-    missing.push({ id: `employer-${index}-role`, label: `${prefix}: role / unit`, step: 2 })
-  }
   if (!hasText(employer.startDate)) {
     missing.push({ id: `employer-${index}-start`, label: `${prefix}: start date`, step: 2 })
   }
   if (!hasText(employer.endDate)) {
     missing.push({ id: `employer-${index}-end`, label: `${prefix}: end date`, step: 2 })
   }
-  if (!hasText(employer.employmentType)) {
-    missing.push({ id: `employer-${index}-type`, label: `${prefix}: employment type`, step: 2 })
-  }
   if (!hasText(employer.patientScope)) {
     missing.push({ id: `employer-${index}-scope`, label: `${prefix}: patient scope`, step: 2 })
   }
-  if (!employer.hospitalId && employer.beds == null) {
-    missing.push({ id: `employer-${index}-beds`, label: `${prefix}: hospital total beds`, step: 2 })
-  }
-  if (!employer.highlights?.length || !employer.highlights.some(h => h.trim())) {
-    missing.push({ id: `employer-${index}-highlights`, label: `${prefix}: at least one highlight`, step: 2 })
-  }
   if (!isStoredEmrComplete(employer.emrSystem)) {
     missing.push({ id: `employer-${index}-emr`, label: `${prefix}: EMR / charting system`, step: 2 })
-  }
-  if (normalizeEmploymentType(employer.employmentType) === 'PRN' && !hasText(employer.prnSchedule)) {
-    missing.push({ id: `employer-${index}-prn-schedule`, label: `${prefix}: typical PRN schedule`, step: 2 })
   }
   return missing
 }
@@ -109,16 +93,6 @@ export function computeMissingTemplateFields(form: FormShape): MissingTemplateFi
         }
       })
     }
-  }
-
-  if (!hasText(form.years_nursing_experience)) {
-    missing.push({ id: 'years_nursing_experience', label: 'Years of nursing experience', step: 3 })
-  }
-  if (!hasText(form.compact_license_status)) {
-    missing.push({ id: 'compact_license_status', label: 'Compact license status', step: 3 })
-  }
-  if (!hasText(form.specialized_medical_equipment)) {
-    missing.push({ id: 'specialized_medical_equipment', label: 'Specialized medical equipment', step: 3 })
   }
 
   const education = form.education || []

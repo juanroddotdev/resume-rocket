@@ -78,6 +78,12 @@ function traumaLevelsPhrase(employers: EmployerEntry[]): string {
   return `Level ${ordered.join(' & ')}`
 }
 
+function traumaExperience(employers: EmployerEntry[]): string {
+  const phrase = traumaLevelsPhrase(employers)
+  if (!phrase) return ''
+  return `Yes — ${phrase}`
+}
+
 function travelExperience(employers: EmployerEntry[]): string {
   const travelCount = employers.filter(
     e => normalizeEmploymentType(e.employmentType) === 'Travel',
@@ -139,7 +145,7 @@ export function buildProfessionalSnapshotFromCandidate(
     snapshot_specialty: line(specialty),
     snapshot_years_experience: line(years),
     snapshot_travel_experience: line(travelExperience(employers)),
-    snapshot_trauma_experience: line(traumaLevelsPhrase(employers)),
+    snapshot_trauma_experience: line(traumaExperience(employers)),
     snapshot_teaching_facility_experience: line(anyYes(employers, e => e.teachingStatus)),
     snapshot_magnet_facility_experience: line(''), // Phase 4 Gemini
     snapshot_charge_nurse_experience: line(
@@ -263,6 +269,58 @@ export const PROFESSIONAL_SNAPSHOT_LABELS: Record<ProfessionalSnapshotKey, strin
   snapshot_emr_systems: 'EMR systems',
   snapshot_patient_ratios_managed: 'Patient ratios managed',
   snapshot_equipment_skills: 'Equipment / skills',
+}
+
+/** Experience-presence lines edited as Yes/No + optional detail. */
+export const SNAPSHOT_EXPERIENCE_FLAG_KEYS = [
+  'snapshot_travel_experience',
+  'snapshot_trauma_experience',
+  'snapshot_teaching_facility_experience',
+  'snapshot_magnet_facility_experience',
+  'snapshot_charge_nurse_experience',
+  'snapshot_preceptor_experience',
+  'snapshot_float_experience',
+] as const satisfies readonly ProfessionalSnapshotKey[]
+
+export type SnapshotExperienceFlagKey = (typeof SNAPSHOT_EXPERIENCE_FLAG_KEYS)[number]
+
+export type SnapshotExperienceAnswer = 'yes' | 'no' | ''
+
+export function isSnapshotExperienceFlag(
+  key: ProfessionalSnapshotKey,
+): key is SnapshotExperienceFlagKey {
+  return (SNAPSHOT_EXPERIENCE_FLAG_KEYS as readonly string[]).includes(key)
+}
+
+/**
+ * Parse stored DOCX/wizard text into Yes/No + optional detail.
+ * Legacy free text (e.g. "Level I") becomes Yes with that text as detail.
+ */
+export function parseExperienceFlagValue(raw: string | null | undefined): {
+  answer: SnapshotExperienceAnswer
+  detail: string
+} {
+  const value = (raw || '').trim()
+  if (!value) return { answer: '', detail: '' }
+  const match = /^(yes|no)\b(?:\s*[—–-]\s*(.*))?$/i.exec(value)
+  if (match) {
+    return {
+      answer: match[1]!.toLowerCase() as 'yes' | 'no',
+      detail: (match[2] || '').trim(),
+    }
+  }
+  return { answer: 'yes', detail: value }
+}
+
+/** Format Yes/No + detail for storage / DOCX (`Yes — detail`). */
+export function formatExperienceFlagValue(
+  answer: SnapshotExperienceAnswer,
+  detail: string | null | undefined,
+): string {
+  if (answer !== 'yes' && answer !== 'no') return ''
+  if (answer === 'no') return 'No'
+  const note = (detail || '').trim()
+  return note ? `Yes — ${note}` : 'Yes'
 }
 
 /** Ensure all 12 lines exist for admin editor binding. */

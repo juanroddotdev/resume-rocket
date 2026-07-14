@@ -33,7 +33,7 @@ async function onCopy(item: SupplementalBucketItem) {
     <li
       v-for="item in items"
       :key="item.id"
-      class="rounded-md border border-slate-100 bg-slate-50 px-3 py-2"
+      class="rounded-md border border-brand-100/60 bg-white px-3 py-2"
     >
       <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ item.label }}</p>
       <p class="mt-0.5 break-words text-sm text-slate-800">{{ item.value }}</p>

@@ -132,4 +132,14 @@ onBeforeUnmount(() => {
 .docx-preview-body :deep(section.docx) {
   min-height: 1rem;
 }
+
+/*
+ * docx-preview paints list markers via p.docx-num-*:before.
+ * Oversized ● glyphs (no Word sizing) looked huge in-app; template now uses • @ 10pt.
+ * Keep a light ceiling if numbering styles are missing.
+ */
+.docx-preview-body :deep(p[class*='docx-num-']::before) {
+  font-size: 10pt;
+  line-height: 1;
+}
 </style>

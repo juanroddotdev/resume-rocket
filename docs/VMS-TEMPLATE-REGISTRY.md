@@ -1,4 +1,6 @@
-# VMS template tag registry (Phase A complete)
+# VMS template tag registry
+
+> **July 2026 contract** added Professional Snapshot (`snapshot_*`) and removed several summary/employer tags. **Authoritative contract inventory:** [`VMS-FIELD-MANIFEST.md`](VMS-FIELD-MANIFEST.md). This registry is a summary; defer to the manifest when they differ.
 
 Source template: `server/assets/template.docx` (tracked in git).  
 Mapping code: `server/utils/docxBuilder.ts` → `mapCandidateToTemplateData()`.

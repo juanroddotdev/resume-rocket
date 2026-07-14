@@ -5,76 +5,9 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { buildResumeDocx, mapCandidateToTemplateData } from '../server/utils/docxBuilder.ts'
+import { completeDocxFixture } from './fixtures/complete-docx-candidate.mjs'
 
-/** Fully completed wizard submission — every required manifest field populated. */
-const fixture = {
-  first_name: 'Jane',
-  last_name: 'Doe',
-  email: 'jane.doe@example.com',
-  phone: '(555) 123-4567',
-  home_address: '123 Main St',
-  home_city: 'San Diego',
-  home_state: 'CA',
-  license_number: 'RN-123456',
-  license_state: 'CA',
-  emr_system: 'Epic',
-  years_nursing_experience: '8',
-  compact_license_status: 'Yes',
-  average_patient_ratios: '1:4 ICU, 1:6 Med-Surg',
-  specialized_medical_equipment: 'ECMO, CRRT, ventilators',
-  specialties: ['ICU', 'Med-Surg'],
-  credentials: {
-    BLS: { active: true, expiry: '2026-06-01' },
-    ACLS: { active: true, expiry: '2026-08-15' },
-    PALS: { active: true, expiry: '2027-01-20' },
-    CCRN: { active: true },
-  },
-  education: [
-    { degree: 'BSN', school: 'University of California', graduationMonth: '06', graduationYear: '2016' },
-  ],
-  employers: [
-    {
-      name: 'Mayo Clinic',
-      role: 'Staff RN — ICU',
-      city: 'Rochester',
-      state: 'MN',
-      beds: 500,
-      traumaLevel: 'I',
-      teachingStatus: true,
-      startDate: '2020-01',
-      endDate: '2024-06',
-      employmentType: 'Staff',
-      unitBedCount: '24',
-      patientScope: 'Adult ICU — critical care',
-      avgDailyPatients: '2-3',
-      patientAcuity: 'High acuity',
-      floatedUnits: ['ER', 'Step-down'],
-      equipmentProcedures: ['ECMO', 'CRRT', 'Ventilator management'],
-      highlights: ['Charge nurse 18 months', 'Preceptor for new grads'],
-    },
-    {
-      name: 'General Hospital',
-      role: 'Travel RN — Med-Surg',
-      city: 'Austin',
-      state: 'TX',
-      beds: 320,
-      traumaLevel: 'II',
-      teachingStatus: false,
-      startDate: '2018-03',
-      endDate: '2019-12',
-      employmentType: 'Travel',
-      unitBedCount: '32',
-      patientScope: 'Med-Surg telemetry',
-      avgDailyPatients: '5-6',
-      patientAcuity: 'Moderate',
-      floatedUnits: ['ICU'],
-      equipmentProcedures: ['IV therapy', 'Wound care'],
-      highlights: ['Consistent patient satisfaction scores'],
-    },
-  ],
-}
-
-const data = mapCandidateToTemplateData(fixture)
+const data = mapCandidateToTemplateData(completeDocxFixture)
 const outPath = join('/tmp', 'resume-rocket-test.docx')
 
 /** Tags that may legitimately be empty even for a complete submission. */
@@ -166,7 +99,7 @@ for (const [label, actual, expected] of checks) {
 }
 
 try {
-  const buffer = await buildResumeDocx(fixture)
+  const buffer = await buildResumeDocx(completeDocxFixture)
   writeFileSync(outPath, buffer)
   console.log(`\nOK: all required manifest fields populated`)
   console.log(`Wrote ${outPath} (${buffer.length} bytes)`)

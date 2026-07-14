@@ -54,7 +54,7 @@ onUnmounted(() => {
   <Teleport to="body">
     <aside
       v-if="open"
-      class="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-slate-200 bg-white shadow-xl sm:max-w-lg"
+      class="fixed bottom-4 right-4 top-4 z-40 flex w-[min(100%-2rem,28rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:bottom-6 sm:right-6 sm:top-6 sm:w-[min(100%-3rem,32rem)]"
       role="complementary"
       :aria-label="`Extra details for ${candidateName}`"
     >

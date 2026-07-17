@@ -82,6 +82,8 @@ export interface EmployerEntry {
   beds?: number
   traumaLevel?: string
   teachingStatus?: boolean
+  /** Magnet designation — not in hospitals DB, so always set manually per employer */
+  magnetStatus?: boolean
   /** Client-only parse suggestions until candidate links a facility */
   hospitalSuggestions?: HospitalSuggestion[]
   /** VMS experience_employment_type */

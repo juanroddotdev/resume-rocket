@@ -290,9 +290,9 @@ function openCandidateIntake(candidate: CandidateRow) {
 
             <div
               v-show="!sidebarCollapsed"
-              class="flex min-h-0 min-w-[280px] flex-1 flex-col pl-3 pr-5"
+              class="flex min-h-0 min-w-[280px] flex-1 flex-col"
             >
-              <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80">
+              <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80 pl-3 pr-5">
                 <button
                   type="button"
                   class="w-full rounded-md border border-brand-200/80 bg-brand-50/60 px-3 py-1 text-sm font-medium text-brand-700 hover:bg-brand-100"
@@ -301,7 +301,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   + New candidate
                 </button>
               </div>
-              <div class="shrink-0 space-y-1.5 pb-1.5 pt-3">
+              <div class="shrink-0 space-y-1.5 pb-1.5 pl-3 pr-5 pt-3">
                 <div class="relative">
                   <svg
                     class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
@@ -368,7 +368,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   </button>
                 </div>
               </div>
-              <div class="min-h-0 flex-1 overflow-y-auto pb-3">
+              <div class="min-h-0 flex-1 overflow-y-auto pb-3 pl-3 pr-5">
                 <div
                   v-if="candidatesError"
                   class="rounded-md border border-red-200 bg-red-50 px-2.5 py-2 text-sm text-red-800"

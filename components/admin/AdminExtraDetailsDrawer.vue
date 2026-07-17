@@ -38,7 +38,7 @@ function onKeydown(event: KeyboardEvent) {
 
 function onApply(payload: { key: ProfessionalSnapshotKey; value: string }) {
   emit('apply', payload)
-  applyNotice.value = 'Applied to Snapshot — check Include on that line to put it in the packet.'
+  applyNotice.value = 'Applied to Snapshot — that line stays hidden until you show it with the eye.'
 }
 
 onMounted(() => {
@@ -74,7 +74,7 @@ onUnmounted(() => {
 
       <div class="shrink-0 space-y-2 border-b border-brand-100/80 px-5 py-3">
         <p class="text-sm text-slate-500">
-          Copy anywhere, or apply to Snapshot (still needs Include).
+          Copy anywhere, or apply to Snapshot (still needs the eye toggle to print).
         </p>
         <p
           v-if="applyNotice"

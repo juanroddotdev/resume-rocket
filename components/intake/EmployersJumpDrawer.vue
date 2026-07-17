@@ -16,6 +16,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   select: [index: number]
+  remove: [index: number]
+  'move-up': [index: number]
+  'move-down': [index: number]
 }>()
 
 function closePanel() {
@@ -51,6 +54,23 @@ function onSelect(index: number) {
   closePanel()
 }
 
+function onMoveUp(index: number, event: Event) {
+  event.stopPropagation()
+  if (index <= 0) return
+  emit('move-up', index)
+}
+
+function onMoveDown(index: number, event: Event) {
+  event.stopPropagation()
+  if (index >= props.employers.length - 1) return
+  emit('move-down', index)
+}
+
+function onRemove(index: number, event: Event) {
+  event.stopPropagation()
+  emit('remove', index)
+}
+
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
 })
@@ -75,7 +95,7 @@ onUnmounted(() => {
             Employers{{ employers.length ? ` (${employers.length})` : '' }}
           </h2>
           <p v-if="candidateName" class="mt-0.5 truncate text-sm text-slate-600">{{ candidateName }}</p>
-          <p v-else class="mt-0.5 text-sm text-slate-600">Jump to a hospital without scrolling the whole list.</p>
+          <p v-else class="mt-0.5 text-sm text-slate-600">Jump, reorder, or remove hospitals here.</p>
         </div>
         <button
           type="button"
@@ -95,13 +115,18 @@ onUnmounted(() => {
           No employers yet — search or add a hospital to start.
         </p>
         <ul v-else class="space-y-0.5" role="list">
-          <li v-for="(employer, index) in employers" :key="`emp-jump-${index}`">
+          <li
+            v-for="(employer, index) in employers"
+            :key="`emp-jump-${index}`"
+            class="flex items-start gap-0.5 rounded-lg"
+            :class="index === activeIndex ? 'bg-white ring-1 ring-brand-200' : 'hover:bg-white/70'"
+          >
             <button
               type="button"
-              class="flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition"
+              class="flex min-w-0 flex-1 items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition"
               :class="index === activeIndex
-                ? 'bg-white font-medium text-brand-900 ring-1 ring-brand-200'
-                : 'text-slate-800 hover:bg-white/70'"
+                ? 'font-medium text-brand-900'
+                : 'text-slate-800'"
               :aria-current="index === activeIndex ? 'true' : undefined"
               @click="onSelect(index)"
             >
@@ -117,6 +142,36 @@ onUnmounted(() => {
                 aria-label="Needs attention"
               />
             </button>
+            <div class="flex shrink-0 items-center gap-0.5 py-2 pr-2">
+              <button
+                type="button"
+                class="rounded border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Move employer up"
+                :disabled="index === 0"
+                @click="onMoveUp(index, $event)"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                class="rounded border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Move employer down"
+                :disabled="index >= employers.length - 1"
+                @click="onMoveDown(index, $event)"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                class="rounded border border-red-200 bg-white p-1 text-red-600 hover:bg-red-50"
+                aria-label="Remove employer"
+                @click="onRemove(index, $event)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
+            </div>
           </li>
         </ul>
       </div>

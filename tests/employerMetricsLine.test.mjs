@@ -14,6 +14,7 @@ describe('formatEmployerMetricsLine', () => {
         beds: 500,
         traumaLevel: 'I',
         teachingStatus: true,
+        magnetStatus: true,
         emrSystem: 'Epic',
         patientScope: 'Adult ICU',
       }),
@@ -22,21 +23,23 @@ describe('formatEmployerMetricsLine', () => {
         '500 hospital beds',
         'Trauma I',
         'Teaching Yes',
+        'Magnet Yes',
         'EMR Epic',
         'Adult ICU',
       ].join(EMPLOYER_METRICS_LINE_SEP),
     )
   })
 
-  it('omits empty slots and maps teaching No', () => {
+  it('omits empty slots and maps teaching/Magnet No', () => {
     assert.equal(
       formatEmployerMetricsLine({
         unitBedCount: '24',
         traumaLevel: 'II',
         teachingStatus: false,
+        magnetStatus: false,
         emrSystem: 'Cerner',
       }),
-      '24 unit beds • Trauma II • Teaching No • EMR Cerner',
+      '24 unit beds • Trauma II • Teaching No • Magnet No • EMR Cerner',
     )
   })
 
@@ -67,13 +70,14 @@ describe('formatEmployerMetricsLine', () => {
 })
 
 describe('employerMetricsLineParts', () => {
-  it('keeps six ordered labeled slots including blanks', () => {
+  it('keeps seven ordered labeled slots including blanks', () => {
     assert.deepEqual(
       employerMetricsLineParts({
         unitBedCount: '24',
         teachingStatus: true,
+        magnetStatus: true,
       }),
-      ['24 unit beds', '', '', 'Teaching Yes', '', ''],
+      ['24 unit beds', '', '', 'Teaching Yes', 'Magnet Yes', '', ''],
     )
   })
 })

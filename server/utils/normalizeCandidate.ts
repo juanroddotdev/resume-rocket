@@ -54,6 +54,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   const traumaLevelRaw = optionalString(e.traumaLevel ?? e.trauma_level)
   const traumaLevel = traumaLevelRaw ? normalizeTraumaLevel(traumaLevelRaw) : undefined
   const teachingStatus = optionalBool(e.teachingStatus ?? e.teaching_status)
+  const magnetStatus = optionalBool(e.magnetStatus ?? e.magnet_status)
   const employmentTypeRaw = optionalString(e.employmentType ?? e.employment_type)
   const unitBedCount = optionalString(e.unitBedCount ?? e.unit_bed_count)
   const patientScope = optionalString(e.patientScope ?? e.patient_scope)
@@ -87,6 +88,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
     if (normalized) entry.traumaLevel = normalized
   }
   if (teachingStatus != null) entry.teachingStatus = teachingStatus
+  if (magnetStatus != null) entry.magnetStatus = magnetStatus
   if (employmentTypeRaw) {
     const canonical = normalizeEmploymentType(employmentTypeRaw)
     entry.employmentType = canonical || employmentTypeRaw

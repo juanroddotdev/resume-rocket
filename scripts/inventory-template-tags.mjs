@@ -15,8 +15,8 @@ const jsonOut = process.argv.includes('--json')
 /** Word XML parts that may contain template tags. */
 const XML_PARTS = /^word\/(document|header\d+|footer\d+|footnotes|endnotes)\.xml$/
 
-/** Match docxtemplater tags: {#loop}, {/loop}, {scalar}, {.} */
-const TAG_RE = /\{([#/]?)([^{}]+)\}/g
+/** Match docxtemplater tags: {#loop}, {^inverted}, {/loop}, {scalar}, {.} */
+const TAG_RE = /\{([#/^]?)([^{}]+)\}/g
 
 function collectXmlParts(zip) {
   return Object.keys(zip.files).filter(name => XML_PARTS.test(name))
@@ -32,9 +32,7 @@ function extractTagsFromXml(xml) {
     const raw = match[2].trim()
     if (raw === '.') continue
 
-    if (marker === '#') {
-      loops.add(raw)
-    } else if (marker === '/') {
+    if (marker === '#' || marker === '^' || marker === '/') {
       loops.add(raw)
     } else {
       tags.add(raw)
@@ -83,6 +81,7 @@ const NESTED_EXPERIENCE_LOOPS = [
   'experience_floated_units_list',
   'experience_equipment_procedures_list',
   'experience_highlights',
+  'experience_metrics_rows',
 ]
 
 function applyNestedSchema(builder) {

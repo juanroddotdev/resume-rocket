@@ -20,6 +20,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | --- | --- | --- |
 | **0** | **New template** | Phase 4 + Extra details non-modal panel + builder chrome cleanup — optional Parse QA snapshot evidence; custom lines deferred until UAT |
 | **UX** | Employment | Employer accordion expand-in-place (all-open + sticky for now) — see Recruiter admin UX backlog |
+| **UX** | DOCX | Visual restyle in progress on `feat/docx-visual-restyle` (Inter + section rules + title\|date) — preview = download |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
@@ -359,6 +360,7 @@ Incremental admin hub / builder UX tweaks — implement in small PRs after layou
 
 ### Backlog
 
+- [ ] **DOCX style editor (admin, session-only v1)** — Toolbar row above the packet preview with style options that apply to **both** preview and download (same `style` options passed to `/api/generate-docx`; post-process `word/document.xml` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts)). **v1:** toggle "Divider lines under section headers" (on by default), session/in-memory only, admin-only. **Later:** font picker (Inter + a small curated set; each font must be embedded in the DOCX), persist per candidate via `docx_style` JSONB if recruiters want stickiness.
 - [ ] **App notifications & toasts (cross-cutting)** — Replace ad-hoc inline banners with a shared notification layer (toast stack or compact status rail). **Scope:** post-create packet success (“builder ready”, clipboard copied), save/autosave errors, DOCX download failures, parse outcomes, confirmation email skipped, real-time “updated elsewhere” when candidate edits via invite. **Principles:** non-blocking, dismissible, no full-width dashboard chrome; reuse across admin hub, builder, and intake where appropriate. **Deferred:** removed green “Packet created — builder ready” banner from [`pages/admin.vue`](../pages/admin.vue); create flow still auto-opens builder (intake handoff via **Open intake** in table).
 - [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open (fold into notifications project above)
 - [ ] **Optional: global content width** — deprioritize unless intentional app-wide layout pass

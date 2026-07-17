@@ -174,6 +174,8 @@ function mapEmployerToExperience(
   const unitSpecialty = employer.role?.trim() || primarySpecialty
   const metrics = employerMetricsLineFields(employer, { legacyEmrSystem })
 
+  const metricsLine = formatEmployerMetricsLine(employer, { legacyEmrSystem })
+
   return {
     experience_unit_specialty: unitSpecialty,
     experience_facility_type: '',
@@ -184,7 +186,11 @@ function mapEmployerToExperience(
     experience_employment_type: formatEmploymentTypeForDocx(employer),
     experience_role_details: roleDetailsForDocx(employer.role, unitSpecialty),
     /** Joined labeled metrics (omits empties — avoids orphan ` • ` in DOCX). */
-    experience_metrics_line: formatEmployerMetricsLine(employer, { legacyEmrSystem }),
+    experience_metrics_line: metricsLine,
+    /** 0–1 row loop so the metrics paragraph is omitted when the line is empty. */
+    experience_metrics_rows: metricsLine.trim()
+      ? [{ experience_metrics_line: metricsLine }]
+      : [],
     experience_unit_bed_count: metrics.unitBedCount,
     experience_hospital_total_beds: metrics.hospitalBeds,
     experience_trauma_level: metrics.traumaLevel,

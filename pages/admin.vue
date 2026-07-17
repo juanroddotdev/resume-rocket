@@ -16,7 +16,7 @@ const password = ref('')
 const authError = ref<string | null>(null)
 const candidates = ref<CandidateRow[]>([])
 const search = ref('')
-const showAll = ref(true)
+const listFilter = ref<'all' | 'draft' | 'submitted'>('all')
 const loadingCandidates = ref(false)
 const candidatesError = ref<string | null>(null)
 const selectedCandidate = ref<CandidateRow | null>(null)
@@ -51,19 +51,18 @@ function toggleSidebarCollapsed() {
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
 
+/** Helper card open + sidebar open → collapse only. Never re-open sidebar when helper closes. */
+function onBuilderDrawerOpen(open: boolean) {
+  if (open && !sidebarCollapsed.value) {
+    sidebarCollapsed.value = true
+  }
+}
+
 const parseQaCandidateName = computed(() => {
   if (!selectedCandidate.value) return 'Candidate'
   const name = `${selectedCandidate.value.first_name || ''} ${selectedCandidate.value.last_name || ''}`.trim()
   return name || 'Unnamed candidate'
 })
-
-const isSelectedDraft = computed(() => selectedCandidate.value?.status === 'draft')
-
-const sidebarParseUrl = computed(() =>
-  selectedCandidate.value?.id
-    ? `/api/admin/candidates/${selectedCandidate.value.id}/parse`
-    : undefined,
-)
 
 watch(selectedCandidate, (candidate) => {
   hasSelectedCandidate.value = Boolean(candidate)
@@ -151,11 +150,6 @@ async function adminAuthHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
-async function onSidebarParsed() {
-  await loadCandidates(selectedCandidate.value?.id)
-  builderReloadKey.value += 1
-}
-
 function selectCandidate(candidate: CandidateRow) {
   selectedCandidate.value = candidate
   setAdminView('builder')
@@ -236,65 +230,59 @@ function openCandidateIntake(candidate: CandidateRow) {
           </button>
         </div>
 
-        <div class="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="relative flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-[#f4f5f7]">
+          <button
+            type="button"
+            class="absolute top-2 z-20 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200/80 bg-[#f4f5f7] text-slate-600 shadow-sm hover:bg-white hover:text-slate-900"
+            :class="sidebarCollapsed ? 'left-14' : 'left-[280px]'"
+            :aria-label="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
+            :title="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
+            @click="toggleSidebarCollapsed"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                v-if="sidebarCollapsed"
+                fill-rule="evenodd"
+                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                clip-rule="evenodd"
+              />
+              <path
+                v-else
+                fill-rule="evenodd"
+                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
           <aside
-            class="flex shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-slate-50 transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
-            :class="sidebarCollapsed ? 'w-12' : 'w-[280px]'"
+            class="flex shrink-0 flex-col overflow-hidden border-r border-slate-200/80 bg-transparent transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+            :class="sidebarCollapsed ? 'w-14' : 'w-[280px]'"
             :aria-expanded="!sidebarCollapsed"
             aria-label="Candidate list"
           >
             <div
-              class="flex h-11 shrink-0 items-center border-b border-slate-200"
-              :class="sidebarCollapsed ? 'justify-center' : 'justify-between gap-2 px-2'"
-            >
-              <p
-                v-if="!sidebarCollapsed"
-                class="truncate px-1 text-xs font-medium uppercase tracking-wide text-slate-500"
-              >
-                Candidates
-              </p>
-              <button
-                type="button"
-                class="rounded-md p-1.5 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
-                :aria-label="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
-                :title="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
-                @click="toggleSidebarCollapsed"
-              >
-                <svg
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    v-if="sidebarCollapsed"
-                    fill-rule="evenodd"
-                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                    clip-rule="evenodd"
-                  />
-                  <path
-                    v-else
-                    fill-rule="evenodd"
-                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div
               v-show="sidebarCollapsed"
-              class="flex flex-1 flex-col items-center gap-2 p-2"
+              class="flex h-11 shrink-0 items-center justify-start border-b border-slate-200/80 pl-1.5 pr-5"
             >
               <button
                 type="button"
-                class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-lg font-semibold leading-none text-white hover:bg-brand-700"
+                class="flex h-7 w-7 items-center justify-center rounded-md border border-brand-200/80 bg-brand-50/60 text-base font-semibold leading-none text-brand-700 hover:bg-brand-100"
                 title="New candidate packet"
                 aria-label="New candidate packet"
                 @click="newPacketModalOpen = true"
               >
                 +
               </button>
+            </div>
+            <div
+              v-show="sidebarCollapsed"
+              class="flex flex-1 flex-col items-center gap-2 p-2"
+            >
               <p class="sr-only">
                 Candidate list is collapsed. Expand to search and select candidates.
               </p>
@@ -302,73 +290,88 @@ function openCandidateIntake(candidate: CandidateRow) {
 
             <div
               v-show="!sidebarCollapsed"
-              class="flex min-h-0 min-w-[280px] flex-1 flex-col"
+              class="flex min-h-0 min-w-[280px] flex-1 flex-col pl-3 pr-5"
             >
-              <div class="shrink-0 space-y-3 border-b border-slate-200 p-3">
-                <div
-                  class="relative grid grid-cols-2 rounded-lg border border-slate-200 bg-white p-0.5"
-                  role="tablist"
-                  aria-label="Dashboard view"
-                >
-                  <span
-                    aria-hidden="true"
-                    class="pointer-events-none absolute inset-y-0.5 left-0.5 w-[calc(50%-0.25rem)] rounded-md bg-slate-100 shadow-sm transition-transform duration-200 ease-out motion-reduce:transition-none"
-                    :class="adminView === 'table' ? 'translate-x-full' : 'translate-x-0'"
-                  />
-                  <button
-                    type="button"
-                    role="tab"
-                    class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
-                    :class="adminView === 'builder' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-                    :aria-selected="adminView === 'builder'"
-                    @click="setAdminView('builder')"
-                  >
-                    Builder
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    class="relative z-10 rounded-md px-2 py-1.5 text-xs font-medium transition-colors duration-200 sm:text-sm"
-                    :class="adminView === 'table' ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'"
-                    :aria-selected="adminView === 'table'"
-                    @click="setAdminView('table')"
-                  >
-                    All candidates
-                  </button>
-                </div>
+              <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80">
                 <button
                   type="button"
-                  class="w-full rounded-lg bg-brand-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+                  class="w-full rounded-md border border-brand-200/80 bg-brand-50/60 px-3 py-1 text-sm font-medium text-brand-700 hover:bg-brand-100"
                   @click="newPacketModalOpen = true"
                 >
-                  + New candidate packet
+                  + New candidate
                 </button>
-                <FileDropZone
-                  v-if="selectedCandidate && isSelectedDraft && sidebarParseUrl"
-                  variant="admin-sidebar"
-                  :candidate-id="selectedCandidate.id"
-                  :parse-url="sidebarParseUrl"
-                  :auth-headers="adminAuthHeaders"
-                  :has-existing-data="true"
-                  @parsed="onSidebarParsed"
-                />
-                <div class="flex flex-wrap items-center gap-2">
+              </div>
+              <div class="shrink-0 space-y-1.5 pb-1.5 pt-3">
+                <div class="relative">
+                  <svg
+                    class="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m1.35-5.15a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" />
+                  </svg>
                   <input
                     v-model="search"
                     type="search"
                     placeholder="Search…"
-                    class="field min-w-0 flex-1 text-sm"
+                    class="sidebar-search"
+                    aria-label="Search candidates"
                   >
-                  <label class="flex items-center gap-1.5 text-xs whitespace-nowrap text-slate-600">
-                    <input v-model="showAll" type="checkbox">
+                </div>
+                <div
+                  class="segmented-control relative grid-cols-3"
+                  role="tablist"
+                  aria-label="Candidate status filter"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="segmented-indicator w-[calc((100%-0.75rem)/3)]"
+                    :class="{
+                      'left-1': listFilter === 'all',
+                      'left-[calc(0.375rem+(100%-0.75rem)/3)]': listFilter === 'draft',
+                      'left-[calc(0.5rem+2*(100%-0.75rem)/3)]': listFilter === 'submitted',
+                    }"
+                  />
+                  <button
+                    type="button"
+                    role="tab"
+                    class="segmented-tab relative z-10 px-1.5 py-1 text-[11px]"
+                    :class="listFilter === 'all' ? 'segmented-tab-active' : ''"
+                    :aria-selected="listFilter === 'all'"
+                    @click="listFilter = 'all'"
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    class="segmented-tab relative z-10 px-1.5 py-1 text-[11px]"
+                    :class="listFilter === 'draft' ? 'segmented-tab-active' : ''"
+                    :aria-selected="listFilter === 'draft'"
+                    @click="listFilter = 'draft'"
+                  >
                     Drafts
-                  </label>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    class="segmented-tab relative z-10 px-1.5 py-1 text-[11px]"
+                    :class="listFilter === 'submitted' ? 'segmented-tab-active' : ''"
+                    :aria-selected="listFilter === 'submitted'"
+                    @click="listFilter = 'submitted'"
+                  >
+                    Submitted
+                  </button>
                 </div>
               </div>
-              <div class="min-h-0 flex-1 overflow-y-auto p-3">
+              <div class="min-h-0 flex-1 overflow-y-auto pb-3">
                 <div
                   v-if="candidatesError"
-                  class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+                  class="rounded-md border border-red-200 bg-red-50 px-2.5 py-2 text-sm text-red-800"
                 >
                   {{ candidatesError }}
                   <button type="button" class="ml-1 underline" @click="loadCandidates()">Retry</button>
@@ -377,7 +380,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   v-else
                   :candidates="candidates"
                   :search="search"
-                  :show-all="showAll"
+                  :list-filter="listFilter"
                   :loading="loadingCandidates"
                   :selected-id="selectedCandidate?.id ?? null"
                   @select="selectCandidate"
@@ -386,18 +389,59 @@ function openCandidateIntake(candidate: CandidateRow) {
             </div>
           </aside>
 
-          <section class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
+          <section class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+            <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80 px-4">
+              <div class="mx-auto flex w-full max-w-5xl items-center">
+              <div
+                class="segmented-control relative w-full max-w-xs grid-cols-2"
+                role="tablist"
+                aria-label="Dashboard view"
+              >
+                <span
+                  aria-hidden="true"
+                  class="segmented-indicator w-[calc((100%-0.625rem)/2)]"
+                  :class="adminView === 'table'
+                    ? 'left-[calc(0.375rem+(100%-0.625rem)/2)]'
+                    : 'left-1'"
+                />
+                <button
+                  type="button"
+                  role="tab"
+                  class="segmented-tab relative z-10 px-2 py-1.5 text-xs sm:text-sm"
+                  :class="adminView === 'builder' ? 'segmented-tab-active' : ''"
+                  :aria-selected="adminView === 'builder'"
+                  @click="setAdminView('builder')"
+                >
+                  Builder
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  class="segmented-tab relative z-10 px-2 py-1.5 text-xs sm:text-sm"
+                  :class="adminView === 'table' ? 'segmented-tab-active' : ''"
+                  :aria-selected="adminView === 'table'"
+                  @click="setAdminView('table')"
+                >
+                  All candidates
+                </button>
+              </div>
+              </div>
+            </div>
+
+            <div class="relative min-h-0 flex-1 overflow-hidden">
             <Transition name="admin-view" mode="out-in">
               <div v-if="adminView === 'builder'" key="builder" class="flex h-full min-h-0 flex-col p-4">
                 <AdminCandidateBuilder
                   v-if="selectedCandidate"
                   :key="`${selectedCandidate.id}-${builderReloadKey}`"
                   :candidate="selectedCandidate"
+                  :sidebar-collapsed="sidebarCollapsed"
                   @reload="loadCandidates()"
+                  @drawer-open="onBuilderDrawerOpen"
                 />
                 <div
                   v-else
-                  class="flex h-full min-h-0 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center"
+                  class="builder-elevated-surface mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col items-center justify-center p-8 text-center"
                 >
                   <h2 class="text-lg font-semibold text-slate-900">Resume builder</h2>
                   <p class="mt-2 max-w-md text-sm text-slate-600">
@@ -417,7 +461,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                 <CandidatesTable
                   :candidates="candidates"
                   :search="search"
-                  :show-all="showAll"
+                  :list-filter="listFilter"
                   :loading="loadingCandidates"
                   :selected-id="selectedCandidate?.id ?? null"
                   @select="openInBuilder"
@@ -426,6 +470,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                 />
               </div>
             </Transition>
+            </div>
           </section>
         </div>
       </div>

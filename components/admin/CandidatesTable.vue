@@ -5,7 +5,7 @@ import { displayCandidateEmr } from '~/utils/emrSystem'
 const props = defineProps<{
   candidates: CandidateRow[]
   search: string
-  showAll: boolean
+  listFilter: 'all' | 'draft' | 'submitted'
   loading?: boolean
   selectedId?: string | null
 }>()
@@ -20,7 +20,9 @@ const submittedStatuses = new Set(['submitted', 'confirmed'])
 
 const filtered = computed(() => {
   let list = props.candidates
-  if (!props.showAll) {
+  if (props.listFilter === 'draft') {
+    list = list.filter(c => c.status === 'draft')
+  } else if (props.listFilter === 'submitted') {
     list = list.filter(c => submittedStatuses.has(c.status))
   }
   const q = props.search.toLowerCase().trim()
@@ -41,11 +43,17 @@ const emptyMessage = computed(() => {
   if (q) {
     return `No candidates match “${q}”. Try a different name, facility, or EMR.`
   }
-  if (!props.showAll) {
+  if (props.listFilter === 'submitted') {
     const hasDrafts = props.candidates.some(c => c.status === 'draft')
     const hasSubmitted = props.candidates.some(c => submittedStatuses.has(c.status))
     if (hasDrafts && !hasSubmitted) {
-      return 'Only drafts so far — turn on Show drafts to see in-progress candidates.'
+      return 'Only drafts so far — switch to Drafts or All to see in-progress candidates.'
+    }
+  }
+  if (props.listFilter === 'draft') {
+    const hasDrafts = props.candidates.some(c => c.status === 'draft')
+    if (!hasDrafts) {
+      return 'No drafts right now — switch to Submitted or All to browse other candidates.'
     }
   }
   return 'No candidates match your filters.'

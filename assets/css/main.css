@@ -8,16 +8,48 @@ body {
 
 @layer components {
   .field-label {
-    @apply mb-1 block text-sm font-medium text-slate-700;
+    @apply mb-1 block text-xs font-medium text-slate-500;
   }
 
   .field-label-compact {
-    @apply mb-1 block text-xs font-medium text-slate-600;
+    @apply mb-1 block text-[11px] font-medium tracking-wide text-slate-500;
+  }
+
+  /* Focused canvas: only elevated surface on the recessed admin workspace */
+  .builder-elevated-surface {
+    @apply rounded-xl border border-black/[0.05] bg-white;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 2px 4px -1px rgba(0, 0, 0, 0.03),
+      0 10px 15px -3px rgba(0, 0, 0, 0.03);
   }
 
   .field {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900;
     @apply focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30;
+  }
+
+  .sidebar-search {
+    @apply h-8 w-full rounded-md border border-slate-200 bg-white/70 py-1.5 pl-8 pr-3 text-[0.85rem] text-slate-900 placeholder:text-slate-400;
+    @apply focus:border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-300;
+  }
+
+  .segmented-control {
+    @apply grid gap-0.5 rounded-lg border border-slate-200/80 bg-slate-100/80 p-1;
+  }
+
+  .segmented-indicator {
+    @apply pointer-events-none absolute inset-y-1 rounded-md bg-white shadow-sm;
+    @apply transition-[left] duration-200 ease-out motion-reduce:transition-none;
+  }
+
+  .segmented-tab {
+    @apply rounded-md font-medium text-slate-500 transition-[color,font-weight] duration-200 ease-out;
+    @apply hover:text-slate-800 motion-reduce:transition-none;
+  }
+
+  .segmented-tab-active {
+    @apply font-semibold text-slate-900;
   }
 
   .field-prefilled {
@@ -59,6 +91,18 @@ body {
 
   .admin-view-leave-active {
     @apply absolute inset-x-0 top-0;
+  }
+
+  /* Extra details: hide row actions until hover/focus on fine pointers; always visible on touch. */
+  @media (hover: hover) and (pointer: fine) {
+    .extra-detail-item .extra-detail-actions {
+      @apply opacity-0 transition-opacity duration-150 motion-reduce:transition-none;
+    }
+
+    .extra-detail-item:hover .extra-detail-actions,
+    .extra-detail-item:focus-within .extra-detail-actions {
+      @apply opacity-100;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

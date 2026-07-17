@@ -2,10 +2,12 @@
 import type { CandidateRow } from '~/types/candidate'
 import { displayCandidateEmr } from '~/utils/emrSystem'
 
+export type CandidateListFilter = 'all' | 'draft' | 'submitted'
+
 const props = defineProps<{
   candidates: CandidateRow[]
   search: string
-  showAll: boolean
+  listFilter: CandidateListFilter
   loading?: boolean
   selectedId?: string | null
 }>()
@@ -18,7 +20,9 @@ const submittedStatuses = new Set(['submitted', 'confirmed'])
 
 const filtered = computed(() => {
   let list = props.candidates
-  if (!props.showAll) {
+  if (props.listFilter === 'draft') {
+    list = list.filter(c => c.status === 'draft')
+  } else if (props.listFilter === 'submitted') {
     list = list.filter(c => submittedStatuses.has(c.status))
   }
   const q = props.search.toLowerCase().trim()
@@ -38,16 +42,16 @@ function candidateDisplayName(c: CandidateRow) {
 </script>
 
 <template>
-  <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div v-if="loading" class="space-y-2 p-3">
-      <div v-for="n in 4" :key="n" class="h-10 animate-pulse rounded-lg bg-slate-100" />
+  <div>
+    <div v-if="loading" class="space-y-2">
+      <div v-for="n in 4" :key="n" class="h-10 animate-pulse rounded-lg bg-slate-200/60" />
     </div>
-    <ul v-else-if="filtered.length" class="divide-y divide-slate-100">
+    <ul v-else-if="filtered.length" class="space-y-0.5">
       <li v-for="c in filtered" :key="c.id">
         <button
           type="button"
-          class="flex w-full flex-col items-start px-3 py-2.5 text-left text-sm transition hover:bg-slate-50"
-          :class="selectedId === c.id ? 'bg-brand-50 ring-1 ring-inset ring-brand-200' : ''"
+          class="flex w-full flex-col items-start rounded-md px-2.5 py-2 text-left text-sm transition hover:bg-white/70"
+          :class="selectedId === c.id ? 'bg-white shadow-sm ring-1 ring-inset ring-brand-200' : ''"
           @click="emit('select', c)"
         >
           <span class="font-medium text-slate-900">{{ candidateDisplayName(c) }}</span>
@@ -55,7 +59,7 @@ function candidateDisplayName(c: CandidateRow) {
         </button>
       </li>
     </ul>
-    <p v-else class="px-3 py-6 text-center text-sm text-slate-500">
+    <p v-else class="px-2.5 py-6 text-center text-sm text-slate-500">
       No candidates yet. Create a packet to get started.
     </p>
   </div>

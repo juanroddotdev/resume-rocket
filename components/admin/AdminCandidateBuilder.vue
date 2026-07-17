@@ -8,13 +8,17 @@ import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/util
 import { allEmployersEmrComplete } from '~/utils/emrSystem'
 import { applySupplementalValueToSnapshot } from '~/utils/professionalSnapshot'
 import { buildSupplementalBucket } from '~/utils/supplementalBucket'
+import { useAdminCandidateWorkspace } from '~/composables/useAdminCandidateWorkspace'
 
 const props = defineProps<{
   candidate: CandidateRow
+  /** When true with a helper card open, form slides left (same width) to clear the card. */
+  sidebarCollapsed?: boolean
 }>()
 
 const emit = defineEmits<{
   reload: []
+  'drawer-open': [open: boolean]
 }>()
 
 const selected = toRef(props, 'candidate')
@@ -181,6 +185,15 @@ function closeEmployersJump() {
   employersJumpOpen.value = false
 }
 
+const sideDrawerOpen = computed(() => extraDetailsOpen.value || employersJumpOpen.value)
+
+/** Slide form left only while helper is open and sidebar is collapsed — never resize. */
+const formSlidForHelper = computed(() => sideDrawerOpen.value && Boolean(props.sidebarCollapsed))
+
+watch(sideDrawerOpen, (open) => {
+  emit('drawer-open', open)
+}, { immediate: true })
+
 async function onEmployerJumpSelect(index: number) {
   employersActiveIndex.value = index
   await hospitalAutocompleteRef.value?.openCard(index, { scroll: true })
@@ -290,7 +303,13 @@ watch(devFixtureRequest, (mode) => {
 </script>
 
 <template>
-  <div class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+  <div class="relative flex h-full min-h-0 flex-col overflow-hidden">
+    <div
+      class="builder-elevated-surface relative flex h-full min-h-0 w-full max-w-5xl flex-col overflow-hidden transition-[margin] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+      :class="formSlidForHelper
+        ? 'ml-0 mr-[min(26rem,calc(100%-3rem))] sm:mr-[min(30rem,calc(100%-3rem))]'
+        : 'mx-auto'"
+    >
     <AdminCandidateBuilderSkeleton v-if="loading" class="flex-1" />
 
     <div
@@ -304,8 +323,9 @@ watch(devFixtureRequest, (mode) => {
     </div>
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="shrink-0 border-b border-slate-100 bg-white">
       <div
-        class="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
+        class="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold text-slate-900">
@@ -378,7 +398,10 @@ watch(devFixtureRequest, (mode) => {
           </div>
         </div>
       </div>
-      <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</p>
+      </div>
+      <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50">
+        <span class="block px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</span>
+      </p>
 
       <AdminSectionTabs
         :sections="ADMIN_SECTIONS"
@@ -390,10 +413,10 @@ watch(devFixtureRequest, (mode) => {
       <div
         ref="canvasRef"
         data-admin-builder-canvas
-        class="relative min-h-0 flex-1 overflow-y-auto"
+        class="relative min-h-0 flex-1 overflow-y-auto bg-white"
       >
-        <!-- Padding on inner wrapper (not the scrollport) so sticky employers sit flush under section tabs. -->
-        <div class="relative space-y-10 p-4 sm:p-6">
+        <!-- Form body lives on the elevated surface; gutters come from the recessed canvas outside. -->
+        <div class="relative space-y-12 p-4 sm:p-6">
         <div
           v-if="devPrefilling"
           class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
@@ -407,7 +430,7 @@ watch(devFixtureRequest, (mode) => {
           <!-- Identity (upload/parse notices live here — no Resume tab) -->
           <section id="admin-section-identity" class="scroll-mt-4 space-y-4">
             <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually below.
+              No resume uploaded yet. Continue manually below, or share the intake link with the candidate.
             </p>
             <ParseNoticeBanner
               :meta="parseMeta"
@@ -416,7 +439,7 @@ watch(devFixtureRequest, (mode) => {
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
-            <h2 class="text-lg font-semibold text-slate-900">Identity</h2>
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Identity</h2>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="field-label">First name</span>
@@ -511,8 +534,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Professional snapshot -->
-          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Professional snapshot</h2>
+          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Professional snapshot</h2>
             <AdminProfessionalSnapshot
               v-model="form.professional_snapshot"
               :specialties="form.specialties"
@@ -532,8 +555,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Employment -->
-          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Employment</h2>
+          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Employment</h2>
             <SpecialtyChipInput
               v-model="form.specialties"
               label="Specialties / units"
@@ -556,8 +579,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Credentials -->
-          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Credentials & clinical</h2>
+          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Credentials & clinical</h2>
             <CredentialsChecklist
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
@@ -573,7 +596,7 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Review -->
-          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100 pt-8">
+          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100/80 pt-10">
             <IntakeReviewPanel
               :missing="missingFields"
               :advisories="employerLinkAdvisories"
@@ -607,6 +630,7 @@ watch(devFixtureRequest, (mode) => {
           </section>
         </div>
       </div>
+    </div>
     </div>
 
     <DocxPreviewSlideOver

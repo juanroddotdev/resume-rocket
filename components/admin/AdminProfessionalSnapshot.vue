@@ -176,20 +176,25 @@ async function regenerateFromResume() {
 </script>
 
 <template>
-  <div class="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+  <div class="space-y-4">
     <div class="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <p class="text-sm font-medium text-slate-800">
-          Lines included below appear in the VMS packet Professional Snapshot.
+      <div class="min-w-0 max-w-xl">
+        <p class="text-sm text-slate-600">
+          Checked lines print in the VMS packet Snapshot.
         </p>
-        <p class="mt-1 text-sm text-slate-600">
-          Uncheck to omit a line. AI propose never auto-includes — you approve each line.
-        </p>
+        <details class="mt-1 text-sm text-slate-500">
+          <summary class="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
+            How Include &amp; AI propose work
+          </summary>
+          <p class="mt-1.5 text-xs leading-relaxed text-slate-500">
+            Uncheck Include to omit a line from the packet. Regenerate from resume fills values with snippets but never auto-includes — you approve each line.
+          </p>
+        </details>
       </div>
       <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           :disabled="disabled || proposing"
           @click="resetFromWizard"
         >
@@ -197,7 +202,7 @@ async function regenerateFromResume() {
         </button>
         <button
           type="button"
-          class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           :disabled="disabled || proposing || !candidateId || hasResume === false"
           @click="regenerateFromResume"
         >
@@ -205,7 +210,7 @@ async function regenerateFromResume() {
         </button>
         <button
           type="button"
-          class="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           :disabled="disabled"
           @click="emit('open-extra-details')"
         >
@@ -215,7 +220,7 @@ async function regenerateFromResume() {
     </div>
 
     <p v-if="proposeError" class="text-sm text-red-700" role="alert">{{ proposeError }}</p>
-    <p v-else-if="proposeNotice" class="text-sm text-slate-700" role="status">{{ proposeNotice }}</p>
+    <p v-else-if="proposeNotice" class="text-sm text-slate-600" role="status">{{ proposeNotice }}</p>
     <p
       v-if="hasResume === false"
       class="text-sm text-amber-800"
@@ -224,14 +229,14 @@ async function regenerateFromResume() {
       Upload a resume via the sidebar to enable regenerate from resume.
     </p>
 
-    <ul class="space-y-3">
+    <ul class="space-y-2">
       <li
         v-for="key in PROFESSIONAL_SNAPSHOT_KEYS"
         :key="key"
-        class="rounded-md border border-slate-200 bg-white p-3"
+        class="rounded-md border border-slate-100 bg-white p-3"
       >
         <div class="flex flex-wrap items-center gap-3">
-          <label class="flex shrink-0 items-center gap-2 text-sm text-slate-800">
+          <label class="flex shrink-0 items-center gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
               class="rounded border-slate-300"
@@ -277,7 +282,7 @@ async function regenerateFromResume() {
                 </button>
                 <input
                   type="text"
-                  class="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm disabled:bg-slate-100"
+                  class="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 disabled:bg-slate-100"
                   :value="flagParts(key).detail"
                   :disabled="disabled || flagParts(key).answer !== 'yes'"
                   placeholder="Optional detail"
@@ -287,7 +292,7 @@ async function regenerateFromResume() {
                 <button
                   v-if="flagParts(key).answer"
                   type="button"
-                  class="shrink-0 text-xs font-medium text-slate-600 underline hover:no-underline disabled:opacity-50"
+                  class="shrink-0 text-xs font-medium text-slate-500 underline hover:no-underline disabled:opacity-50"
                   :disabled="disabled"
                   @click="clearFlag(key)"
                 >
@@ -299,7 +304,7 @@ async function regenerateFromResume() {
             <input
               v-else
               type="text"
-              class="mt-0.5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
+              class="mt-0.5 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 disabled:bg-slate-100"
               :value="lines[key].value"
               :disabled="disabled"
               @input="onValueInput(key, $event)"
@@ -308,7 +313,7 @@ async function regenerateFromResume() {
         </div>
         <p
           v-if="lines[key].source"
-          class="mt-1.5 text-xs text-slate-500"
+          class="mt-1.5 text-[11px] italic text-slate-400"
         >
           Source: {{ lines[key].source }}
           <span v-if="lines[key].sourceSnippet"> — “{{ lines[key].sourceSnippet }}”</span>

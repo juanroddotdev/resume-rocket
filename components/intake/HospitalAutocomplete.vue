@@ -131,22 +131,24 @@ async function scrollCardToTop(index: number) {
   if (!import.meta.client) return
   await nextTick()
   requestAnimationFrame(() => {
-    document.getElementById(`employer-card-${index}`)?.scrollIntoView({
+    document.getElementById(`employer-deck-row-${index}`)?.scrollIntoView({
       behavior: prefersReducedMotion() ? 'auto' : 'smooth',
       block: 'start',
     })
   })
 }
 
-async function openCard(index: number) {
+async function openCard(index: number, options?: { scroll?: boolean }) {
   if (!isMultiDeck.value && activeCardIndex.value === index) {
     emit('active-change', index)
+    if (options?.scroll) await scrollCardToTop(index)
     return
   }
   linkSearchRequested.value = null
   activeCardIndex.value = index
   emit('active-change', index)
-  await scrollCardToTop(index)
+  // Jump drawer / gap review opt into scroll. Header toggles expand in place (accordion only).
+  if (options?.scroll) await scrollCardToTop(index)
 }
 
 async function openEmployerField(fieldId: string): boolean {
@@ -306,7 +308,7 @@ defineExpose({
       :legacy-emr-system="legacyEmrSystem"
       panel-class="fixed bottom-3 right-3 top-16 z-40"
       @close="employersJumpOpen = false"
-      @select="openCard"
+      @select="(index) => openCard(index, { scroll: true })"
     />
   </div>
 </template>

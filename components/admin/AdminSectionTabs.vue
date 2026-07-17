@@ -15,10 +15,11 @@ const emit = defineEmits<{
 
 <template>
   <nav
-    class="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2 sm:px-6"
+    class="shrink-0 border-b border-slate-200 bg-white"
     role="tablist"
     aria-label="Builder sections"
   >
+    <div class="mx-auto flex w-full max-w-5xl items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6">
     <template v-for="(section, index) in sections" :key="section.id">
       <span
         v-if="index > 0"
@@ -47,5 +48,6 @@ const emit = defineEmits<{
         </span>
       </button>
     </template>
+    </div>
   </nav>
 </template>

@@ -33,14 +33,14 @@ async function onCopy(item: SupplementalBucketItem) {
     <li
       v-for="item in items"
       :key="item.id"
-      class="rounded-md border border-brand-100/60 bg-white px-3 py-2"
+      class="group extra-detail-item rounded-md border border-brand-100/50 bg-white px-3 py-2"
     >
-      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ item.label }}</p>
-      <p class="mt-0.5 break-words text-sm text-slate-800">{{ item.value }}</p>
-      <div class="mt-2 flex flex-wrap gap-2">
+      <p class="text-[11px] font-medium uppercase tracking-wider text-slate-400">{{ item.label }}</p>
+      <p class="mt-0.5 break-words text-sm font-medium text-slate-900">{{ item.value }}</p>
+      <div class="extra-detail-actions mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
         <button
           type="button"
-          class="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          class="text-xs font-medium text-brand-700 hover:underline disabled:opacity-50"
           :disabled="disabled"
           @click="onCopy(item)"
         >
@@ -49,7 +49,7 @@ async function onCopy(item: SupplementalBucketItem) {
         <button
           v-if="item.applyTargetKey"
           type="button"
-          class="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          class="rounded border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
           :disabled="disabled"
           @click="emit('apply', { key: item.applyTargetKey, value: item.value })"
         >

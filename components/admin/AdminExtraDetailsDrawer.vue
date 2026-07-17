@@ -73,8 +73,8 @@ onUnmounted(() => {
       </div>
 
       <div class="shrink-0 space-y-2 border-b border-brand-100/80 px-5 py-3">
-        <p class="text-sm text-slate-600">
-          Not in the download until you add them — copy anywhere, or apply to a suggested field (Snapshot still needs Include).
+        <p class="text-sm text-slate-500">
+          Copy anywhere, or apply to Snapshot (still needs Include).
         </p>
         <p
           v-if="applyNotice"

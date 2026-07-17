@@ -8,11 +8,11 @@ body {
 
 @layer components {
   .field-label {
-    @apply mb-1 block text-sm font-medium text-slate-700;
+    @apply mb-1 block text-xs font-medium text-slate-500;
   }
 
   .field-label-compact {
-    @apply mb-1 block text-xs font-medium text-slate-600;
+    @apply mb-1 block text-[11px] font-medium tracking-wide text-slate-500;
   }
 
   .field {
@@ -59,6 +59,18 @@ body {
 
   .admin-view-leave-active {
     @apply absolute inset-x-0 top-0;
+  }
+
+  /* Extra details: hide row actions until hover/focus on fine pointers; always visible on touch. */
+  @media (hover: hover) and (pointer: fine) {
+    .extra-detail-item .extra-detail-actions {
+      @apply opacity-0 transition-opacity duration-150 motion-reduce:transition-none;
+    }
+
+    .extra-detail-item:hover .extra-detail-actions,
+    .extra-detail-item:focus-within .extra-detail-actions {
+      @apply opacity-100;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

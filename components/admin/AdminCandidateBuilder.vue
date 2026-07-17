@@ -304,8 +304,9 @@ watch(devFixtureRequest, (mode) => {
     </div>
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div class="shrink-0 border-b border-slate-200 bg-white">
       <div
-        class="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6"
+        class="mx-auto flex w-full max-w-5xl flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold text-slate-900">
@@ -378,7 +379,10 @@ watch(devFixtureRequest, (mode) => {
           </div>
         </div>
       </div>
-      <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</p>
+      </div>
+      <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50">
+        <span class="mx-auto block w-full max-w-5xl px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</span>
+      </p>
 
       <AdminSectionTabs
         :sections="ADMIN_SECTIONS"
@@ -390,10 +394,10 @@ watch(devFixtureRequest, (mode) => {
       <div
         ref="canvasRef"
         data-admin-builder-canvas
-        class="relative min-h-0 flex-1 overflow-y-auto"
+        class="relative min-h-0 flex-1 overflow-y-auto bg-slate-50"
       >
-        <!-- Padding on inner wrapper (not the scrollport) so sticky employers sit flush under section tabs. -->
-        <div class="relative space-y-10 p-4 sm:p-6">
+        <!-- Constrained form column (Figma-like artboard); padding on wrapper so sticky employers sit flush. -->
+        <div class="relative mx-auto w-full max-w-5xl space-y-12 p-4 sm:p-6">
         <div
           v-if="devPrefilling"
           class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
@@ -416,7 +420,7 @@ watch(devFixtureRequest, (mode) => {
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
-            <h2 class="text-lg font-semibold text-slate-900">Identity</h2>
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Identity</h2>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="field-label">First name</span>
@@ -511,8 +515,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Professional snapshot -->
-          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Professional snapshot</h2>
+          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Professional snapshot</h2>
             <AdminProfessionalSnapshot
               v-model="form.professional_snapshot"
               :specialties="form.specialties"
@@ -532,8 +536,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Employment -->
-          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Employment</h2>
+          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Employment</h2>
             <SpecialtyChipInput
               v-model="form.specialties"
               label="Specialties / units"
@@ -556,8 +560,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Credentials -->
-          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100 pt-8">
-            <h2 class="text-lg font-semibold text-slate-900">Credentials & clinical</h2>
+          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
+            <h2 class="text-base font-semibold tracking-tight text-slate-900">Credentials & clinical</h2>
             <CredentialsChecklist
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
@@ -573,7 +577,7 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Review -->
-          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100 pt-8">
+          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100/80 pt-10">
             <IntakeReviewPanel
               :missing="missingFields"
               :advisories="employerLinkAdvisories"

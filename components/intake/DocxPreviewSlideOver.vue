@@ -71,7 +71,7 @@ onUnmounted(() => {
           </button>
           <button
             type="button"
-            class="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 sm:px-4"
+            class="rounded-lg bg-accent-500 px-3 py-2 text-sm font-semibold text-brand-900 hover:bg-accent-600 disabled:opacity-50 sm:px-4"
             :disabled="submitting || preparing || !candidateId"
             @click="emit('download')"
           >

@@ -238,7 +238,7 @@ function onInput(e: Event) {
       </div>
       <template v-else>
         <p class="text-sm text-slate-700">Drop your resume here</p>
-        <label class="mt-3 inline-block cursor-pointer rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+        <label class="mt-3 inline-block cursor-pointer rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600">
           Choose file
           <input
             type="file"

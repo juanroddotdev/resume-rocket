@@ -354,7 +354,7 @@ watch(devFixtureRequest, (mode) => {
     </div>
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div class="shrink-0 border-b border-slate-100 bg-white">
+      <div class="shrink-0 bg-white">
       <div
         class="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
       >

@@ -230,7 +230,7 @@ function openCandidateIntake(candidate: CandidateRow) {
           </button>
         </div>
 
-        <div class="relative flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-canvas">
+        <div class="relative flex min-h-0 flex-1 overflow-hidden rounded-xl bg-canvas">
           <button
             type="button"
             class="absolute top-2 z-20 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-brand-200 bg-canvas text-brand-600 shadow-sm hover:bg-white hover:text-brand-900"
@@ -267,7 +267,7 @@ function openCandidateIntake(candidate: CandidateRow) {
           >
             <div
               v-show="sidebarCollapsed"
-              class="flex h-11 shrink-0 items-center justify-start border-b border-slate-200/80 pl-1.5 pr-5"
+              class="flex h-11 shrink-0 items-center justify-start pl-1.5 pr-5"
             >
               <button
                 type="button"
@@ -292,7 +292,7 @@ function openCandidateIntake(candidate: CandidateRow) {
               v-show="!sidebarCollapsed"
               class="flex min-h-0 min-w-[280px] flex-1 flex-col"
             >
-              <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80 pl-3 pr-5">
+              <div class="flex h-11 shrink-0 items-center pl-3 pr-5">
                 <button
                   type="button"
                   class="w-full rounded-md border border-brand-200/80 bg-brand-50/60 px-3 py-1 text-sm font-medium text-brand-700 hover:bg-brand-100"
@@ -390,7 +390,7 @@ function openCandidateIntake(candidate: CandidateRow) {
           </aside>
 
           <section class="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
-            <div class="flex h-11 shrink-0 items-center border-b border-slate-200/80 px-4">
+            <div class="flex h-11 shrink-0 items-center px-4">
               <div class="mx-auto flex w-full max-w-5xl items-center">
               <div
                 class="segmented-control relative w-full max-w-xs grid-cols-2"
@@ -430,7 +430,7 @@ function openCandidateIntake(candidate: CandidateRow) {
 
             <div class="relative min-h-0 flex-1 overflow-hidden">
             <Transition name="admin-view" mode="out-in">
-              <div v-if="adminView === 'builder'" key="builder" class="flex h-full min-h-0 flex-col p-4">
+              <div v-if="adminView === 'builder'" key="builder" class="flex h-full min-h-0 flex-col px-4 pb-4 pt-3">
                 <AdminCandidateBuilder
                   v-if="selectedCandidate"
                   :key="`${selectedCandidate.id}-${builderReloadKey}`"
@@ -458,7 +458,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                 </div>
               </div>
 
-              <div v-else key="table" class="h-full min-h-0 overflow-y-auto p-4">
+              <div v-else key="table" class="h-full min-h-0 overflow-y-auto px-4 pb-4 pt-3">
                 <CandidatesTable
                   :candidates="candidates"
                   :search="search"

@@ -29,7 +29,7 @@ body {
 
   /* Focused canvas: only elevated surface on the recessed admin workspace */
   .builder-elevated-surface {
-    @apply rounded-xl border border-black/[0.05] bg-white;
+    @apply rounded-xl bg-white;
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.05),
       0 2px 4px -1px rgba(0, 0, 0, 0.03),

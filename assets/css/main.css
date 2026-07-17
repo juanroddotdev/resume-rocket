@@ -35,11 +35,11 @@ body {
   }
 
   .segmented-control {
-    @apply grid gap-0.5 rounded-lg border border-slate-200/80 bg-slate-100/80 p-1;
+    @apply relative grid gap-0.5;
   }
 
   .segmented-indicator {
-    @apply pointer-events-none absolute inset-y-1 rounded-md bg-white shadow-sm;
+    @apply pointer-events-none absolute inset-y-0 rounded-md border border-slate-200/80 bg-white shadow-sm;
     @apply transition-[left] duration-200 ease-out motion-reduce:transition-none;
   }
 

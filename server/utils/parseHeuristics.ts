@@ -46,6 +46,9 @@ export function hasParsedFields(parsed: ParsedResume): boolean {
     || parsed.lastName
     || parsed.email
     || parsed.phone
+    || parsed.homeAddress
+    || parsed.homeCity
+    || parsed.homeState
     || parsed.licenseNumber
     || parsed.licenseState
     || parsed.licenses?.length
@@ -85,6 +88,9 @@ export function mergeParsedResume(
     lastName: preferPrimary(primary?.lastName, fallback.lastName),
     email: preferPrimary(primary?.email, fallback.email),
     phone: preferPrimary(primary?.phone, fallback.phone),
+    homeAddress: preferPrimary(primary?.homeAddress, fallback.homeAddress),
+    homeCity: preferPrimary(primary?.homeCity, fallback.homeCity),
+    homeState: preferPrimary(primary?.homeState, fallback.homeState),
     licenseNumber: preferPrimary(primary?.licenseNumber, fallback.licenseNumber),
     licenseState: preferPrimary(primary?.licenseState, fallback.licenseState),
     licenses: preferPrimary(primary?.licenses, fallback.licenses),

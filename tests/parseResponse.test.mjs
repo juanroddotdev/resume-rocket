@@ -82,4 +82,13 @@ describe('countParsedFields', () => {
     })
     assert.equal(count, 4)
   })
+
+  it('counts home_state separately from city and address', () => {
+    const count = countParsedFields({
+      home_address: '123 Main St',
+      home_city: 'Austin',
+      home_state: 'TX',
+    })
+    assert.equal(count, 3)
+  })
 })

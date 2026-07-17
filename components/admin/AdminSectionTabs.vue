@@ -15,11 +15,11 @@ const emit = defineEmits<{
 
 <template>
   <nav
-    class="shrink-0 border-b border-slate-200 bg-white"
+    class="shrink-0 border-b border-slate-100 bg-white"
     role="tablist"
     aria-label="Builder sections"
   >
-    <div class="mx-auto flex w-full max-w-5xl items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6">
+    <div class="flex items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6">
     <template v-for="(section, index) in sections" :key="section.id">
       <span
         v-if="index > 0"

@@ -8,13 +8,17 @@ import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/util
 import { allEmployersEmrComplete } from '~/utils/emrSystem'
 import { applySupplementalValueToSnapshot } from '~/utils/professionalSnapshot'
 import { buildSupplementalBucket } from '~/utils/supplementalBucket'
+import { useAdminCandidateWorkspace } from '~/composables/useAdminCandidateWorkspace'
 
 const props = defineProps<{
   candidate: CandidateRow
+  /** When true with a helper card open, form slides left (same width) to clear the card. */
+  sidebarCollapsed?: boolean
 }>()
 
 const emit = defineEmits<{
   reload: []
+  'drawer-open': [open: boolean]
 }>()
 
 const selected = toRef(props, 'candidate')
@@ -181,6 +185,15 @@ function closeEmployersJump() {
   employersJumpOpen.value = false
 }
 
+const sideDrawerOpen = computed(() => extraDetailsOpen.value || employersJumpOpen.value)
+
+/** Slide form left only while helper is open and sidebar is collapsed — never resize. */
+const formSlidForHelper = computed(() => sideDrawerOpen.value && Boolean(props.sidebarCollapsed))
+
+watch(sideDrawerOpen, (open) => {
+  emit('drawer-open', open)
+}, { immediate: true })
+
 async function onEmployerJumpSelect(index: number) {
   employersActiveIndex.value = index
   await hospitalAutocompleteRef.value?.openCard(index, { scroll: true })
@@ -290,7 +303,13 @@ watch(devFixtureRequest, (mode) => {
 </script>
 
 <template>
-  <div class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+  <div class="relative flex h-full min-h-0 flex-col overflow-hidden">
+    <div
+      class="builder-elevated-surface relative flex h-full min-h-0 w-full max-w-5xl flex-col overflow-hidden transition-[margin] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none"
+      :class="formSlidForHelper
+        ? 'ml-0 mr-[min(26rem,calc(100%-3rem))] sm:mr-[min(30rem,calc(100%-3rem))]'
+        : 'mx-auto'"
+    >
     <AdminCandidateBuilderSkeleton v-if="loading" class="flex-1" />
 
     <div
@@ -304,9 +323,9 @@ watch(devFixtureRequest, (mode) => {
     </div>
 
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div class="shrink-0 border-b border-slate-200 bg-white">
+      <div class="shrink-0 border-b border-slate-100 bg-white">
       <div
-        class="mx-auto flex w-full max-w-5xl flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
+        class="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold text-slate-900">
@@ -381,7 +400,7 @@ watch(devFixtureRequest, (mode) => {
       </div>
       </div>
       <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50">
-        <span class="mx-auto block w-full max-w-5xl px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</span>
+        <span class="block px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</span>
       </p>
 
       <AdminSectionTabs
@@ -394,10 +413,10 @@ watch(devFixtureRequest, (mode) => {
       <div
         ref="canvasRef"
         data-admin-builder-canvas
-        class="relative min-h-0 flex-1 overflow-y-auto bg-slate-50"
+        class="relative min-h-0 flex-1 overflow-y-auto bg-white"
       >
-        <!-- Constrained form column (Figma-like artboard); padding on wrapper so sticky employers sit flush. -->
-        <div class="relative mx-auto w-full max-w-5xl space-y-12 p-4 sm:p-6">
+        <!-- Form body lives on the elevated surface; gutters come from the recessed canvas outside. -->
+        <div class="relative space-y-12 p-4 sm:p-6">
         <div
           v-if="devPrefilling"
           class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
@@ -411,7 +430,7 @@ watch(devFixtureRequest, (mode) => {
           <!-- Identity (upload/parse notices live here — no Resume tab) -->
           <section id="admin-section-identity" class="scroll-mt-4 space-y-4">
             <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Use <span class="font-medium">Re-upload resume</span> in the sidebar, or continue manually below.
+              No resume uploaded yet. Continue manually below, or share the intake link with the candidate.
             </p>
             <ParseNoticeBanner
               :meta="parseMeta"
@@ -611,6 +630,7 @@ watch(devFixtureRequest, (mode) => {
           </section>
         </div>
       </div>
+    </div>
     </div>
 
     <DocxPreviewSlideOver

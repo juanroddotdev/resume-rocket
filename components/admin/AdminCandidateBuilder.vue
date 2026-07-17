@@ -202,6 +202,34 @@ async function onEmployerJumpSelect(index: number) {
   await hospitalAutocompleteRef.value?.openCard(index, { scroll: true })
 }
 
+function removeEmployerAt(index: number) {
+  const next = [...form.employers]
+  next.splice(index, 1)
+  form.employers = next
+  if (employersActiveIndex.value >= next.length) {
+    employersActiveIndex.value = Math.max(0, next.length - 1)
+  } else if (employersActiveIndex.value > index) {
+    employersActiveIndex.value -= 1
+  }
+  if (next.length === 0) {
+    closeEmployersJump()
+  }
+}
+
+function moveEmployerAt(index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= form.employers.length) return
+  const next = [...form.employers]
+  const [item] = next.splice(index, 1)
+  next.splice(target, 0, item!)
+  form.employers = next
+  if (employersActiveIndex.value === index) {
+    employersActiveIndex.value = target
+  } else if (employersActiveIndex.value === target) {
+    employersActiveIndex.value = index
+  }
+}
+
 function applyExtraDetailToSnapshot(payload: { key: ProfessionalSnapshotKey; value: string }) {
   form.professional_snapshot = applySupplementalValueToSnapshot(
     form.professional_snapshot,
@@ -363,7 +391,7 @@ watch(devFixtureRequest, (mode) => {
               </svg>
               View extra details{{ extraDetailsItems.length ? ` (${extraDetailsItems.length})` : '' }}
             </button>
-            <template v-if="form.employers.length >= 2">
+            <template v-if="form.employers.length >= 1">
               <span class="text-slate-300" aria-hidden="true">|</span>
               <button
                 type="button"
@@ -670,6 +698,9 @@ watch(devFixtureRequest, (mode) => {
       :candidate-name="displayName"
       @close="closeEmployersJump"
       @select="onEmployerJumpSelect"
+      @remove="removeEmployerAt"
+      @move-up="(index) => moveEmployerAt(index, -1)"
+      @move-down="(index) => moveEmployerAt(index, 1)"
     />
 
     <div

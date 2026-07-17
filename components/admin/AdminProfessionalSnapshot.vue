@@ -160,7 +160,7 @@ async function regenerateFromResume() {
     model.value = applySnapshotProposals(model.value, res.proposals || {})
     const count = res.proposal_count ?? Object.keys(res.proposals || {}).length
     proposeNotice.value = count
-      ? `Filled ${count} line${count === 1 ? '' : 's'} from the resume. Review snippets and check Include — nothing is auto-included.`
+      ? `Filled ${count} line${count === 1 ? '' : 's'} from the resume. Dimmed lines are hidden from the packet — tap the eye to show each one you want.`
       : 'No snapshot lines found in the resume text. You can still edit manually or open Extra details.'
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; statusMessage?: string; message?: string }
@@ -173,6 +173,11 @@ async function regenerateFromResume() {
     proposing.value = false
   }
 }
+
+function toggleIncluded(key: ProfessionalSnapshotKey) {
+  if (props.disabled) return
+  patchLine(key, { included: !lines.value[key].included })
+}
 </script>
 
 <template>
@@ -180,14 +185,14 @@ async function regenerateFromResume() {
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="min-w-0 max-w-xl">
         <p class="text-sm text-slate-600">
-          Checked lines print in the VMS packet Snapshot.
+          Bright lines print in the packet. Dimmed lines stay out until you show them.
         </p>
         <details class="mt-1 text-sm text-slate-500">
           <summary class="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
-            How Include &amp; AI propose work
+            How packet visibility &amp; AI propose work
           </summary>
           <p class="mt-1.5 text-xs leading-relaxed text-slate-500">
-            Uncheck Include to omit a line from the packet. Regenerate from resume fills values with snippets but never auto-includes — you approve each line.
+            Use the eye on each row to show or hide that line in the packet. Regenerate from resume fills values with snippets but never turns lines on automatically — you approve each one.
           </p>
         </details>
       </div>
@@ -233,21 +238,16 @@ async function regenerateFromResume() {
       <li
         v-for="key in PROFESSIONAL_SNAPSHOT_KEYS"
         :key="key"
-        class="rounded-md border border-slate-100 bg-white p-3"
+        class="rounded-lg border p-3 transition-[background-color,border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none"
+        :class="lines[key].included
+          ? 'border-slate-400 bg-white shadow-sm'
+          : 'border-slate-100 bg-slate-50/90'"
       >
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="flex shrink-0 items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              class="rounded border-slate-300"
-              :checked="lines[key].included"
-              :disabled="disabled"
-              :aria-label="`Include ${PROFESSIONAL_SNAPSHOT_LABELS[key]}`"
-              @change="patchLine(key, { included: ($event.target as HTMLInputElement).checked })"
-            >
-            Include
-          </label>
-          <div class="min-w-0 flex-1">
+        <div class="flex items-start gap-2">
+          <div
+            class="min-w-0 flex-1 transition-opacity duration-200 ease-out motion-reduce:transition-none"
+            :class="lines[key].included ? 'opacity-100' : 'opacity-45'"
+          >
             <span class="field-label-compact">{{ PROFESSIONAL_SNAPSHOT_LABELS[key] }}</span>
 
             <template v-if="isSnapshotExperienceFlag(key)">
@@ -309,30 +309,73 @@ async function regenerateFromResume() {
               :disabled="disabled"
               @input="onValueInput(key, $event)"
             >
+            <p
+              v-if="lines[key].source"
+              class="mt-1.5 text-[11px] italic text-slate-400"
+            >
+              Source: {{ lines[key].source }}
+              <span v-if="lines[key].sourceSnippet"> — “{{ lines[key].sourceSnippet }}”</span>
+            </p>
+            <p
+              v-if="mismatchByKey[key]"
+              class="mt-2 text-sm text-amber-800"
+              role="status"
+            >
+              {{ mismatchByKey[key] }}
+              <button
+                v-if="key === 'snapshot_charge_nurse_experience' || key === 'snapshot_preceptor_experience' || key === 'snapshot_teaching_facility_experience' || key === 'snapshot_travel_experience' || key === 'snapshot_specialty'"
+                type="button"
+                class="ml-1 font-medium underline hover:no-underline"
+                @click="emit('go-to-employment')"
+              >
+                Go to Employment
+              </button>
+            </p>
           </div>
-        </div>
-        <p
-          v-if="lines[key].source"
-          class="mt-1.5 text-[11px] italic text-slate-400"
-        >
-          Source: {{ lines[key].source }}
-          <span v-if="lines[key].sourceSnippet"> — “{{ lines[key].sourceSnippet }}”</span>
-        </p>
-        <p
-          v-if="mismatchByKey[key]"
-          class="mt-2 text-sm text-amber-800"
-          role="status"
-        >
-          {{ mismatchByKey[key] }}
+
           <button
-            v-if="key === 'snapshot_charge_nurse_experience' || key === 'snapshot_preceptor_experience' || key === 'snapshot_teaching_facility_experience' || key === 'snapshot_travel_experience' || key === 'snapshot_specialty'"
             type="button"
-            class="ml-1 font-medium underline hover:no-underline"
-            @click="emit('go-to-employment')"
+            class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors disabled:opacity-50"
+            :class="lines[key].included
+              ? 'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100'
+              : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600'"
+            :disabled="disabled"
+            :aria-pressed="lines[key].included"
+            :aria-label="lines[key].included
+              ? `Hide ${PROFESSIONAL_SNAPSHOT_LABELS[key]} from packet`
+              : `Show ${PROFESSIONAL_SNAPSHOT_LABELS[key]} in packet`"
+            :title="lines[key].included ? 'Shown in packet' : 'Hidden from packet'"
+            @click="toggleIncluded(key)"
           >
-            Go to Employment
+            <!-- Eye (included) -->
+            <svg
+              v-if="lines[key].included"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <!-- Eye slash (excluded) -->
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
           </button>
-        </p>
+        </div>
       </li>
     </ul>
 

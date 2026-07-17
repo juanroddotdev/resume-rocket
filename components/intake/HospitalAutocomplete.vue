@@ -36,7 +36,7 @@ const employersJumpOpen = ref(false)
 const isMultiDeck = computed(() => props.deckMode === 'multi')
 const cardStickyTopPx = computed(() => props.stickyChromeOffsetPx ?? 0)
 const showJumpLink = computed(
-  () => props.showEmployersJumpLink === true && props.employers.length >= 2,
+  () => props.showEmployersJumpLink === true && props.employers.length >= 1,
 )
 
 watch(
@@ -106,6 +106,9 @@ function removeEmployer(index: number) {
     activeCardIndex.value = Math.max(0, next.length - 1)
   } else if (activeCardIndex.value > index) {
     activeCardIndex.value -= 1
+  }
+  if (next.length === 0) {
+    employersJumpOpen.value = false
   }
 }
 
@@ -283,16 +286,11 @@ defineExpose({
         :layout="isMultiDeck ? 'panel' : 'deck'"
         :expanded="isMultiDeck ? true : activeCardIndex === index"
         :deck-collapse-style="isMultiDeck ? 'none' : deckCollapseStyle(index)"
-        :can-move-up="index > 0"
-        :can-move-down="index < employers.length - 1"
         :request-link-search="linkSearchRequested === index"
         :persist-immediate="persistImmediate"
         :legacy-emr-system="legacyEmrSystem"
         :sticky-top-offset-px="cardStickyTopPx"
         @update="patchEmployer(index, $event)"
-        @remove="removeEmployer(index)"
-        @move-up="moveEmployer(index, -1)"
-        @move-down="moveEmployer(index, 1)"
         @toggle="openCard(index)"
       />
     </ul>
@@ -309,6 +307,9 @@ defineExpose({
       panel-class="fixed bottom-3 right-3 top-16 z-40"
       @close="employersJumpOpen = false"
       @select="(index) => openCard(index, { scroll: true })"
+      @remove="removeEmployer"
+      @move-up="(index) => moveEmployer(index, -1)"
+      @move-down="(index) => moveEmployer(index, 1)"
     />
   </div>
 </template>

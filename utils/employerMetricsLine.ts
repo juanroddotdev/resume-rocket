@@ -9,6 +9,7 @@ export type EmployerMetricsLineInput = Pick<
   | 'beds'
   | 'traumaLevel'
   | 'teachingStatus'
+  | 'magnetStatus'
   | 'emrSystem'
   | 'patientScope'
 >
@@ -18,6 +19,7 @@ export type EmployerMetricsLineFields = {
   hospitalBeds: string
   traumaLevel: string
   teachingFacility: string
+  magnetFacility: string
   emrSystem: string
   patientScope: string
 }
@@ -28,6 +30,15 @@ export function teachingFacilityLabelForMetrics(
 ): string {
   if (teachingStatus === true) return 'Teaching Yes'
   if (teachingStatus === false) return 'Teaching No'
+  return ''
+}
+
+/** Labeled Magnet segment for metrics line / DOCX (`Magnet Yes`). */
+export function magnetFacilityLabelForMetrics(
+  magnetStatus: boolean | undefined,
+): string {
+  if (magnetStatus === true) return 'Magnet Yes'
+  if (magnetStatus === false) return 'Magnet No'
   return ''
 }
 
@@ -59,7 +70,7 @@ function labeledEmr(raw: string | null | undefined): string {
 
 /**
  * Labeled values for each DOCX metrics tag (same strings used in the live stamp).
- * Order: unit beds → hospital beds → trauma → teaching → EMR → patient scope
+ * Order: unit beds → hospital beds → trauma → teaching → Magnet → EMR → patient scope
  */
 export function employerMetricsLineFields(
   employer: EmployerMetricsLineInput,
@@ -71,6 +82,7 @@ export function employerMetricsLineFields(
     hospitalBeds: labeledHospitalBeds(employer.beds),
     traumaLevel: labeledTrauma(employer.traumaLevel),
     teachingFacility: teachingFacilityLabelForMetrics(employer.teachingStatus),
+    magnetFacility: magnetFacilityLabelForMetrics(employer.magnetStatus),
     emrSystem: labeledEmr(emrRaw),
     patientScope: (employer.patientScope || '').trim(),
   }
@@ -90,6 +102,7 @@ export function employerMetricsLineParts(
     fields.hospitalBeds,
     fields.traumaLevel,
     fields.teachingFacility,
+    fields.magnetFacility,
     fields.emrSystem,
     fields.patientScope,
   ]

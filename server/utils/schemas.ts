@@ -26,6 +26,8 @@ export const employerInputSchema = z.object({
   trauma_level: z.string().optional(),
   teachingStatus: z.boolean().optional(),
   teaching_status: z.boolean().optional(),
+  magnetStatus: z.boolean().optional(),
+  magnet_status: z.boolean().optional(),
   employmentType: z.string().optional(),
   employment_type: z.string().optional(),
   unitBedCount: z.string().optional(),

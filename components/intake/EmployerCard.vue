@@ -13,8 +13,6 @@ const props = defineProps<{
   employer: EmployerEntry
   index: number
   expanded: boolean
-  canMoveUp?: boolean
-  canMoveDown?: boolean
   requestLinkSearch?: boolean
   layout?: 'deck' | 'panel'
   /** Deck list spacing: gap below expanded card, overlap among other collapsed headers. */
@@ -43,9 +41,6 @@ const deckRowMarginClass = computed(() => {
 
 const emit = defineEmits<{
   update: [value: EmployerEntry]
-  remove: []
-  'move-up': []
-  'move-down': []
   toggle: []
 }>()
 
@@ -92,7 +87,7 @@ const dateSummary = computed(() => {
   return `${start || '—'} – ${end || 'Present'}`
 })
 
-/** Live DOCX-style metrics stamp (unit beds • hospital beds • trauma • teaching • EMR • scope). */
+/** Live DOCX-style metrics stamp (unit beds • hospital beds • trauma • teaching • Magnet • EMR • scope). */
 const metricsLine = computed(() =>
   formatEmployerMetricsLine(props.employer, {
     legacyEmrSystem: props.legacyEmrSystem,
@@ -237,6 +232,18 @@ function onTeachingStatusChange(event: Event) {
   emit('update', next)
 }
 
+function onMagnetStatusChange(event: Event) {
+  clearParseHighlight(employerFieldId('magnet'))
+  const value = triStateBoolFromSelect((event.target as HTMLSelectElement).value)
+  const next = { ...props.employer }
+  if (value === undefined) {
+    delete next.magnetStatus
+  } else {
+    next.magnetStatus = value
+  }
+  emit('update', next)
+}
+
 function onTraumaLevelChange(event: Event) {
   clearParseHighlight(employerFieldId('trauma'))
   const raw = (event.target as HTMLSelectElement).value
@@ -310,30 +317,9 @@ function onTraumaLevelChange(event: Event) {
           v-else-if="isExpanded"
           class="mt-1.5 text-xs text-slate-400"
         >
-          Packet metrics appear here as beds, trauma, teaching, EMR, and scope are filled
+          Packet metrics appear here as beds, trauma, teaching, Magnet, EMR, and scope are filled
         </p>
       </component>
-      <div class="flex shrink-0 items-center gap-1 self-center pr-2">
-        <button
-          v-if="canMoveUp"
-          type="button"
-          class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
-          aria-label="Move employer up"
-          @click="emit('move-up')"
-        >
-          ↑
-        </button>
-        <button
-          v-if="canMoveDown"
-          type="button"
-          class="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
-          aria-label="Move employer down"
-          @click="emit('move-down')"
-        >
-          ↓
-        </button>
-        <button type="button" class="text-sm text-red-600" @click="emit('remove')">Remove</button>
-      </div>
     </div>
 
     <div
@@ -381,7 +367,7 @@ function onTraumaLevelChange(event: Event) {
                 >
               </label>
             </div>
-            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <label class="block" :for="`intake-field-${employerFieldId('trauma')}`">
                 <span class="field-label-compact">Trauma level</span>
                 <select
@@ -403,6 +389,19 @@ function onTraumaLevelChange(event: Event) {
                   :value="triStateBoolValue(employer.teachingStatus)"
                   :class="fieldClasses(employerFieldId('teaching'))"
                   @change="onTeachingStatusChange"
+                >
+                  <option value="">Select…</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <label class="block" :for="`intake-field-${employerFieldId('magnet')}`">
+                <span class="field-label-compact">Magnet hospital</span>
+                <select
+                  :id="`intake-field-${employerFieldId('magnet')}`"
+                  :value="triStateBoolValue(employer.magnetStatus)"
+                  :class="fieldClasses(employerFieldId('magnet'))"
+                  @change="onMagnetStatusChange"
                 >
                   <option value="">Select…</option>
                   <option value="yes">Yes</option>
@@ -434,6 +433,19 @@ function onTraumaLevelChange(event: Event) {
               value="Yes"
               :from-database="isEmployerDbMetricsHighlighted(index)"
             />
+            <label class="block" :for="`intake-field-${employerFieldId('magnet')}`">
+              <span class="field-label-compact">Magnet hospital</span>
+              <select
+                :id="`intake-field-${employerFieldId('magnet')}`"
+                :value="triStateBoolValue(employer.magnetStatus)"
+                :class="fieldClasses(employerFieldId('magnet'))"
+                @change="onMagnetStatusChange"
+              >
+                <option value="">Select…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
             <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
               Change facility
             </button>

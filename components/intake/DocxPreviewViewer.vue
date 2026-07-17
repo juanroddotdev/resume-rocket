@@ -8,6 +8,8 @@ const props = defineProps<{
   reloadToken?: number | string
   /** Fill available height (slide-over) vs embedded max height. */
   fill?: boolean
+  /** Full workspace preview with a darker canvas and edge-to-edge scroll area. */
+  immersive?: boolean
 }>()
 
 const bodyContainer = ref<HTMLElement | null>(null)
@@ -85,8 +87,11 @@ onBeforeUnmount(() => {
   <div
     role="region"
     aria-labelledby="docx-preview-heading"
-    class="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white"
-    :class="fill ? 'h-full min-h-0' : ''"
+    class="flex flex-col overflow-hidden"
+    :class="[
+      fill ? 'h-full min-h-0' : '',
+      immersive ? 'bg-slate-200' : 'rounded-lg border border-slate-200 bg-white',
+    ]"
   >
     <p id="docx-preview-heading" class="sr-only">VMS packet document preview</p>
 
@@ -106,8 +111,11 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      class="relative overflow-auto bg-slate-100 p-3"
-      :class="fill ? 'min-h-0 flex-1' : 'max-h-[min(70vh,720px)] min-h-[12rem]'"
+      class="relative overflow-auto"
+      :class="[
+        immersive ? 'bg-slate-200 px-3 py-6 sm:px-6 sm:py-8' : 'bg-slate-100 p-3',
+        fill ? 'min-h-0 flex-1' : 'max-h-[min(70vh,720px)] min-h-[12rem]',
+      ]"
     >
       <div ref="styleContainer" class="docx-preview-styles" aria-hidden="true" />
       <div ref="bodyContainer" class="docx-preview-body mx-auto max-w-full bg-white shadow-sm" />

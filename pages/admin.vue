@@ -438,6 +438,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   :sidebar-collapsed="sidebarCollapsed"
                   @reload="loadCandidates()"
                   @drawer-open="onBuilderDrawerOpen"
+                  @preview-open="onBuilderDrawerOpen"
                 />
                 <div
                   v-else

@@ -648,6 +648,7 @@ async function onReviewPreview() {
           ref="hospitalAutocompleteRef"
           :employers="form.employers"
           :legacy-emr-system="form.emr_system"
+          deck-mode="multi"
           :sticky-chrome-offset-px="56"
           show-employers-jump-link
           :persist-immediate="flushAutosave"

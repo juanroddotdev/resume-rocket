@@ -54,6 +54,7 @@ export function countParsedFields(fields: ReturnType<typeof parsedResumeToApiFie
   if (fields.phone) count++
   if (fields.home_address) count++
   if (fields.home_city) count++
+  if (fields.home_state) count++
   if (fields.license_number) count++
   if (fields.license_state) count++
   if (fields.licenses?.length) count++

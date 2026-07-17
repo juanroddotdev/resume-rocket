@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary-navy: #1f1a40;
+  --color-bg-light: #f8f9fc;
+  --color-surface-white: #ffffff;
+  --color-accent-gold: #e6b35c;
+  --color-accent-gold-hover: #df9e2f;
+  --color-secondary-blue: #363062;
+  --color-text-dark: #2d3142;
+  --color-text-muted: #64748b;
+  --color-border-light: #e2e8f0;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-canvas text-ink antialiased;
 }
 
 @layer components {
@@ -26,7 +38,12 @@ body {
 
   .field {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900;
-    @apply focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30;
+    @apply focus:outline-none;
+  }
+
+  .field:focus {
+    border-color: var(--color-accent-gold-hover);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
   }
 
   .sidebar-search {
@@ -39,7 +56,7 @@ body {
   }
 
   .segmented-indicator {
-    @apply pointer-events-none absolute inset-y-0 rounded-md border border-slate-200/80 bg-white shadow-sm;
+    @apply pointer-events-none absolute inset-y-0 rounded-md border border-brand-200 bg-white shadow-sm;
     @apply transition-[left] duration-200 ease-out motion-reduce:transition-none;
   }
 
@@ -49,7 +66,7 @@ body {
   }
 
   .segmented-tab-active {
-    @apply font-semibold text-slate-900;
+    @apply font-semibold text-brand-700;
   }
 
   .field-prefilled {

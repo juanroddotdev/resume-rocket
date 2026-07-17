@@ -161,7 +161,7 @@ async function onScratchPath() {
           </div>
           <button
             type="button"
-            class="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            class="mt-3 w-full rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="loading || !selectedFile"
             @click="onUploadPath"
           >

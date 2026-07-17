@@ -10,11 +10,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#eff6ff',
-          600: '#2563eb',
-          700: '#1d4ed8',
+        accent: {
+          500: '#e6b35c',
+          600: '#df9e2f',
         },
+        brand: {
+          50: '#f4f3f8',
+          100: '#e8e6f0',
+          200: '#ccc8dc',
+          600: '#363062',
+          700: '#1f1a40',
+          800: '#191534',
+          900: '#120f29',
+        },
+        canvas: '#f8f9fc',
+        ink: '#2d3142',
       },
     },
   },

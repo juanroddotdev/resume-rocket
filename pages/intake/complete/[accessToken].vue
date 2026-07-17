@@ -27,7 +27,7 @@ async function download() {
     <p class="mt-2 text-slate-600">Download your VMS-ready document.</p>
     <button
       type="button"
-      class="mt-6 rounded-lg bg-brand-600 px-6 py-3 font-medium text-white disabled:opacity-50"
+      class="mt-6 rounded-lg bg-accent-500 px-6 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
       :disabled="loading"
       @click="download"
     >

@@ -625,7 +625,7 @@ async function onReviewPreview() {
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
             type="button"
-            class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
+            class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep1()"
             @click="goToStep(2)"
           >
@@ -670,7 +670,7 @@ async function onReviewPreview() {
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>
           <button
             type="button"
-            class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
+            class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep2()"
             @click="goToStep(3)"
           >
@@ -711,7 +711,7 @@ async function onReviewPreview() {
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(2)">Back</button>
           <button
             type="button"
-            class="flex-1 rounded-lg bg-brand-600 py-3 font-medium text-white disabled:opacity-50"
+            class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep3()"
             @click="goToStep(4)"
           >

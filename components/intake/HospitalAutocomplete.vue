@@ -269,7 +269,7 @@ defineExpose({
         <p v-if="manualError" class="text-xs text-amber-800">{{ manualError }}</p>
         <button
           type="button"
-          class="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-medium text-white"
+          class="w-full rounded-lg bg-accent-500 py-2.5 text-sm font-medium text-brand-900 hover:bg-accent-600"
           @click="addManualEmployer"
         >
           Add to list

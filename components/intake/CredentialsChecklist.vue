@@ -99,7 +99,7 @@ function validateExpiry(cert: string) {
           v-for="cert in selectedCertKeys"
           :key="cert"
           type="button"
-          class="inline-flex items-center gap-1 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white transition"
+          class="inline-flex items-center gap-1 rounded-full bg-accent-500 px-3 py-1.5 text-sm font-medium text-brand-900 transition hover:bg-accent-600"
           :class="isParseHighlighted(`credential-${cert}`) ? 'ring-2 ring-brand-600/30 ring-offset-1' : null"
           @click="removeCert(cert)"
         >

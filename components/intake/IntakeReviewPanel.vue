@@ -119,7 +119,7 @@ function onBackToEdit() {
         <button type="button" class="flex-1 rounded-lg border py-3" @click="emit('back')">Back</button>
         <button
           type="button"
-          class="flex-1 rounded-lg bg-brand-600 py-3 font-bold text-white disabled:opacity-50"
+          class="flex-1 rounded-lg bg-accent-500 py-3 font-bold text-brand-900 hover:bg-accent-600 disabled:opacity-50"
           :disabled="submitting || previewLoading || !canPreview"
           @click="onPreviewClick"
         >
@@ -168,7 +168,7 @@ function onBackToEdit() {
         </button>
         <button
           type="button"
-          class="flex-1 rounded-lg bg-brand-600 py-3 font-bold text-white disabled:opacity-50"
+          class="flex-1 rounded-lg bg-accent-500 py-3 font-bold text-brand-900 hover:bg-accent-600 disabled:opacity-50"
           :disabled="submitting || previewLoading || !candidateId"
           @click="emit('submit')"
         >

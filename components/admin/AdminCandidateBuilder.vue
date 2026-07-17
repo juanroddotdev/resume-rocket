@@ -420,7 +420,7 @@ watch(devFixtureRequest, (mode) => {
             </button>
             <button
               type="button"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              class="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
               :disabled="actionLoading || !isEditable || devPrefilling"
               @click="onDownloadDraft"
             >
@@ -722,7 +722,7 @@ watch(devFixtureRequest, (mode) => {
           </button>
           <button
             type="button"
-            class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white"
+            class="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600"
             @click="onMarkSubmitted"
           >
             Mark submitted

@@ -204,7 +204,7 @@ function openCandidateIntake(candidate: CandidateRow) {
       <input v-model="password" type="password" autocomplete="current-password" placeholder="Password" class="field mt-2">
       <button
         type="button"
-        class="mt-4 w-full rounded-lg bg-brand-600 py-2 font-medium text-white"
+        class="mt-4 w-full rounded-lg bg-accent-500 py-2 font-medium text-brand-900 hover:bg-accent-600"
         @click="signIn"
       >
         Sign in
@@ -230,10 +230,10 @@ function openCandidateIntake(candidate: CandidateRow) {
           </button>
         </div>
 
-        <div class="relative flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-[#f4f5f7]">
+        <div class="relative flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-canvas">
           <button
             type="button"
-            class="absolute top-2 z-20 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-slate-200/80 bg-[#f4f5f7] text-slate-600 shadow-sm hover:bg-white hover:text-slate-900"
+            class="absolute top-2 z-20 flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-brand-200 bg-canvas text-brand-600 shadow-sm hover:bg-white hover:text-brand-900"
             :class="sidebarCollapsed ? 'left-14' : 'left-[280px]'"
             :aria-label="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
             :title="sidebarCollapsed ? 'Expand candidate list' : 'Collapse candidate list'"
@@ -450,7 +450,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   </p>
                   <button
                     type="button"
-                    class="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white"
+                    class="mt-4 rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600"
                     @click="newPacketModalOpen = true"
                   >
                     + New candidate packet

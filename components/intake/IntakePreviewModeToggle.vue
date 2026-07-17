@@ -27,7 +27,7 @@ function toggle() {
     type="button"
     class="absolute right-0 top-0 z-40 rounded-l-md px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide shadow-sm transition-colors"
     :class="isAdmin
-      ? 'bg-brand-600 text-white'
+      ? 'bg-accent-500 text-brand-900'
       : 'bg-slate-200 text-slate-600'"
     :aria-pressed="isAdmin"
     :aria-label="ariaLabel"

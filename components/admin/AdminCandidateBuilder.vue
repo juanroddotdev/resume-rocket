@@ -19,6 +19,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   reload: []
   'drawer-open': [open: boolean]
+  'preview-open': [open: boolean]
 }>()
 
 const selected = toRef(props, 'candidate')
@@ -160,11 +161,13 @@ async function preparePreview() {
 
 async function openPreview() {
   previewOpen.value = true
+  emit('preview-open', true)
   await preparePreview()
 }
 
 function closePreview() {
   previewOpen.value = false
+  emit('preview-open', false)
 }
 
 function openExtraDetails() {
@@ -637,6 +640,7 @@ watch(devFixtureRequest, (mode) => {
       v-if="!loading && !loadError"
       :open="previewOpen"
       :candidate-id="candidate.id"
+      :candidate-name="displayName"
       :headers="previewAuthHeaders"
       :reload-token="previewReloadToken"
       :preparing="previewSaving"

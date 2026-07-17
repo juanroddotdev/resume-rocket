@@ -329,11 +329,11 @@ function openCandidateIntake(candidate: CandidateRow) {
                 >
                   <span
                     aria-hidden="true"
-                    class="segmented-indicator w-[calc((100%-0.75rem)/3)]"
+                    class="segmented-indicator w-[calc((100%-0.25rem)/3)]"
                     :class="{
-                      'left-1': listFilter === 'all',
-                      'left-[calc(0.375rem+(100%-0.75rem)/3)]': listFilter === 'draft',
-                      'left-[calc(0.5rem+2*(100%-0.75rem)/3)]': listFilter === 'submitted',
+                      'left-0': listFilter === 'all',
+                      'left-[calc(0.125rem+(100%-0.25rem)/3)]': listFilter === 'draft',
+                      'left-[calc(0.25rem+2*((100%-0.25rem)/3))]': listFilter === 'submitted',
                     }"
                   />
                   <button
@@ -399,10 +399,10 @@ function openCandidateIntake(candidate: CandidateRow) {
               >
                 <span
                   aria-hidden="true"
-                  class="segmented-indicator w-[calc((100%-0.625rem)/2)]"
+                  class="segmented-indicator w-[calc((100%-0.125rem)/2)]"
                   :class="adminView === 'table'
-                    ? 'left-[calc(0.375rem+(100%-0.625rem)/2)]'
-                    : 'left-1'"
+                    ? 'left-[calc(0.125rem+(100%-0.125rem)/2)]'
+                    : 'left-0'"
                 />
                 <button
                   type="button"

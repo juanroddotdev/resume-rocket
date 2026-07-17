@@ -226,6 +226,23 @@ describe('mapCandidateToTemplateData', () => {
     const line = data.professional_experiences[0].experience_metrics_line
     assert.equal(line, '24 unit beds • Trauma I • EMR Epic')
     assert.equal(line.includes(' •  • '), false)
+    assert.equal(data.professional_experiences[0].experience_metrics_rows.length, 1)
+  })
+
+  it('omits experience_metrics_rows when the metrics line is empty', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      employers: [{
+        name: 'Trinity Health',
+        role: 'RN - Recovery Medicine',
+        city: 'Grand Haven',
+        state: 'MI',
+      }],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_metrics_line, '')
+    assert.deepEqual(data.professional_experiences[0].experience_metrics_rows, [])
   })
 
   it('never leaves undefined template values for sparse candidates', () => {

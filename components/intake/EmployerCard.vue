@@ -106,7 +106,6 @@ watch(
   },
   { immediate: true, deep: true },
 )
-const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const {
   fieldClasses,
   clearParseHighlight,
@@ -115,6 +114,8 @@ const {
   isEmployerDbMetricsHighlighted,
   isParseHighlighted,
 } = useIntakePrefillHighlight()
+
+const nameComboboxRef = ref<{ focus: () => void } | null>(null)
 
 const isLinked = computed(() => Boolean(props.employer.hospitalId))
 
@@ -137,16 +138,27 @@ const metricsLine = computed(() =>
   }),
 )
 
-function focusFacilityLinkSearch() {
+const googleVerifyLabel = computed(() => {
+  const name = props.employer.name?.trim()
+  if (!name) return 'this facility'
+  return name.length > 32 ? `${name.slice(0, 32)}…` : name
+})
+
+const missingFacilityStats = computed(() => {
+  const e = props.employer
+  return e.beds == null && !e.traumaLevel && e.teachingStatus === undefined
+})
+
+function focusFacilityNameCombobox() {
   nextTick(() => {
-    document.getElementById(`intake-field-employer-${props.index}-link`)?.focus()
+    nameComboboxRef.value?.focus()
   })
 }
 
 watch(
   () => props.requestLinkSearch,
   (open) => {
-    if (open) focusFacilityLinkSearch()
+    if (open) focusFacilityNameCombobox()
   },
 )
 
@@ -166,13 +178,12 @@ function patchField(suffix: string, partial: Partial<EmployerEntry>) {
 function linkFromHospital(hospital: HospitalRow | HospitalSuggestion) {
   emit('update', linkEmployerFromHospital(props.employer, hospital))
   markEmployerDbMetrics(props.index)
-  clearSearch()
 }
 
 function startChangeFacility() {
   clearEmployerDbMetrics(props.index)
   emit('update', unlinkEmployerFacility(props.employer))
-  focusFacilityLinkSearch()
+  focusFacilityNameCombobox()
 }
 
 type LineField = 'highlights' | 'floatedUnits' | 'equipmentProcedures'
@@ -248,20 +259,8 @@ function onEmploymentTypeChange(event: Event) {
 
 function openFacilityGoogleSearch() {
   if (!import.meta.client) return
-  window.open(
-    facilityGoogleSearchUrl(props.employer, { searchQuery: query.value }),
-    '_blank',
-    'noopener,noreferrer',
-  )
+  window.open(facilityGoogleSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
 }
-
-const googleSearchLabel = computed(() => {
-  const typed = query.value.trim()
-  const fallback = props.employer.name?.trim()
-  const label = typed || fallback
-  if (!label) return 'this facility'
-  return label.length > 28 ? `${label.slice(0, 28)}…` : label
-})
 
 function onClinicalFlagChange(
   suffix: string,
@@ -410,16 +409,20 @@ function onTraumaLevelChange(event: Event) {
 
             <template v-if="!isLinked">
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_4.5rem]">
-                <label class="block" :for="`intake-field-${employerFieldId('name')}`">
-                  <span class="field-label-compact">Hospital name</span>
-                  <input
-                    :id="`intake-field-${employerFieldId('name')}`"
-                    :value="employer.name || ''"
-                    placeholder="Hospital name"
-                    :class="fieldClasses(employerFieldId('name'))"
-                    @input="patchField('name', { name: ($event.target as HTMLInputElement).value })"
-                  >
-                </label>
+                <div class="min-w-0">
+                  <label class="field-label-compact" :for="`intake-field-${employerFieldId('name')}`">
+                    Hospital name
+                  </label>
+                  <FacilityNameCombobox
+                    ref="nameComboboxRef"
+                    :model-value="employer.name || ''"
+                    :input-id="`intake-field-${employerFieldId('name')}`"
+                    :input-class="fieldClasses(employerFieldId('name'))"
+                    :suggestions="employer.hospitalSuggestions"
+                    @update:model-value="patchField('name', { name: $event })"
+                    @select="linkFromHospital"
+                  />
+                </div>
                 <label class="block" :for="`intake-field-${employerFieldId('city')}`">
                   <span class="field-label-compact">City</span>
                   <input
@@ -486,81 +489,22 @@ function onTraumaLevelChange(event: Event) {
                 </label>
               </div>
 
-              <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-5">
-                <div>
-                  <p class="text-xs font-medium text-slate-800">Link facility</p>
-                  <p class="mt-1 text-xs text-slate-600">
-                    Type a facility name to auto-fill beds, trauma, and teaching from the database.
-                  </p>
-                </div>
-                <div
-                  class="flex flex-col overflow-hidden rounded-lg border border-slate-300 bg-white focus-within:border-[var(--color-accent-gold-hover)] focus-within:ring-2 focus-within:ring-[color-mix(in_srgb,var(--color-accent-gold)_30%,transparent)] sm:flex-row"
+              <div
+                class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+                :class="missingFacilityStats
+                  ? 'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950'
+                  : 'text-slate-600'"
+              >
+                <span v-if="missingFacilityStats">Missing facility stats?</span>
+                <span v-else>Need details?</span>
+                <button
+                  type="button"
+                  class="font-medium text-brand-800 underline hover:text-brand-900"
+                  :aria-label="`Verify ${googleVerifyLabel} on Google`"
+                  @click="openFacilityGoogleSearch"
                 >
-                  <label class="min-w-0 flex-1" :for="`intake-field-employer-${index}-link`">
-                    <span class="sr-only">Search facility database</span>
-                    <input
-                      :id="`intake-field-employer-${index}-link`"
-                      v-model="query"
-                      type="search"
-                      placeholder="Search hospital name…"
-                      class="field min-h-11 rounded-none border-0 shadow-none focus:border-transparent focus:shadow-none"
-                    >
-                  </label>
-                  <button
-                    type="button"
-                    class="inline-flex shrink-0 items-center justify-center gap-1.5 border-t border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-100 sm:border-l sm:border-t-0"
-                    :aria-label="query.trim()
-                      ? `Search Google for ${query.trim()}`
-                      : 'Search Google for this facility'"
-                    @click="openFacilityGoogleSearch"
-                  >
-                    <span aria-hidden="true">↗</span>
-                    <span class="sm:hidden">Google</span>
-                    <span class="hidden sm:inline">Search Google</span>
-                  </button>
-                </div>
-                <ul v-if="results.length" class="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
-                  <li
-                    v-for="h in results"
-                    :key="h.id"
-                    class="cursor-pointer px-3 py-2 text-sm hover:bg-brand-50"
-                    @click="linkFromHospital(h)"
-                  >
-                    {{ h.name }}
-                    <span v-if="h.city" class="text-slate-500"> — {{ h.city }}, {{ h.state }}</span>
-                  </li>
-                </ul>
-                <p v-if="searching" class="text-xs text-slate-500">Searching…</p>
-                <div
-                  v-else-if="showNoResults"
-                  class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950"
-                >
-                  <span>Facility not found in database?</span>
-                  <button
-                    type="button"
-                    class="font-medium text-brand-800 underline hover:text-brand-900"
-                    @click="openFacilityGoogleSearch"
-                  >
-                    Search Google for {{ googleSearchLabel }} ↗
-                  </button>
-                </div>
-                <p v-if="searchError" class="text-xs text-red-600">{{ searchError }}</p>
-
-                <div v-if="employer.hospitalSuggestions?.length" class="space-y-1 border-t border-slate-200/80 pt-2">
-                  <p class="text-xs font-medium text-slate-700">Suggested matches</p>
-                  <div class="flex flex-wrap gap-2">
-                    <button
-                      v-for="suggestion in employer.hospitalSuggestions"
-                      :key="suggestion.id"
-                      type="button"
-                      class="rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-left text-xs text-brand-900 hover:bg-brand-100"
-                      @click="linkFromHospital(suggestion)"
-                    >
-                      {{ suggestion.name }}
-                      <span v-if="suggestion.city" class="text-slate-500"> — {{ suggestion.city }}, {{ suggestion.state }}</span>
-                    </button>
-                  </div>
-                </div>
+                  Verify “{{ googleVerifyLabel }}” on Google ↗
+                </button>
               </div>
             </template>
 

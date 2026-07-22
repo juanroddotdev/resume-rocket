@@ -1,7 +1,7 @@
 # Hospital name combobox (eliminate duplicate facility entry)
 
-**Status:** Planned  
-**Related:** [Hospital parse UX](./TODO.md#hospital-parse-ux) (complete), PR #135 (link-strip Google UX)  
+**Status:** PR A in progress / shipping  
+**Related:** [Hospital parse UX](./TODO.md#hospital-parse-ux) (complete), PR #135 (spacing + Google strip)  
 **Epic:** Part of #16  
 **Phase:** B (intake UI) — reuses existing `hospitalMatch`, `/api/hospitals/search`, `linkEmployerFromHospital`
 
@@ -69,17 +69,17 @@ Trauma level     Teaching     Magnet
 1. Extract/reuse `useHospitalSearch` into a combobox component (name input + results list + keyboard nav if cheap).
 2. Replace plain Hospital name `<input>` on unlinked `EmployerCard` with combobox.
 3. On select → existing `linkFromHospital`.
-4. Keep **Link facility** card temporarily *or* remove in same PR if Google helper already moved under metadata (prefer remove in same PR to avoid two search UIs).
+4. Remove **Link facility** sub-card in the same PR; Google verify lives under trauma/teaching/magnet (absorbs PR B layout).
 
 **Done when:** Typing in Hospital name shows DB matches; pick links; no second search box required.
 
-### PR B — Google helper under metadata + remove link strip
+### PR B — Google helper polish (mostly done in A)
 
-1. Move Google CTA under trauma/teaching/magnet (quiet default; stronger when stats missing / no matches).
-2. Delete Link facility sub-card and input-adjacent Google control from #135 path.
-3. Update copy/tests for `facilityGoogleSearchUrl` (card fields only; drop live `searchQuery` if unused).
+1. ~~Move Google CTA under trauma/teaching/magnet~~ (done in A).
+2. ~~Delete Link facility sub-card~~ (done in A).
+3. Optional: drop unused `searchQuery` option from `facilityGoogleSearchUrl` if nothing else uses it; tighten copy/tests.
 
-**Done when:** Vertical space reclaimed; Google still one click from card name/city/state.
+**Done when:** Google still one click from card name/city/state; API helper cleaned up if needed.
 
 ### PR C — Parse / suggestions polish
 

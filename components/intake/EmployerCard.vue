@@ -141,7 +141,9 @@ const metricsLine = computed(() =>
 const googleVerifyLabel = computed(() => {
   const name = props.employer.name?.trim()
   if (!name) return 'this facility'
-  return name.length > 32 ? `${name.slice(0, 32)}…` : name
+  const location = [props.employer.city?.trim(), props.employer.state?.trim()].filter(Boolean).join(', ')
+  const full = location ? `${name} (${location})` : name
+  return full.length > 42 ? `${full.slice(0, 42)}…` : full
 })
 
 const missingFacilityStats = computed(() => {
@@ -490,20 +492,28 @@ function onTraumaLevelChange(event: Event) {
               </div>
 
               <div
-                class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+                class="inline-flex max-w-full rounded-md border px-2.5 py-1.5"
                 :class="missingFacilityStats
-                  ? 'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950'
-                  : 'text-slate-600'"
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-brand-100 bg-brand-50/70'"
               >
-                <span v-if="missingFacilityStats">Missing facility stats?</span>
-                <span v-else>Need details?</span>
                 <button
                   type="button"
-                  class="font-medium text-brand-800 underline hover:text-brand-900"
+                  class="text-left text-xs leading-snug transition-colors"
+                  :class="missingFacilityStats
+                    ? 'text-amber-950 hover:text-amber-900'
+                    : 'text-brand-900 hover:text-brand-800'"
                   :aria-label="`Verify ${googleVerifyLabel} on Google`"
                   @click="openFacilityGoogleSearch"
                 >
-                  Verify “{{ googleVerifyLabel }}” on Google ↗
+                  <span class="font-medium">
+                    {{ missingFacilityStats ? 'Missing hospital stats?' : 'Need details?' }}
+                  </span>
+                  <span class="mx-1.5 opacity-40" aria-hidden="true">·</span>
+                  <span class="underline decoration-brand-300/80 underline-offset-2">
+                    Verify “{{ googleVerifyLabel }}” on Google
+                  </span>
+                  <span class="ml-1 opacity-70" aria-hidden="true">↗</span>
                 </button>
               </div>
             </template>

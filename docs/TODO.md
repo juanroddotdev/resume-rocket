@@ -412,6 +412,7 @@ See also [Test automation plan — Phase 1](#phase-1--expand-script--unit-covera
 
 ### Backlog
 
+- [ ] **Hospital name = facility combobox** — eliminate duplicate “Link facility” search; plan: [HOSPITAL-NAME-COMBOBOX-PLAN.md](./HOSPITAL-NAME-COMBOBOX-PLAN.md) (PRs A–C)
 - [x] **Hospital data Google search helper** — [`facilityGoogleSearchUrl`](../utils/facilityGoogleSearch.ts) + **Search hospital info on Google** on unlinked employer cards ([`EmployerCard.vue`](../components/intake/EmployerCard.vue)); query = name, city/state, `"trauma level"`, `"total beds"`, `"teaching hospital"`, Magnet
 - [ ] **Facility Google query — ideas (optional later)**
   - [ ] Stronger trauma phrasing (`"Level I"` / `"Level II trauma"`) if `"trauma level"` alone underperforms

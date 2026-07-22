@@ -20,11 +20,11 @@ body {
 
 @layer components {
   .field-label {
-    @apply mb-1 block text-xs font-medium text-slate-500;
+    @apply mb-1.5 block text-xs font-medium text-slate-700;
   }
 
   .field-label-compact {
-    @apply mb-1 block text-[11px] font-medium tracking-wide text-slate-500;
+    @apply mb-1.5 block text-[11px] font-medium tracking-wide text-slate-700;
   }
 
   /* Focused canvas: only elevated surface on the recessed admin workspace */
@@ -37,8 +37,12 @@ body {
   }
 
   .field {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base text-slate-900;
+    @apply w-full min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3 text-base text-slate-900;
     @apply focus:outline-none;
+  }
+
+  textarea.field {
+    @apply min-h-[5.5rem] py-3;
   }
 
   .field:focus {

@@ -56,7 +56,8 @@ async function loadPreview() {
       {
         className: 'docx-preview',
         inWrapper: true,
-        ignoreWidth: true,
+        // Keep Word page geometry so preview matches printed/download layout.
+        ignoreWidth: false,
         breakPages: true,
       },
     )
@@ -113,12 +114,12 @@ onBeforeUnmount(() => {
     <div
       class="relative overflow-auto"
       :class="[
-        immersive ? 'bg-slate-200 px-3 py-6 sm:px-6 sm:py-8' : 'bg-slate-100 p-3',
+        immersive ? 'bg-slate-200 px-2 py-4' : 'bg-slate-100 px-2 py-3',
         fill ? 'min-h-0 flex-1' : 'max-h-[min(70vh,720px)] min-h-[12rem]',
       ]"
     >
       <div ref="styleContainer" class="docx-preview-styles" aria-hidden="true" />
-      <div ref="bodyContainer" class="docx-preview-body mx-auto max-w-full bg-white shadow-sm" />
+      <div ref="bodyContainer" class="docx-preview-body mx-auto w-max max-w-none" />
 
       <div
         v-if="loading"
@@ -134,11 +135,31 @@ onBeforeUnmount(() => {
 <style scoped>
 .docx-preview-body :deep(.docx-wrapper) {
   margin: 0 auto;
-  background: white;
+  background: transparent;
+  padding: 0;
 }
 
 .docx-preview-body :deep(section.docx) {
-  min-height: 1rem;
+  box-sizing: border-box;
+  margin: 0 auto 0.75rem;
+  background: white;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.12), 0 4px 12px rgb(15 23 42 / 0.06);
+}
+
+.docx-preview-body :deep(section.docx:last-child) {
+  margin-bottom: 0;
+}
+
+/*
+ * docx-preview paints bullets as list-item + list-style-position:inside, so wrapped
+ * lines align under the marker. Force a Word-style hanging indent (template numbering
+ * uses left=360 / hanging=360 twips = 18pt) so wrap aligns with the first text letter.
+ */
+.docx-preview-body :deep(p[class*='docx-num-']) {
+  display: block;
+  list-style: none;
+  margin-inline-start: 18pt !important;
+  text-indent: -18pt !important;
 }
 
 /*
@@ -149,5 +170,8 @@ onBeforeUnmount(() => {
 .docx-preview-body :deep(p[class*='docx-num-']::before) {
   font-size: 10pt;
   line-height: 1;
+  display: inline-block;
+  width: 18pt;
+  text-indent: 0;
 }
 </style>

@@ -499,89 +499,93 @@ async function onReviewPreview() {
           <span aria-hidden="true">↻</span>
           Replace resume
         </button>
-        <label class="block">
-          <span class="field-label">First name</span>
-          <div class="relative">
-            <input
-              id="intake-field-first_name"
-              v-model="form.first_name"
-              autocomplete="given-name"
-              placeholder="Jane"
-              required
-              class="field pr-9"
-              :class="fieldClasses('first_name')"
-              @input="clearParseHighlight('first_name')"
-              @blur="identityTouched.first_name = true"
-            >
-            <FieldValidityIcon
-              :touched="identityTouched.first_name"
-              :valid="identityFieldValid('first_name')"
-            />
-          </div>
-        </label>
-        <label class="block">
-          <span class="field-label">Last name</span>
-          <div class="relative">
-            <input
-              id="intake-field-last_name"
-              v-model="form.last_name"
-              autocomplete="family-name"
-              placeholder="Doe"
-              required
-              class="field pr-9"
-              :class="fieldClasses('last_name')"
-              @input="clearParseHighlight('last_name')"
-              @blur="identityTouched.last_name = true"
-            >
-            <FieldValidityIcon
-              :touched="identityTouched.last_name"
-              :valid="identityFieldValid('last_name')"
-            />
-          </div>
-        </label>
-        <label class="block">
-          <span class="field-label">Email</span>
-          <div class="relative">
-            <input
-              id="intake-field-email"
-              v-model="form.email"
-              type="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              required
-              class="field pr-9"
-              :class="fieldClasses('email')"
-              @input="clearParseHighlight('email')"
-              @blur="identityTouched.email = true"
-            >
-            <FieldValidityIcon
-              :touched="identityTouched.email"
-              :valid="identityFieldValid('email')"
-            />
-          </div>
-        </label>
-        <label class="block">
-          <span class="field-label">Phone</span>
-          <div class="relative">
-            <input
-              id="intake-field-phone"
-              v-model="form.phone"
-              type="tel"
-              autocomplete="tel"
-              placeholder="(555) 555-5555"
-              required
-              class="field pr-9"
-              :class="fieldClasses('phone')"
-              @input="clearParseHighlight('phone')"
-              @blur="identityTouched.phone = true"
-            >
-            <FieldValidityIcon
-              :touched="identityTouched.phone"
-              :valid="identityFieldValid('phone')"
-            />
-          </div>
-          <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
-        </label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block">
+            <span class="field-label">First name</span>
+            <div class="relative">
+              <input
+                id="intake-field-first_name"
+                v-model="form.first_name"
+                autocomplete="given-name"
+                placeholder="Jane"
+                required
+                class="field pr-9"
+                :class="fieldClasses('first_name')"
+                @input="clearParseHighlight('first_name')"
+                @blur="identityTouched.first_name = true"
+              >
+              <FieldValidityIcon
+                :touched="identityTouched.first_name"
+                :valid="identityFieldValid('first_name')"
+              />
+            </div>
+          </label>
+          <label class="block">
+            <span class="field-label">Last name</span>
+            <div class="relative">
+              <input
+                id="intake-field-last_name"
+                v-model="form.last_name"
+                autocomplete="family-name"
+                placeholder="Doe"
+                required
+                class="field pr-9"
+                :class="fieldClasses('last_name')"
+                @input="clearParseHighlight('last_name')"
+                @blur="identityTouched.last_name = true"
+              >
+              <FieldValidityIcon
+                :touched="identityTouched.last_name"
+                :valid="identityFieldValid('last_name')"
+              />
+            </div>
+          </label>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block">
+            <span class="field-label">Email</span>
+            <div class="relative">
+              <input
+                id="intake-field-email"
+                v-model="form.email"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+                class="field pr-9"
+                :class="fieldClasses('email')"
+                @input="clearParseHighlight('email')"
+                @blur="identityTouched.email = true"
+              >
+              <FieldValidityIcon
+                :touched="identityTouched.email"
+                :valid="identityFieldValid('email')"
+              />
+            </div>
+          </label>
+          <label class="block">
+            <span class="field-label">Phone</span>
+            <div class="relative">
+              <input
+                id="intake-field-phone"
+                v-model="form.phone"
+                type="tel"
+                autocomplete="tel"
+                placeholder="(555) 555-5555"
+                required
+                class="field pr-9"
+                :class="fieldClasses('phone')"
+                @input="clearParseHighlight('phone')"
+                @blur="identityTouched.phone = true"
+              >
+              <FieldValidityIcon
+                :touched="identityTouched.phone"
+                :valid="identityFieldValid('phone')"
+              />
+            </div>
+            <span class="mt-1 block text-xs text-slate-500">Include area code — any common format is fine.</span>
+          </label>
+        </div>
         <label class="block">
           <span class="field-label">Home address</span>
           <input
@@ -621,7 +625,7 @@ async function onReviewPreview() {
             >
           </label>
         </div>
-        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
+        <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4 lg:ml-auto lg:max-w-sm">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
             type="button"
@@ -666,7 +670,7 @@ async function onReviewPreview() {
         >
           Select an EMR / charting system on each employer card. If you choose Other, enter the system name — required before continuing.
         </p>
-        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
+        <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4 lg:ml-auto lg:max-w-sm">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(1)">Back</button>
           <button
             type="button"
@@ -707,7 +711,7 @@ async function onReviewPreview() {
         >
           {{ step3OtherMissing.length }} more field{{ step3OtherMissing.length === 1 ? '' : 's' }} recommended on this step — you can fix them on review.
         </p>
-        <div class="flex gap-2 border-t border-slate-100 pt-4 mt-6">
+        <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4 lg:ml-auto lg:max-w-sm">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(2)">Back</button>
           <button
             type="button"

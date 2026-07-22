@@ -97,6 +97,8 @@ Run once end-to-end as baseline:
 - [ ] Step 1: visible labels above First name, Last name, Email, Phone
 - [ ] Phone helper: “Include area code — any common format is fine.”
 - [ ] Browser autofill works on identity fields (`autocomplete` attrs)
+- [ ] **Desktop (~1280px):** intake shell wider than phone column (`lg:max-w-3xl`); Step 1 name + email/phone side-by-side; Back/Next not full column width
+- [ ] **Mobile (~375px):** single-column Step 1; drop zone and employer cards unchanged
 
 ### Draft recovery
 

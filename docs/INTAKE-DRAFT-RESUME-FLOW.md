@@ -24,16 +24,16 @@ How candidates start, pause, and resume the intake wizard before final submit �
 | **3** | Credentials + education |
 | **4** | Review → **Download VMS-Ready Resume** (final submit) |
 
-Recruiters create links from `/admin` → **Create intake link**. Default link lifetime: **7 days** (`expires_at` on `intake_invites`).
+Recruiters create links from `/admin` → **+ New candidate** → **Create & copy link** (or upload / start from scratch). Default link lifetime: **7 days** (`expires_at` on `intake_invites`).
 
 ### Admin builder (concierge workflow)
 
 Recruiters can complete the same packet in [`/admin`](../pages/admin.vue) without opening the invite URL:
 
-1. **Create link & start packet** — creates invite + draft row; opens [`AdminCandidateBuilder`](../components/admin/AdminCandidateBuilder.vue)
+1. **Create link & start packet** — **Send intake link** (copy URL, stay on candidates table) or upload / scratch (opens builder); all create invite + draft row
 2. **Upload / parse / edit** — section-based desktop UI; autosave via `PATCH /api/admin/candidates/:id`
 3. **Download draft DOCX** — does not change `status` (candidate link stays editable)
-4. **Copy invite link** — share when the candidate should finish on mobile intake
+4. **Copy invite link** — from the create success screen, or **Copy link** / **Open intake** in the candidates table
 5. **Mark submitted** — downloads DOCX, sets `status: submitted`, locks the invite (same as candidate final submit)
 
 Same `candidates` row and invite token — handoff mid-draft works as in [Returning to the same link](#returning-to-the-same-link).

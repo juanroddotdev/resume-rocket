@@ -24,6 +24,7 @@ const parseQaOpen = ref(false)
 const adminView = ref<AdminView>('builder')
 const docxError = ref<string | null>(null)
 const intakeOpenError = ref<string | null>(null)
+const deleteError = ref<string | null>(null)
 const newPacketModalOpen = ref(false)
 const builderReloadKey = ref(0)
 const SIDEBAR_COLLAPSED_KEY = 'rr-admin-sidebar-collapsed'
@@ -142,6 +143,13 @@ async function onPacketReady(payload: { candidateId: string }) {
   builderReloadKey.value += 1
 }
 
+/** Link-only create: refresh list, show table, do not open empty builder. */
+async function onIntakeLinkReady(payload: { candidateId: string }) {
+  await loadCandidates(payload.candidateId)
+  selectedCandidate.value = candidates.value.find(c => c.id === payload.candidateId) ?? null
+  setAdminView('table')
+}
+
 async function adminAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.access_token) {
@@ -191,7 +199,35 @@ function openCandidateIntake(candidate: CandidateRow) {
     window.open(candidate.intake_url, '_blank', 'noopener,noreferrer')
     return
   }
-  intakeOpenError.value = 'No intake link for this candidate. Open in builder to copy the link.'
+  intakeOpenError.value = 'No intake link for this candidate. Create a new packet to generate one.'
+}
+
+async function deleteDraftCandidate(candidate: CandidateRow) {
+  deleteError.value = null
+  if (candidate.status !== 'draft') {
+    deleteError.value = 'Only draft candidates can be deleted.'
+    return
+  }
+  const name = `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unnamed candidate'
+  const ok = window.confirm(
+    `Delete “${name}”? This removes the draft and revokes its intake link. This cannot be undone.`,
+  )
+  if (!ok) return
+
+  try {
+    const headers = await adminAuthHeaders()
+    await $fetch(`/api/admin/candidates/${candidate.id}`, {
+      method: 'DELETE',
+      headers,
+    })
+    if (selectedCandidate.value?.id === candidate.id) {
+      selectedCandidate.value = null
+    }
+    await loadCandidates()
+  } catch (error: unknown) {
+    const err = error as { data?: { statusMessage?: string }; message?: string }
+    deleteError.value = err.data?.statusMessage || err.message || 'Could not delete draft.'
+  }
 }
 </script>
 
@@ -216,15 +252,15 @@ function openCandidateIntake(candidate: CandidateRow) {
     <template v-else>
       <div class="flex h-full min-h-0 flex-col">
         <div
-          v-if="docxError || intakeOpenError"
+          v-if="docxError || intakeOpenError || deleteError"
           class="mb-3 shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
           role="alert"
         >
-          {{ docxError || intakeOpenError }}
+          {{ docxError || intakeOpenError || deleteError }}
           <button
             type="button"
             class="ml-2 underline"
-            @click="docxError = null; intakeOpenError = null"
+            @click="docxError = null; intakeOpenError = null; deleteError = null"
           >
             Dismiss
           </button>
@@ -384,6 +420,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   :loading="loadingCandidates"
                   :selected-id="selectedCandidate?.id ?? null"
                   @select="selectCandidate"
+                  @delete="deleteDraftCandidate"
                 />
               </div>
             </div>
@@ -468,6 +505,7 @@ function openCandidateIntake(candidate: CandidateRow) {
                   @select="openInBuilder"
                   @download="downloadCandidateDocx"
                   @open-intake="openCandidateIntake"
+                  @delete="deleteDraftCandidate"
                 />
               </div>
             </Transition>
@@ -480,6 +518,7 @@ function openCandidateIntake(candidate: CandidateRow) {
         :open="newPacketModalOpen"
         @close="newPacketModalOpen = false"
         @ready="onPacketReady"
+        @link-ready="onIntakeLinkReady"
       />
 
       <ParseQAPanel

@@ -6,7 +6,9 @@ alwaysApply: false
 
 # Mobile-first intake
 
-- Layout: `max-w-md mx-auto`, large tap targets, `min-h-dvh` where appropriate.
+- Layout: `max-w-md mx-auto` on mobile; `lg:max-w-3xl` + `lg:px-8` on desktop ([`layouts/intake.vue`](layouts/intake.vue)). Large tap targets, `min-h-dvh` where appropriate.
+- Step 1 identity: single column on narrow viewports; `sm:grid-cols-2` for name and email/phone pairs. Keep address full width; city/state stay two-column.
+- Steps 2–3: employer/education decks stay vertical (no desktop table reflow). Back/Next footers full-width on mobile; `lg:max-w-sm lg:ml-auto` so actions don’t stretch across the wide shell.
 - Wizard: debounced autosave (PATCH), localStorage backup, back navigation without wiping draft.
 - Step 0: format hint + privacy line; staged parse spinner labels.
 - Show save status chip (Saving… / Saved) on all editable steps (not success).
@@ -14,4 +16,4 @@ alwaysApply: false
 - **Gap review** (Step 4): block submit when required VMS tags empty; recovery links to wizard fields (`empty-error-states.mdc`).
 - Wizard includes specialties, employer cards (accordion deck), education repeater, clinical summary, credentials with optional expiry.
 
-Match existing Tailwind patterns (`brand-600`, `field` class on intake page).
+Match existing Tailwind patterns (`brand-600`, `field` class on intake page). Do not clone the admin builder for candidate intake.

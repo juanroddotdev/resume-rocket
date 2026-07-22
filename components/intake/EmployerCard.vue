@@ -26,10 +26,54 @@ const props = defineProps<{
 
 const isPanel = computed(() => props.layout === 'panel')
 const isExpanded = computed(() => isPanel.value || props.expanded)
+
+const stickyHeaderRef = ref<HTMLElement | null>(null)
+const stickyHeaderHeight = ref(0)
+
+const stickyTopPx = computed(() => {
+  if (!isExpanded.value) return 0
+  return props.stickyTopOffsetPx ?? (isPanel.value ? 0 : 56)
+})
+
+/** Sticky preview overlays the form; clearance = measured header + 24px breathing room. */
+const stickyClearancePx = computed(() =>
+  (stickyHeaderHeight.value > 0 ? stickyHeaderHeight.value : 0) + 24,
+)
+
 const stickyTopStyle = computed(() => {
   if (!isExpanded.value) return undefined
-  const top = props.stickyTopOffsetPx ?? (isPanel.value ? 0 : 56)
-  return { top: `${top}px` }
+  return {
+    top: `${stickyTopPx.value}px`,
+    marginBottom: stickyHeaderHeight.value > 0 ? `-${stickyHeaderHeight.value}px` : undefined,
+    boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.06)',
+  }
+})
+
+const panelContentStyle = computed(() => {
+  if (!isExpanded.value) return undefined
+  return {
+    paddingTop: `${stickyClearancePx.value}px`,
+    scrollMarginTop: `${stickyTopPx.value + stickyClearancePx.value}px`,
+  }
+})
+
+onMounted(() => {
+  const el = stickyHeaderRef.value
+  if (!el || typeof ResizeObserver === 'undefined') return
+  const sync = () => {
+    stickyHeaderHeight.value = Math.ceil(el.getBoundingClientRect().height)
+  }
+  sync()
+  const ro = new ResizeObserver(sync)
+  ro.observe(el)
+  onUnmounted(() => ro.disconnect())
+})
+
+watch(isExpanded, async (open) => {
+  if (!open) return
+  await nextTick()
+  const el = stickyHeaderRef.value
+  if (el) stickyHeaderHeight.value = Math.ceil(el.getBoundingClientRect().height)
 })
 
 const deckRowMarginClass = computed(() => {
@@ -62,7 +106,6 @@ watch(
   },
   { immediate: true, deep: true },
 )
-const showLinkSearch = ref(false)
 const { query, results, searching, searchError, showNoResults, clearSearch } = useHospitalSearch()
 const {
   fieldClasses,
@@ -94,10 +137,16 @@ const metricsLine = computed(() =>
   }),
 )
 
+function focusFacilityLinkSearch() {
+  nextTick(() => {
+    document.getElementById(`intake-field-employer-${props.index}-link`)?.focus()
+  })
+}
+
 watch(
   () => props.requestLinkSearch,
   (open) => {
-    if (open) showLinkSearch.value = true
+    if (open) focusFacilityLinkSearch()
   },
 )
 
@@ -117,14 +166,13 @@ function patchField(suffix: string, partial: Partial<EmployerEntry>) {
 function linkFromHospital(hospital: HospitalRow | HospitalSuggestion) {
   emit('update', linkEmployerFromHospital(props.employer, hospital))
   markEmployerDbMetrics(props.index)
-  showLinkSearch.value = false
   clearSearch()
 }
 
 function startChangeFacility() {
   clearEmployerDbMetrics(props.index)
   emit('update', unlinkEmployerFacility(props.employer))
-  showLinkSearch.value = true
+  focusFacilityLinkSearch()
 }
 
 type LineField = 'highlights' | 'floatedUnits' | 'equipmentProcedures'
@@ -200,8 +248,20 @@ function onEmploymentTypeChange(event: Event) {
 
 function openFacilityGoogleSearch() {
   if (!import.meta.client) return
-  window.open(facilityGoogleSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
+  window.open(
+    facilityGoogleSearchUrl(props.employer, { searchQuery: query.value }),
+    '_blank',
+    'noopener,noreferrer',
+  )
 }
+
+const googleSearchLabel = computed(() => {
+  const typed = query.value.trim()
+  const fallback = props.employer.name?.trim()
+  const label = typed || fallback
+  if (!label) return 'this facility'
+  return label.length > 28 ? `${label.slice(0, 28)}…` : label
+})
 
 function onClinicalFlagChange(
   suffix: string,
@@ -265,7 +325,9 @@ function onTraumaLevelChange(event: Event) {
       isPanel ? 'py-3' : expanded ? 'z-30 py-8' : 'z-10 py-0',
       !isPanel && deckRowMarginClass,
     ]"
-    :style="stickyTopOffsetPx != null ? { scrollMarginTop: `${stickyTopOffsetPx + 8}px` } : undefined"
+    :style="{
+      scrollMarginTop: `${stickyTopPx + stickyClearancePx}px`,
+    }"
   >
     <div
       :id="`employer-card-${index}`"
@@ -278,13 +340,14 @@ function onTraumaLevelChange(event: Event) {
     >
     <!--
       Sticky only while expanded: pin name + metrics while scrolling fields.
-      Drops with this card when the next employer enters — no JS handoff.
-      overflow-hidden removed from surface so sticky is not clipped.
+      Negative margin + panel paddingTop (= header height + 24px) keep the first
+      fields clear of the overlay; shadow draws a hard boundary while content slides under.
     -->
     <div
+      ref="stickyHeaderRef"
       class="flex items-start gap-1"
       :class="isExpanded
-        ? 'sticky z-20 border-b border-brand-100 bg-brand-50 shadow-sm'
+        ? 'sticky z-20 border-b border-slate-200 bg-brand-50'
         : 'rounded-t-lg bg-white'"
       :style="stickyTopStyle"
     >
@@ -332,69 +395,194 @@ function onTraumaLevelChange(event: Event) {
         :aria-hidden="!isExpanded"
         :class="!isExpanded && 'pointer-events-none'"
       >
-        <div class="space-y-3 border-t border-slate-100 px-3 pb-3 pt-2">
-          <template v-if="!isLinked">
-            <label class="block" :for="`intake-field-${employerFieldId('name')}`">
-              <span class="field-label-compact">Hospital name</span>
-              <input
-                :id="`intake-field-${employerFieldId('name')}`"
-                :value="employer.name || ''"
-                placeholder="Hospital name"
-                :class="fieldClasses(employerFieldId('name'))"
-                @input="patchField('name', { name: ($event.target as HTMLInputElement).value })"
-              >
-            </label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="block" :for="`intake-field-${employerFieldId('city')}`">
-                <span class="field-label-compact">City</span>
-                <input
-                  :id="`intake-field-${employerFieldId('city')}`"
-                  :value="employer.city || ''"
-                  placeholder="City"
-                  :class="fieldClasses(employerFieldId('city'))"
-                  @input="patchField('city', { city: ($event.target as HTMLInputElement).value })"
+        <div
+          class="space-y-8 px-6 pb-6"
+          :style="panelContentStyle"
+        >
+          <!-- Facility & location -->
+          <section class="space-y-4" :aria-labelledby="`employer-${index}-facility-heading`">
+            <h3
+              :id="`employer-${index}-facility-heading`"
+              class="text-xs font-semibold uppercase tracking-wide text-slate-700"
+            >
+              Facility &amp; location
+            </h3>
+
+            <template v-if="!isLinked">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_4.5rem]">
+                <label class="block" :for="`intake-field-${employerFieldId('name')}`">
+                  <span class="field-label-compact">Hospital name</span>
+                  <input
+                    :id="`intake-field-${employerFieldId('name')}`"
+                    :value="employer.name || ''"
+                    placeholder="Hospital name"
+                    :class="fieldClasses(employerFieldId('name'))"
+                    @input="patchField('name', { name: ($event.target as HTMLInputElement).value })"
+                  >
+                </label>
+                <label class="block" :for="`intake-field-${employerFieldId('city')}`">
+                  <span class="field-label-compact">City</span>
+                  <input
+                    :id="`intake-field-${employerFieldId('city')}`"
+                    :value="employer.city || ''"
+                    placeholder="City"
+                    :class="fieldClasses(employerFieldId('city'))"
+                    @input="patchField('city', { city: ($event.target as HTMLInputElement).value })"
+                  >
+                </label>
+                <label class="block" :for="`intake-field-${employerFieldId('state')}`">
+                  <span class="field-label-compact">State</span>
+                  <input
+                    :id="`intake-field-${employerFieldId('state')}`"
+                    :value="employer.state || ''"
+                    placeholder="ST"
+                    maxlength="2"
+                    :class="fieldClasses(employerFieldId('state'))"
+                    @input="patchField('state', { state: ($event.target as HTMLInputElement).value.toUpperCase() })"
+                  >
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <label class="block" :for="`intake-field-${employerFieldId('trauma')}`">
+                  <span class="field-label-compact">Trauma level</span>
+                  <select
+                    :id="`intake-field-${employerFieldId('trauma')}`"
+                    :value="employer.traumaLevel || ''"
+                    :class="fieldClasses(employerFieldId('trauma'))"
+                    @change="onTraumaLevelChange"
+                  >
+                    <option value="">Select…</option>
+                    <option v-for="level in TRAUMA_LEVEL_OPTIONS" :key="level" :value="level">
+                      Level {{ level }}
+                    </option>
+                  </select>
+                </label>
+                <label class="block" :for="`intake-field-${employerFieldId('teaching')}`">
+                  <span class="field-label-compact">Teaching hospital</span>
+                  <select
+                    :id="`intake-field-${employerFieldId('teaching')}`"
+                    :value="triStateBoolValue(employer.teachingStatus)"
+                    :class="fieldClasses(employerFieldId('teaching'))"
+                    @change="onTeachingStatusChange"
+                  >
+                    <option value="">Select…</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </label>
+                <label class="block" :for="`intake-field-${employerFieldId('magnet')}`">
+                  <span class="field-label-compact">Magnet hospital</span>
+                  <select
+                    :id="`intake-field-${employerFieldId('magnet')}`"
+                    :value="triStateBoolValue(employer.magnetStatus)"
+                    :class="fieldClasses(employerFieldId('magnet'))"
+                    @change="onMagnetStatusChange"
+                  >
+                    <option value="">Select…</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-5">
+                <div>
+                  <p class="text-xs font-medium text-slate-800">Link facility</p>
+                  <p class="mt-1 text-xs text-slate-600">
+                    Type a facility name to auto-fill beds, trauma, and teaching from the database.
+                  </p>
+                </div>
+                <div
+                  class="flex flex-col overflow-hidden rounded-lg border border-slate-300 bg-white focus-within:border-[var(--color-accent-gold-hover)] focus-within:ring-2 focus-within:ring-[color-mix(in_srgb,var(--color-accent-gold)_30%,transparent)] sm:flex-row"
                 >
-              </label>
-              <label class="block" :for="`intake-field-${employerFieldId('state')}`">
-                <span class="field-label-compact">State</span>
-                <input
-                  :id="`intake-field-${employerFieldId('state')}`"
-                  :value="employer.state || ''"
-                  placeholder="ST"
-                  maxlength="2"
-                  :class="fieldClasses(employerFieldId('state'))"
-                  @input="patchField('state', { state: ($event.target as HTMLInputElement).value.toUpperCase() })"
+                  <label class="min-w-0 flex-1" :for="`intake-field-employer-${index}-link`">
+                    <span class="sr-only">Search facility database</span>
+                    <input
+                      :id="`intake-field-employer-${index}-link`"
+                      v-model="query"
+                      type="search"
+                      placeholder="Search hospital name…"
+                      class="field min-h-11 rounded-none border-0 shadow-none focus:border-transparent focus:shadow-none"
+                    >
+                  </label>
+                  <button
+                    type="button"
+                    class="inline-flex shrink-0 items-center justify-center gap-1.5 border-t border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-100 sm:border-l sm:border-t-0"
+                    :aria-label="query.trim()
+                      ? `Search Google for ${query.trim()}`
+                      : 'Search Google for this facility'"
+                    @click="openFacilityGoogleSearch"
+                  >
+                    <span aria-hidden="true">↗</span>
+                    <span class="sm:hidden">Google</span>
+                    <span class="hidden sm:inline">Search Google</span>
+                  </button>
+                </div>
+                <ul v-if="results.length" class="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
+                  <li
+                    v-for="h in results"
+                    :key="h.id"
+                    class="cursor-pointer px-3 py-2 text-sm hover:bg-brand-50"
+                    @click="linkFromHospital(h)"
+                  >
+                    {{ h.name }}
+                    <span v-if="h.city" class="text-slate-500"> — {{ h.city }}, {{ h.state }}</span>
+                  </li>
+                </ul>
+                <p v-if="searching" class="text-xs text-slate-500">Searching…</p>
+                <div
+                  v-else-if="showNoResults"
+                  class="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950"
                 >
-              </label>
-            </div>
-            <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <label class="block" :for="`intake-field-${employerFieldId('trauma')}`">
-                <span class="field-label-compact">Trauma level</span>
-                <select
-                  :id="`intake-field-${employerFieldId('trauma')}`"
-                  :value="employer.traumaLevel || ''"
-                  :class="fieldClasses(employerFieldId('trauma'))"
-                  @change="onTraumaLevelChange"
-                >
-                  <option value="">Select…</option>
-                  <option v-for="level in TRAUMA_LEVEL_OPTIONS" :key="level" :value="level">
-                    Level {{ level }}
-                  </option>
-                </select>
-              </label>
-              <label class="block" :for="`intake-field-${employerFieldId('teaching')}`">
-                <span class="field-label-compact">Teaching hospital</span>
-                <select
-                  :id="`intake-field-${employerFieldId('teaching')}`"
-                  :value="triStateBoolValue(employer.teachingStatus)"
-                  :class="fieldClasses(employerFieldId('teaching'))"
-                  @change="onTeachingStatusChange"
-                >
-                  <option value="">Select…</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
+                  <span>Facility not found in database?</span>
+                  <button
+                    type="button"
+                    class="font-medium text-brand-800 underline hover:text-brand-900"
+                    @click="openFacilityGoogleSearch"
+                  >
+                    Search Google for {{ googleSearchLabel }} ↗
+                  </button>
+                </div>
+                <p v-if="searchError" class="text-xs text-red-600">{{ searchError }}</p>
+
+                <div v-if="employer.hospitalSuggestions?.length" class="space-y-1 border-t border-slate-200/80 pt-2">
+                  <p class="text-xs font-medium text-slate-700">Suggested matches</p>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="suggestion in employer.hospitalSuggestions"
+                      :key="suggestion.id"
+                      type="button"
+                      class="rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-left text-xs text-brand-900 hover:bg-brand-100"
+                      @click="linkFromHospital(suggestion)"
+                    >
+                      {{ suggestion.name }}
+                      <span v-if="suggestion.city" class="text-slate-500"> — {{ suggestion.city }}, {{ suggestion.state }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <div v-else class="flex flex-wrap items-end gap-4">
+              <MetricTile
+                v-if="employer.beds != null"
+                label="Hospital beds"
+                :value="employer.beds"
+                :from-database="isEmployerDbMetricsHighlighted(index)"
+              />
+              <MetricTile
+                v-if="employer.traumaLevel"
+                label="Trauma level"
+                :value="employer.traumaLevel"
+                :from-database="isEmployerDbMetricsHighlighted(index)"
+              />
+              <MetricTile
+                v-if="employer.teachingStatus"
+                label="Teaching hospital"
+                value="Yes"
+                :from-database="isEmployerDbMetricsHighlighted(index)"
+              />
               <label class="block" :for="`intake-field-${employerFieldId('magnet')}`">
                 <span class="field-label-compact">Magnet hospital</span>
                 <select
@@ -408,124 +596,14 @@ function onTraumaLevelChange(event: Event) {
                   <option value="no">No</option>
                 </select>
               </label>
-            </div>
-            <p class="text-xs text-slate-500">
-              For manual hospitals — link the facility below to pull trauma and teaching from the database instead.
-            </p>
-          </template>
-
-          <div v-if="isLinked" class="flex flex-wrap items-end gap-2">
-            <MetricTile
-              v-if="employer.beds != null"
-              label="Hospital beds"
-              :value="employer.beds"
-              :from-database="isEmployerDbMetricsHighlighted(index)"
-            />
-            <MetricTile
-              v-if="employer.traumaLevel"
-              label="Trauma level"
-              :value="employer.traumaLevel"
-              :from-database="isEmployerDbMetricsHighlighted(index)"
-            />
-            <MetricTile
-              v-if="employer.teachingStatus"
-              label="Teaching hospital"
-              value="Yes"
-              :from-database="isEmployerDbMetricsHighlighted(index)"
-            />
-            <label class="block" :for="`intake-field-${employerFieldId('magnet')}`">
-              <span class="field-label-compact">Magnet hospital</span>
-              <select
-                :id="`intake-field-${employerFieldId('magnet')}`"
-                :value="triStateBoolValue(employer.magnetStatus)"
-                :class="fieldClasses(employerFieldId('magnet'))"
-                @change="onMagnetStatusChange"
-              >
-                <option value="">Select…</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </label>
-            <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
-              Change facility
-            </button>
-          </div>
-
-          <template v-else>
-            <p class="text-xs text-slate-600">
-              Link facility for bed count &amp; trauma (recommended)
-            </p>
-            <button
-              type="button"
-              class="text-xs text-slate-600 underline hover:text-brand-700"
-              @click="openFacilityGoogleSearch"
-            >
-              Search hospital info on Google
-            </button>
-
-            <div v-if="employer.hospitalSuggestions?.length" class="space-y-1">
-              <p class="text-xs font-medium text-slate-700">Suggested matches</p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="suggestion in employer.hospitalSuggestions"
-                  :key="suggestion.id"
-                  type="button"
-                  class="rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-left text-xs text-brand-900 hover:bg-brand-100"
-                  @click="linkFromHospital(suggestion)"
-                >
-                  {{ suggestion.name }}
-                  <span v-if="suggestion.city" class="text-slate-500"> — {{ suggestion.city }}, {{ suggestion.state }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <button
-                v-if="!showLinkSearch"
-                :id="`intake-field-employer-${index}-link`"
-                type="button"
-                class="text-sm text-brand-700"
-                @click="showLinkSearch = true"
-                @focus="showLinkSearch = true"
-              >
-                Search to link facility
+              <button type="button" class="text-xs text-brand-700 underline" @click="startChangeFacility">
+                Change facility
               </button>
-              <div v-else class="space-y-1">
-                <label class="block" :for="`intake-field-employer-${index}-link`">
-                  <span class="field-label-compact">Link to facility database</span>
-                </label>
-                <input
-                  :id="`intake-field-employer-${index}-link`"
-                  v-model="query"
-                  type="search"
-                  placeholder="Search hospital name…"
-                  class="field"
-                >
-                <ul v-if="results.length" class="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-white shadow">
-                  <li
-                    v-for="h in results"
-                    :key="h.id"
-                    class="cursor-pointer px-3 py-2 text-sm hover:bg-brand-50"
-                    @click="linkFromHospital(h)"
-                  >
-                    {{ h.name }}
-                    <span v-if="h.city" class="text-slate-500"> — {{ h.city }}, {{ h.state }}</span>
-                  </li>
-                </ul>
-                <p v-if="searching" class="text-xs text-slate-500">Searching…</p>
-                <p v-else-if="showNoResults" class="text-xs text-slate-500">
-                  No facilities found — try a different name.
-                </p>
-                <p v-if="searchError" class="text-xs text-red-600">{{ searchError }}</p>
-                <button type="button" class="text-xs text-slate-500 underline" @click="showLinkSearch = false; clearSearch()">
-                  Cancel search
-                </button>
-              </div>
             </div>
-          </template>
+          </section>
 
-          <fieldset class="space-y-3 border-0 p-0">
-            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <fieldset class="space-y-4 border-0 p-0">
+            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
               Role &amp; dates
             </legend>
 
@@ -540,7 +618,7 @@ function onTraumaLevelChange(event: Event) {
             >
           </label>
 
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-4">
             <label class="block" :for="`intake-field-employer-${index}-start`">
               <span class="field-label-compact">Start date</span>
               <input
@@ -598,9 +676,9 @@ function onTraumaLevelChange(event: Event) {
           </label>
           </fieldset>
 
-          <fieldset class="space-y-3 border-0 border-t border-slate-100 p-0 pt-3">
-            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Clinical
+          <fieldset class="space-y-4 border-0 p-0">
+            <legend class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+              Clinical &amp; unit details
             </legend>
 
           <label class="block" :for="`intake-field-${employerFieldId('emr')}`">
@@ -637,7 +715,7 @@ function onTraumaLevelChange(event: Event) {
             >
           </label>
 
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label class="block" :for="`intake-field-${employerFieldId('charge-nurse')}`">
               <span class="field-label-compact">Charge nurse experience</span>
               <select
@@ -674,9 +752,9 @@ function onTraumaLevelChange(event: Event) {
             {{ showClinical ? 'Hide' : 'Add' }} optional unit details
           </button>
 
-          <div v-if="showClinical" class="space-y-2 border-t border-slate-100 pt-2">
+          <div v-if="showClinical" class="space-y-4 border-t border-slate-100 pt-4">
             <p class="text-xs font-medium text-slate-700">Unit details (your unit — not hospital-wide)</p>
-            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <MetricTile
                 editable
                 label="Unit beds"

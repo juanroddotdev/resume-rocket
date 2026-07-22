@@ -412,7 +412,13 @@ See also [Test automation plan — Phase 1](#phase-1--expand-script--unit-covera
 
 ### Backlog
 
-- [ ] **Hospital data Google search helper** — small helper control on unlinked employer / facility link UI ([`EmployerCard.vue`](../components/intake/EmployerCard.vue), [`HospitalAutocomplete.vue`](../components/intake/HospitalAutocomplete.vue); intake + admin builder) that opens a new tab to Google with a prefilled query (employer name, city/state, e.g. “trauma level beds teaching hospital”) so recruiters can research metrics before linking or manual entry; no PHI in query beyond what’s already on the card
+- [x] **Hospital data Google search helper** — [`facilityGoogleSearchUrl`](../utils/facilityGoogleSearch.ts) + **Search hospital info on Google** on unlinked employer cards ([`EmployerCard.vue`](../components/intake/EmployerCard.vue)); query = name, city/state, `"trauma level"`, `"total beds"`, `"teaching hospital"`, Magnet
+- [ ] **Facility Google query — ideas (optional later)**
+  - [ ] Stronger trauma phrasing (`"Level I"` / `"Level II trauma"`) if `"trauma level"` alone underperforms
+  - [ ] CMS / CCN / NPI terms if we seed or match by facility IDs later
+  - [ ] `"academic medical center"` as alternate teaching phrasing
+  - [ ] Unit/specialty from the card (e.g. ICU) only when present — clinical context, not facility metrics
+  - [ ] Session/localStorage “Advanced” checkboxes to toggle Magnet / teaching / trauma / beds (not free-form parameter editing)
 - [ ] **PR 1b** — Hospital search `pg_trgm` tuning (only if search feels weak in prod)
 - [x] **PR 5 (optional)** — multi-license parse + `licenses[]` JSONB (Track A #78–#80)
 

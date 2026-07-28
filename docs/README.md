@@ -9,6 +9,7 @@ Start here to find the right doc. **Active backlog:** [TODO.md](./TODO.md).
 | Doc | Use when |
 | --- | --- |
 | [TODO.md](./TODO.md) | Open engineering work, test automation plan, issue #10–#15 status |
+| [AGENT-LANES.md](./AGENT-LANES.md) | Parallel side agents (1 QA / 2 Bug Hunter / 5 Docs); branching + deferred 3–4 |
 | [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) | Pre-deploy / pre-tag smoke (automated + manual) |
 | [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) | Deeper UX QA after CI is green |
 | [DEPLOY.md](./DEPLOY.md) | Render deploy, env vars, Supabase migrations |

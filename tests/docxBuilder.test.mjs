@@ -33,7 +33,7 @@ describe('mapCandidateToTemplateData', () => {
       specialized_medical_equipment: 'ECMO',
       specialties: ['ICU'],
       credentials: { BLS: { active: true, expiry: '06/2026' } },
-      education: [{ degree: 'BSN', school: 'State U', graduationMonth: '05', graduationYear: '2016' }],
+      education: [{ degree: 'BSN', school: 'State U', city: 'Austin', state: 'TX', graduationMonth: '05', graduationYear: '2016' }],
       employers: [{
         name: 'Metro Hospital',
         role: 'ICU RN',
@@ -52,6 +52,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(data.candidate_first_name)
     assert.ok(data.education.length)
     assert.equal(data.education[0].education_graduation_year, '05/2016')
+    assert.equal(data.education[0].education_school_name, 'State U (Austin, TX)')
     assert.ok(data.professional_experiences.length)
     assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')

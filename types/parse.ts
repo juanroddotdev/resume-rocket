@@ -70,6 +70,8 @@ export interface ParseLicenseAudit {
 export interface ParseEducationAudit {
   degree?: string
   school?: string
+  city?: string
+  state?: string
   sourceSnippet?: string
 }
 

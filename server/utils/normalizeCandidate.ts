@@ -148,6 +148,8 @@ export function normalizeEducation(raw: unknown): EducationEntry[] {
       const o = item as Record<string, unknown>
       const degree = optionalString(o.degree ?? o.education_degree)
       const school = optionalString(o.school ?? o.schoolName ?? o.education_school_name)
+      const city = optionalString(o.city ?? o.education_city)
+      const state = optionalString(o.state ?? o.education_state)
       let graduationMonth = normalizeGraduationMonth(
         optionalString(o.graduationMonth ?? o.graduation_month ?? o.education_graduation_month),
       )
@@ -162,10 +164,13 @@ export function normalizeEducation(raw: unknown): EducationEntry[] {
         graduationMonth = legacy.graduationMonth ?? graduationMonth
         graduationYear = legacy.graduationYear ?? graduationYear
       }
-      if (!degree && !school && !graduationYear && !graduationMonth) return null
+      // Client-only suggestion keys are intentionally not read — never persist inferred location.
+      if (!degree && !school && !graduationYear && !graduationMonth && !city && !state) return null
       const entry: EducationEntry = {}
       if (degree) entry.degree = degree
       if (school) entry.school = school
+      if (city) entry.city = city
+      if (state) entry.state = state
       if (graduationMonth) entry.graduationMonth = graduationMonth
       if (graduationYear) entry.graduationYear = graduationYear
       return entry

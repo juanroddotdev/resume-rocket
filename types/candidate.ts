@@ -53,9 +53,19 @@ export type CredentialsMap = Record<string, CredentialEntry>
 export interface EducationEntry {
   degree?: string
   school?: string
+  /** School city when known */
+  city?: string
+  /** 2-letter US state when known */
+  state?: string
   /** 01–12 when known */
   graduationMonth?: string
   graduationYear?: string
+  /**
+   * Client-only Gemini suggestion when school is known but location was not in the resume.
+   * Not persisted — stripped by normalizeEducation.
+   */
+  suggestedCity?: string
+  suggestedState?: string
 }
 
 export interface LicenseEntry {

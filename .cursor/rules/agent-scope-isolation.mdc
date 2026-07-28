@@ -1,0 +1,41 @@
+---
+description: Path locks and lane isolation for parallel side agents
+alwaysApply: true
+---
+
+# Agent scope & isolation
+
+Used with [docs/AGENT-LANES.md](../../docs/AGENT-LANES.md) and prompts in `.cursor/agents/`.
+
+## Path lock
+
+- Do not modify files outside the **Allowed paths** in the chat kickoff.
+- Do not touch **Locked paths** (Main owns them this session).
+- No drive-by refactors of adjacent business logic.
+
+## Lane write targets
+
+| Lane / agent | May write |
+|--------------|-----------|
+| Agent 1 QA | `tests/*.test.mjs`, optionally `scripts/test-*.mjs` / test wiring in `package.json` |
+| Agent 2 Bug Hunter | Chat report; optionally `docs/audits/*.md` only |
+| Agent 5 Docs Auditor | `docs/**` only |
+| Main / Side feature | Production code inside Allowed paths for that ticket |
+
+Audit and verification agents must not “fix while reporting” unless the user promotes them to a new Side ticket.
+
+## Git
+
+- One agent = one branch from latest `main` when writing (never share a long-lived agents branch).
+- Do not merge or ship unless the user explicitly asks.
+- Follow `git-pr-workflow.mdc` and `pr-size.mdc` (one concern per PR).
+
+## Safety
+
+- No `.env` or secrets in commits or reports (`security-secrets.mdc`).
+- No PHI in logs, fixtures, or audit reports (`phi-handling.mdc`).
+- Preserve intentional graceful degradation (`graceful-degradation.mdc`).
+
+## Stop
+
+If the task needs Locked paths, expands past one concern, or needs a product decision — stop and report.

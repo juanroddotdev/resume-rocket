@@ -4,9 +4,9 @@ Living task list for Resume Rocket. Epic context: [#16 hardening sprint](https:/
 
 **Doc index:** [README.md](./README.md) · **VMS status:** [VMS-FULL-COVERAGE-PLAN.md](./VMS-FULL-COVERAGE-PLAN.md) (expansion complete)
 
-**Related:** [MVP-PLAN.md](./MVP-PLAN.md) (historical spec) · [VMS-FIELD-MANIFEST.md](./VMS-FIELD-MANIFEST.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) · **Archived plans:** [archive/](./archive/)
+**Related:** [MVP-PLAN.md](./MVP-PLAN.md) (historical spec) · [VMS-FIELD-MANIFEST.md](./VMS-FIELD-MANIFEST.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) · [AGENT-LANES.md](./AGENT-LANES.md) (parallel side agents) · **Archived plans:** [archive/](./archive/)
 
-**Quick nav:** [What's next](#whats-next) · [New template & Professional Snapshot](#new-template--professional-snapshot) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports)
+**Quick nav:** [What's next](#whats-next) · [New template & Professional Snapshot](#new-template--professional-snapshot) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports) · [Agent lanes](./AGENT-LANES.md)
 
 One concern per PR when implementing. Check items off when merged (optionally add PR number inline).
 
@@ -23,7 +23,8 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | **UX** | DOCX | Visual restyle in progress on `feat/docx-visual-restyle` (Inter + section rules + title\|date) — preview = download |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
-| **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) |
+| **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) — use [Agent 1 QA](../.cursor/agents/qa-edge-cases.md) |
+| **Agents** | Side lanes | Active: Agents **1 / 2 / 5** — see [`AGENT-LANES.md`](./AGENT-LANES.md). **Deferred:** Agent 3 (design/a11y) + Agent 4 (DX/refactor) until after 1/2/5 run once + human smoke; then 3 on chrome, 4 last with named ticket |
 | **A** | Intake polish | Track A shipped (#76–#82) — see [Candidate intake UX](#candidate-intake-ux) |
 | **B** | Step 4 | DOCX preview shipped (#89–#91); Phase 2 admin per-employment DOCX layout deferred |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |

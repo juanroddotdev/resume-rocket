@@ -41,7 +41,9 @@ Clinical summary: specialties (units like ICU, ER, Med-Surg), years_nursing_expe
 - average_patient_ratios: as written (e.g. "1:4", "1:5-6")
 - specialized_medical_equipment: equipment and advanced skills from summary/skills sections (ECMO, CRRT, ventilators, etc.)
 
-Education: education[] with degree, school, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined), source_snippet
+Education: education[] with degree, school, city, state, graduation_month (01-12 or month name when stated), graduation_year (YYYY, or MM/YYYY when month and year are combined), suggested_city, suggested_state, source_snippet
+- city / state: only when the resume explicitly states the school location
+- suggested_city / suggested_state: only when school is known AND city/state were NOT stated in the resume; use the well-known campus city if confident; leave empty if unsure or ambiguous (multiple campuses)
 - source_snippet: short verbatim excerpt supporting this education row (max ${PARSE_AUDIT_SNIPPET_MAX_CHARS} characters)
 
 Certifications: certifications[] with name (standard acronym, e.g. BLS, ACLS, PALS, NRP, STABLE, CCRN, CEN, TNCC, ENPC, NIHSS, RRT, CRT, ARRT, RDMS, RDCS, RVT, RCIS, RCES, MLS, MLT, CST, CRCST, CPhT, CMA, CPI, MOAB, MAB, QMHP, PBT) and optional expiry (MM/YYYY, e.g. 06/2026), source_snippet
@@ -91,8 +93,13 @@ export type GeminiCertificationJson = {
 export type GeminiEducationJson = {
   degree?: string
   school?: string
+  city?: string
+  state?: string
   graduation_month?: string
   graduation_year?: string
+  /** Inferred campus location when not stated in resume — never auto-committed. */
+  suggested_city?: string
+  suggested_state?: string
   source_snippet?: string
 }
 
@@ -186,8 +193,12 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
         properties: {
           degree: { type: Type.STRING },
           school: { type: Type.STRING },
+          city: { type: Type.STRING },
+          state: { type: Type.STRING },
           graduation_month: { type: Type.STRING },
           graduation_year: { type: Type.STRING },
+          suggested_city: { type: Type.STRING },
+          suggested_state: { type: Type.STRING },
           source_snippet: { type: Type.STRING },
         },
       },
@@ -300,6 +311,8 @@ export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
       const entry = {
         ...(mapped.degree ? { degree: mapped.degree } : {}),
         ...(mapped.school ? { school: mapped.school } : {}),
+        ...(mapped.city ? { city: mapped.city } : {}),
+        ...(mapped.state ? { state: mapped.state } : {}),
       }
       if (!entry.degree && !entry.school) return null
       return mapAuditEntry(entry, education.source_snippet)
@@ -331,6 +344,8 @@ export function buildParseAudit(parsed: GeminiResumeJson): ParseAudit | null {
 function mapGeminiEducation(ed: GeminiEducationJson) {
   const degree = ed.degree?.trim() || undefined
   const school = ed.school?.trim() || undefined
+  const city = ed.city?.trim() || undefined
+  const state = ed.state?.trim() || undefined
   let graduationMonth = normalizeGraduationMonth(ed.graduation_month)
   let graduationYear = normalizeGraduationYear(ed.graduation_year)
   if (!graduationMonth && ed.graduation_year?.trim()) {
@@ -338,12 +353,27 @@ function mapGeminiEducation(ed: GeminiEducationJson) {
     graduationMonth = legacy.graduationMonth ?? graduationMonth
     graduationYear = legacy.graduationYear ?? graduationYear
   }
-  if (!degree && !school && !graduationYear && !graduationMonth) return null
+  if (!degree && !school && !graduationYear && !graduationMonth && !city && !state) return null
+
+  const suggestedCity = ed.suggested_city?.trim() || undefined
+  const suggestedState = ed.suggested_state?.trim() || undefined
+  const hasCommittedLocation = Boolean(city || state)
+  // Only surface suggestions when resume location is empty and school is known.
+  const includeSuggestion = Boolean(school && !hasCommittedLocation && (suggestedCity || suggestedState))
+
   return {
     degree,
     school,
+    city,
+    state,
     graduationMonth,
     graduationYear,
+    ...(includeSuggestion
+      ? {
+          ...(suggestedCity ? { suggestedCity } : {}),
+          ...(suggestedState ? { suggestedState } : {}),
+        }
+      : {}),
   }
 }
 

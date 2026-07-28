@@ -12,6 +12,7 @@ import {
   formatEmployerMetricsLine,
 } from '../../utils/employerMetricsLine.ts'
 import { formatEducationGraduationForDocx } from '../../utils/educationGraduation.ts'
+import { formatEducationSchoolForDocx } from '../../utils/educationLocation.ts'
 import {
   activeLicensesListForDocx,
   formatLicenseRowForDocx,
@@ -152,7 +153,7 @@ function resolveCandidateLocation(candidate: DocxCandidate) {
 function mapEducation(education: EducationEntry[] | null | undefined) {
   return (education || []).map(entry => ({
     education_degree: entry.degree || '',
-    education_school_name: entry.school || '',
+    education_school_name: formatEducationSchoolForDocx(entry),
     education_graduation_year: formatEducationGraduationForDocx(entry),
   }))
 }

@@ -108,8 +108,10 @@ Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
 | `education_degree` | `education[].degree` | Yes | 3 — Education | Yes | Live |
-| `education_school_name` | `education[].school` | Yes | 3 — Education | Yes | Live |
+| `education_school_name` | `education[].school` (+ optional `city`/`state` rendered as `School (City, ST)`) | Yes | 3 — Education | Yes | Live |
 | `education_graduation_year` | `education[].graduationMonth` + `graduationYear` (DOCX: MM/YYYY when month known, else YYYY) | Yes | 3 — Education | Yes | Live |
+
+City/state on `education[]` are collected in the wizard and from parse when stated; optional Accept suggestions when school is known but location was not in the resume. No dedicated template tags yet — location is folded into `education_school_name`.
 
 ---
 

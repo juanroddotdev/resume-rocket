@@ -161,6 +161,8 @@ export function parseAuditFromBlob(parsedResume: unknown): ParseAudit | null {
     const mapped = {
       ...(typeof entry.degree === 'string' ? { degree: entry.degree } : {}),
       ...(typeof entry.school === 'string' ? { school: entry.school } : {}),
+      ...(typeof entry.city === 'string' ? { city: entry.city } : {}),
+      ...(typeof entry.state === 'string' ? { state: entry.state } : {}),
       ...(typeof entry.sourceSnippet === 'string' ? { sourceSnippet: entry.sourceSnippet } : {}),
     }
     if (!mapped.degree && !mapped.school) return null

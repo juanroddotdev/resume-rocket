@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import type { EducationEntry } from '~/types/candidate'
 import { GRADUATION_MONTH_OPTIONS } from '~/utils/educationGraduation'
+import {
+  applyEducationLocationSuggestion,
+  dismissEducationLocationSuggestion,
+  educationHasLocationSuggestion,
+  formatEducationLocation,
+} from '~/utils/educationLocation'
 
 const props = defineProps<{
   modelValue: EducationEntry[]
@@ -67,7 +73,21 @@ function graduationSummary(row: EducationEntry) {
 function rowSummary(row: EducationEntry) {
   const degree = row.degree?.trim() || 'Degree not set'
   const school = row.school?.trim() || 'School not set'
-  return `${degree} · ${school} · ${graduationSummary(row)}`
+  const location = [row.city?.trim(), row.state?.trim()].filter(Boolean).join(', ')
+  const schoolPart = location ? `${school} · ${location}` : school
+  return `${degree} · ${schoolPart} · ${graduationSummary(row)}`
+}
+
+function acceptLocationSuggestion(index: number) {
+  const row = props.modelValue[index]
+  if (!row) return
+  patchRow(index, applyEducationLocationSuggestion(row))
+}
+
+function dismissLocationSuggestion(index: number) {
+  const row = props.modelValue[index]
+  if (!row) return
+  patchRow(index, dismissEducationLocationSuggestion(row))
 }
 
 function openCard(index: number) {
@@ -167,6 +187,54 @@ defineExpose({ openEducationField })
                   @input="patchEducationField(index, 'school', { school: ($event.target as HTMLInputElement).value })"
                 >
               </label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="block" :for="`intake-field-${educationFieldId(index, 'city')}`">
+                  <span class="field-label-compact">City</span>
+                  <input
+                    :id="`intake-field-${educationFieldId(index, 'city')}`"
+                    :value="row.city || ''"
+                    placeholder="City"
+                    :class="fieldClasses(educationFieldId(index, 'city'))"
+                    @input="patchEducationField(index, 'city', { city: ($event.target as HTMLInputElement).value })"
+                  >
+                </label>
+                <label class="block" :for="`intake-field-${educationFieldId(index, 'state')}`">
+                  <span class="field-label-compact">State</span>
+                  <input
+                    :id="`intake-field-${educationFieldId(index, 'state')}`"
+                    :value="row.state || ''"
+                    placeholder="ST"
+                    maxlength="2"
+                    :class="fieldClasses(educationFieldId(index, 'state'))"
+                    @input="patchEducationField(index, 'state', { state: ($event.target as HTMLInputElement).value })"
+                  >
+                </label>
+              </div>
+              <div
+                v-if="educationHasLocationSuggestion(row)"
+                class="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                role="status"
+              >
+                <span class="min-w-0 flex-1">
+                  Suggested location:
+                  <span class="font-medium text-slate-900">{{ formatEducationLocation({ city: row.suggestedCity, state: row.suggestedState }) }}</span>
+                  <span class="text-slate-500"> (not in resume — tap Accept if correct)</span>
+                </span>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-md bg-brand-700 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-800"
+                  @click="acceptLocationSuggestion(index)"
+                >
+                  Accept
+                </button>
+                <button
+                  type="button"
+                  class="shrink-0 text-xs font-medium text-slate-600 hover:text-slate-900"
+                  @click="dismissLocationSuggestion(index)"
+                >
+                  Dismiss
+                </button>
+              </div>
               <fieldset class="space-y-2">
                 <legend class="field-label-compact">Graduation date</legend>
                 <div class="grid grid-cols-2 gap-2">

@@ -6,6 +6,7 @@ import { describe, it } from 'node:test'
 import {
   buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
+  ensureProfessionalSnapshotLines,
   formatExperienceFlagValue,
   isSnapshotExperienceFlag,
   normalizeProfessionalSnapshot,
@@ -38,6 +39,19 @@ describe('parseExperienceFlagValue / formatExperienceFlagValue', () => {
   it('formats empty answer as blank and No without detail', () => {
     assert.equal(formatExperienceFlagValue('', 'ignored'), '')
     assert.equal(formatExperienceFlagValue('no', 'should drop'), 'No')
+  })
+
+  it('preserves trailing spaces in detail while typing', () => {
+    assert.equal(formatExperienceFlagValue('yes', 'Level '), 'Yes — Level ')
+    assert.deepEqual(parseExperienceFlagValue('Yes — Level '), {
+      answer: 'yes',
+      detail: 'Level ',
+    })
+    assert.equal(formatExperienceFlagValue('yes', ' '), 'Yes —  ')
+    assert.deepEqual(parseExperienceFlagValue('Yes —  '), {
+      answer: 'yes',
+      detail: ' ',
+    })
   })
 
   it('classifies flag keys', () => {
@@ -144,6 +158,16 @@ describe('normalizeProfessionalSnapshot', () => {
     })
     assert.equal(normalized.snapshot_specialty?.value, 'ICU')
     assert.equal('junk' in normalized, false)
+  })
+})
+
+describe('ensureProfessionalSnapshotLines', () => {
+  it('preserves trailing spaces for live editor binding', () => {
+    const lines = ensureProfessionalSnapshotLines({
+      snapshot_specialty: { value: 'ICU ', included: true },
+    })
+    assert.equal(lines.snapshot_specialty.value, 'ICU ')
+    assert.equal(lines.snapshot_years_experience.value, '')
   })
 })
 

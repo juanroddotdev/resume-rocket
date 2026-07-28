@@ -295,44 +295,73 @@ export function isSnapshotExperienceFlag(
 /**
  * Parse stored DOCX/wizard text into Yes/No + optional detail.
  * Legacy free text (e.g. "Level I") becomes Yes with that text as detail.
+ * Preserves trailing spaces in detail so controlled inputs can accept Space while typing.
  */
 export function parseExperienceFlagValue(raw: string | null | undefined): {
   answer: SnapshotExperienceAnswer
   detail: string
 } {
-  const value = (raw || '').trim()
-  if (!value) return { answer: '', detail: '' }
-  const match = /^(yes|no)\b(?:\s*[—–-]\s*(.*))?$/i.exec(value)
+  const value = raw ?? ''
+  if (!value.trim()) return { answer: '', detail: '' }
+  // trimStart only: keep trailing detail whitespace for live editors.
+  // Optional single space after the dash; capture the rest raw (do not trim detail).
+  const match = /^(yes|no)\b(?:\s*[—–-]\s?(.*))?$/i.exec(value.trimStart())
   if (match) {
     return {
       answer: match[1]!.toLowerCase() as 'yes' | 'no',
-      detail: (match[2] || '').trim(),
+      detail: match[2] ?? '',
     }
   }
-  return { answer: 'yes', detail: value }
+  return { answer: 'yes', detail: value.trimStart() }
 }
 
-/** Format Yes/No + detail for storage / DOCX (`Yes — detail`). */
+/**
+ * Format Yes/No + detail for storage / DOCX (`Yes — detail`).
+ * Does not trim detail — trailing spaces must survive while typing in controlled inputs.
+ * Persistence still trims via normalizeProfessionalSnapshot on save.
+ */
 export function formatExperienceFlagValue(
   answer: SnapshotExperienceAnswer,
   detail: string | null | undefined,
 ): string {
   if (answer !== 'yes' && answer !== 'no') return ''
   if (answer === 'no') return 'No'
-  const note = (detail || '').trim()
-  return note ? `Yes — ${note}` : 'Yes'
+  const note = detail ?? ''
+  if (note === '') return 'Yes'
+  return `Yes — ${note}`
 }
 
-/** Ensure all 12 lines exist for admin editor binding. */
+/**
+ * Ensure all 12 lines exist for admin editor binding.
+ * Does not trim values — trimming mid-keystroke eats Space in controlled inputs.
+ * Use normalizeProfessionalSnapshot (or PATCH) to trim on save/export.
+ */
 export function ensureProfessionalSnapshotLines(
   snapshot: ProfessionalSnapshot | null | undefined,
 ): Record<ProfessionalSnapshotKey, ProfessionalSnapshotLine> {
-  const normalized = normalizeProfessionalSnapshot(snapshot)
+  const raw =
+    snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot)
+      ? (snapshot as ProfessionalSnapshot)
+      : {}
   const out = {} as Record<ProfessionalSnapshotKey, ProfessionalSnapshotLine>
   for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
-    out[key] = normalized[key]
-      ? { ...normalized[key]! }
-      : { value: '', included: false }
+    const entry = raw[key]
+    if (!entry || typeof entry !== 'object') {
+      out[key] = { value: '', included: false }
+      continue
+    }
+    const value = typeof entry.value === 'string' ? entry.value : ''
+    const lineOut: ProfessionalSnapshotLine = {
+      value,
+      included: typeof entry.included === 'boolean' ? entry.included : value.trim().length > 0,
+    }
+    if (typeof entry.source === 'string' && entry.source.trim()) {
+      lineOut.source = entry.source.trim()
+    }
+    if (typeof entry.sourceSnippet === 'string' && entry.sourceSnippet.trim()) {
+      lineOut.sourceSnippet = entry.sourceSnippet.trim()
+    }
+    out[key] = lineOut
   }
   return out
 }

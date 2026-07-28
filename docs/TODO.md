@@ -24,7 +24,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) — use [Agent 1 QA](../.cursor/agents/qa-edge-cases.md) |
-| **Agents** | Side lanes | Active: Agents **1 / 2 / 5** — see [`AGENT-LANES.md`](./AGENT-LANES.md). **Deferred:** Agent 3 (design/a11y) + Agent 4 (DX/refactor) until after 1/2/5 run once + human smoke; then 3 on chrome, 4 last with named ticket |
+| **Agents** | Side lanes | Active: Agents **1 / 2 / 5** via [`AGENT-LANES.md`](./AGENT-LANES.md). **Whole-app path:** [`APP-COVERAGE-TOUR.md`](./APP-COVERAGE-TOUR.md) slices 0–7. **Deferred:** Agent 3 (design/a11y) + Agent 4 (DX/refactor) until after one full tour + human smoke |
 | **A** | Intake polish | Track A shipped (#76–#82) — see [Candidate intake UX](#candidate-intake-ux) |
 | **B** | Step 4 | DOCX preview shipped (#89–#91); Phase 2 admin per-employment DOCX layout deferred |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |

@@ -23,6 +23,8 @@ export function facilityGoogleSearchUrl(
     '"total beds"',
     '"teaching hospital"',
     'Magnet',
+    'EMR',
+    '"charting system"',
   ]
     .filter(Boolean)
     .join(' ')

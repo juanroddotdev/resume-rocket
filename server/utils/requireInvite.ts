@@ -26,7 +26,7 @@ export async function validateInviteToken(
   const supabase = useSupabaseAdmin()
   const { data: invite, error } = await supabase
     .from('intake_invites')
-    .select('id, token, expires_at, revoked_at, used_at, candidate_id, candidate_email')
+    .select('id, token, expires_at, revoked_at, used_at, candidate_id, candidate_email, candidate_first_name, candidate_last_name')
     .eq('token', token)
     .maybeSingle()
 

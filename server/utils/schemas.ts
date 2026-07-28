@@ -6,6 +6,9 @@ import {
 } from '~/server/utils/normalizeCandidate'
 import { legacyScalarsFromLicenses, normalizeLicenses } from '~/utils/licenseRows'
 import { normalizeProfessionalSnapshot } from '~/utils/professionalSnapshot'
+import { inviteCreateSchema } from '~/utils/inviteCreateSchema'
+
+export { inviteCreateSchema }
 
 const stringArrayInput = z.array(z.union([z.string(), z.number()])).optional()
 
@@ -111,10 +114,4 @@ export const candidatePatchSchema = z.object({
   preferred_hospital_id: z.string().uuid().optional().nullable(),
   emr_system: z.string().optional(),
   status: z.enum(['draft', 'submitted', 'confirmed', 'archived']).optional(),
-})
-
-export const inviteCreateSchema = z.object({
-  candidate_email: z.string().email().optional(),
-  expires_in_days: z.number().min(1).max(30).default(7),
-  label: z.string().optional(),
 })

@@ -10,12 +10,18 @@ export default defineEventHandler(async (event) => {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + body.expires_in_days)
 
+  const label =
+    body.label?.trim()
+    || `${body.candidate_first_name} ${body.candidate_last_name}`.trim()
+
   const { data, error } = await supabase
     .from('intake_invites')
     .insert({
       token,
-      label: body.label,
+      label,
       candidate_email: body.candidate_email,
+      candidate_first_name: body.candidate_first_name,
+      candidate_last_name: body.candidate_last_name,
       created_by: user.id,
       expires_at: expiresAt.toISOString(),
     })

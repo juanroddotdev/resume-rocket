@@ -47,7 +47,9 @@ export default defineEventHandler(async (event) => {
         .insert({
           intake_invite_id: validation.invite.id,
           status: 'draft',
-          email: validation.invite.candidate_email,
+          email: validation.invite.candidate_email || null,
+          first_name: validation.invite.candidate_first_name || null,
+          last_name: validation.invite.candidate_last_name || null,
         })
         .select('id')
         .single()

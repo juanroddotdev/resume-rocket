@@ -4,6 +4,8 @@ export function useIntakeInvite() {
   const inviteError = useState<string | null>('invite-error', () => null)
   const candidateId = useState<string | null>('invite-candidate-id', () => null)
   const prefilledEmail = useState<string | null>('invite-email', () => null)
+  const prefilledFirstName = useState<string | null>('invite-first-name', () => null)
+  const prefilledLastName = useState<string | null>('invite-last-name', () => null)
 
   async function validate(routeToken: string) {
     token.value = routeToken
@@ -15,6 +17,8 @@ export function useIntakeInvite() {
         reason?: string
         candidate_id?: string
         candidate_email?: string
+        candidate_first_name?: string
+        candidate_last_name?: string
       }>('/api/invites/validate', { query: { token: routeToken } })
 
       if (!result.valid) {
@@ -26,6 +30,8 @@ export function useIntakeInvite() {
       inviteValid.value = true
       candidateId.value = result.candidate_id || null
       prefilledEmail.value = result.candidate_email || null
+      prefilledFirstName.value = result.candidate_first_name || null
+      prefilledLastName.value = result.candidate_last_name || null
       return true
     } catch {
       inviteValid.value = false
@@ -44,6 +50,8 @@ export function useIntakeInvite() {
     inviteError,
     candidateId,
     prefilledEmail,
+    prefilledFirstName,
+    prefilledLastName,
     validate,
     intakeHeaders,
   }

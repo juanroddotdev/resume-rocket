@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
 
   const { data: invite, error: inviteError } = await supabase
     .from('intake_invites')
-    .select('id, candidate_id, candidate_email, revoked_at, expires_at')
+    .select(
+      'id, candidate_id, candidate_email, candidate_first_name, candidate_last_name, revoked_at, expires_at',
+    )
     .eq('id', body.intake_invite_id)
     .single()
 
@@ -48,7 +50,9 @@ export default defineEventHandler(async (event) => {
     .insert({
       intake_invite_id: invite.id,
       status: 'draft',
-      email: invite.candidate_email,
+      email: invite.candidate_email || null,
+      first_name: invite.candidate_first_name || null,
+      last_name: invite.candidate_last_name || null,
     })
     .select('id, status, created_at')
     .single()

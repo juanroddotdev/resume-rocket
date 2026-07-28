@@ -2,16 +2,16 @@
 
 Start-to-end path for Agents **1 / 2 / 5** to cover the product surfaces that matter. Not every file in the repo — every **risk slice** on the invite → parse → wizard → DOCX → admin loop.
 
-**Prompts:** [`.cursor/agents/`](../.cursor/agents/) · **Lanes:** [AGENT-LANES.md](./AGENT-LANES.md) · **Backlog:** [TODO.md](./TODO.md) · **Release:** [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md)
+**Prompts:** [`.cursor/agents/`](../.cursor/agents/) · **Paste-ready kickoffs:** [`.cursor/agents/kickoffs/`](../.cursor/agents/kickoffs/README.md) · **Lanes:** [AGENT-LANES.md](./AGENT-LANES.md) · **Backlog:** [TODO.md](./TODO.md) · **Release:** [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md)
 
 ---
 
 ## How to use
 
 1. Work **one slice at a time** in order **0 → 7** (do not skip ahead unless that slice is already Done).
-2. Inside a slice: **Agent 5** (truth) → **Agent 2** (audit) → **you** fix Highs / ticket Mediums → **Agent 1** (tests for that slice).
-3. Mark the slice Done in the progress table below when its **End criteria** are met.
-4. Kickoff must include `Slice: N` and the Allowed paths for that slice (copy from the slice card).
+2. Open a **new Agent chat** and paste the matching file from [`.cursor/agents/kickoffs/`](../.cursor/agents/kickoffs/README.md) (do not invent Allowed paths).
+3. Inside a slice: **Agent 5** (truth) → **Agent 2** (audit) → **you** fix Highs / ticket Mediums → **Agent 1** (tests for that slice). Agents that write use **their own branch from `main`**.
+4. Mark the slice Done in the progress table below when its **End criteria** are met.
 
 **Out of tour (ignore unless a ticket names them):** `components/archive/`, historical `docs/archive/`, one-off scratch scripts, untracked local assets.
 

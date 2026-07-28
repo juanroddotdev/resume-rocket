@@ -3,6 +3,7 @@
 Operating guide for multi-agent work on Resume Rocket. Product backlog stays in [TODO.md](./TODO.md).
 
 **Coverage path (start → end):** [APP-COVERAGE-TOUR.md](./APP-COVERAGE-TOUR.md)  
+**Paste-ready kickoffs:** [`.cursor/agents/kickoffs/`](../.cursor/agents/kickoffs/README.md) (one file per agent×slice — open new chat, paste file)  
 **Prompts:** [`.cursor/agents/`](../.cursor/agents/) · **Scope rule:** [`.cursor/rules/agent-scope-isolation.mdc`](../.cursor/rules/agent-scope-isolation.mdc)
 
 ---

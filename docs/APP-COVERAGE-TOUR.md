@@ -10,8 +10,8 @@ Start-to-end path for Agents **1 / 2 / 5** to cover the product surfaces that ma
 
 1. Work **one slice at a time** in order **0 → 7** (do not skip ahead unless that slice is already Done).
 2. Open a **new Agent chat** and paste the matching file from [`.cursor/agents/kickoffs/`](../.cursor/agents/kickoffs/README.md) (do not invent Allowed paths).
-3. Inside a slice: **Agent 5** (truth) → **Agent 2** (audit) → **you** fix Highs / ticket Mediums → **Agent 1** (tests for that slice). Agents that write use **their own branch from `main`**.
-4. Mark the slice Done in the progress table below when its **End criteria** are met.
+3. Inside a slice: **Agent 5** (truth) → **Agent 2** (audit) → **you** fix Must/Should from the report Action inbox → **Agent 1** (tests for that slice). Each agent writes `docs/audits/*_REPORT|BUG_AUDIT-…` ([audits README](./audits/README.md)). Writers use **their own branch from `main`**.
+4. Use the report **Action inbox** as your todo — not chat scrollback. Mark the slice Done in the progress table below when its **End criteria** are met.
 
 **Out of tour (ignore unless a ticket names them):** `components/archive/`, historical `docs/archive/`, one-off scratch scripts, untracked local assets.
 

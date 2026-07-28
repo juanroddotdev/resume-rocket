@@ -11,12 +11,12 @@ Slice: 3
 Lane: Backfill
 Agent: 2 Bug Hunter
 Ticket: Coverage tour slice 3 — light util audit (trim/format / null render risks)
-Allowed paths: utils/professionalSnapshot.ts ; utils/vmsGapReview.ts ; utils/adminCandidateForm.ts ; utils/employerLink.ts ; server/utils/schemas.ts ; server/utils/normalizeCandidate.ts
+Allowed paths: utils/professionalSnapshot.ts ; utils/vmsGapReview.ts ; utils/adminCandidateForm.ts ; utils/employerLink.ts ; server/utils/schemas.ts ; server/utils/normalizeCandidate.ts ; docs/audits/
 Locked paths:
 Ship: no
-Write report file: no
+Write report file: yes
 ```
 
-**Git:** Chat-only. No shared branch with Agent 1.
+**Git:** Branch `docs/bug-audit-s3-<module>` from latest **`main`**. No shared branch with Agent 1. No merge unless ship.
 
-**Do:** Look for trim-on-every-keystroke patterns, unsafe assumptions on parse shapes, `any`. Report only. Suggest which utils Agent 1 should prioritize.
+**Do:** Look for trim-on-every-keystroke patterns, unsafe parse shapes, `any`. Write `docs/audits/BUG_AUDIT-s3-<module>.md` with Action inbox. Suggest which utils Agent 1 should prioritize. Report only.

@@ -22,9 +22,9 @@ Used with [docs/AGENT-LANES.md](../../docs/AGENT-LANES.md), [docs/APP-COVERAGE-T
 
 | Lane / agent | May write |
 |--------------|-----------|
-| Agent 1 QA | `tests/*.test.mjs`, optionally `scripts/test-*.mjs` / test wiring in `package.json` |
-| Agent 2 Bug Hunter | Chat report; optionally `docs/audits/*.md` only |
-| Agent 5 Docs Auditor | `docs/**` only |
+| Agent 1 QA | `tests/*.test.mjs`, `docs/audits/QA_REPORT-*.md`, optionally `scripts/test-*.mjs` / test wiring in `package.json` |
+| Agent 2 Bug Hunter | `docs/audits/BUG_AUDIT-*.md` (+ `docs/audits/README.md` index) |
+| Agent 5 Docs Auditor | `docs/**` only (includes `docs/audits/DOCS_REPORT-*.md`) |
 | Main / Side feature | Production code inside Allowed paths for that ticket |
 
 Audit and verification agents must not “fix while reporting” unless the user promotes them to a new Side ticket.

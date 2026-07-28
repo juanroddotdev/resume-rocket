@@ -23,6 +23,7 @@ Ticket: Coverage tour slice 0 — map backlog vs main
 Allowed paths: docs/
 Locked paths:
 Ship: no
+Write report file: yes
 Mode: report-only
 ```
 
@@ -80,9 +81,20 @@ Update `APP-COVERAGE-TOUR.md` progress row if evidence exists; do not mark Done 
 
 You cover the “whole app” by ensuring **every slice** has a truthful status and every RELEASE concern is either automated, manually listed, or deferred — not by reading Vue files yourself.
 
+## Output report
+
+**Always** write `docs/audits/DOCS_REPORT-s<N>-<slug>.md` using [docs/audits/README.md](../../docs/audits/README.md):
+
+- **Action inbox** — stale docs to fix, automate handoffs, human-smoke rows, deferrals
+- What you changed in `docs/` this run (if Mode = docs-PR) vs chat-only recommendations
+- Slice readiness / tour progress honesty
+
+Update the index table in `docs/audits/README.md`.
+
 ## Done
 
-- [ ] Ranked backlog or matrix delivered
+- [ ] `docs/audits/DOCS_REPORT-s<N>-…` written (Action inbox filled)
+- [ ] Ranked backlog or matrix delivered (in report and/or docs-PR)
 - [ ] Progress/TODO/RELEASE updates only with evidence (if Mode = docs-PR)
 - [ ] No app code changes
 - [ ] Next slice + agent named for the user

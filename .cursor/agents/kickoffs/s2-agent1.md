@@ -11,11 +11,12 @@ Slice: 2
 Lane: Backfill
 Agent: 1 QA
 Ticket: Coverage tour slice 2 — parse rate-limit + parse response / flag edge tests
-Allowed paths: tests/ ; scripts/test-*.mjs ; package.json (test wiring only) ; tests/fixtures/ (synthetic only, no PHI)
+Allowed paths: tests/ ; scripts/test-*.mjs ; package.json (test wiring only) ; tests/fixtures/ (synthetic only, no PHI) ; docs/audits/
 Locked paths:
 Ship: no
+Write report file: yes
 ```
 
 **Git:** Branch `test/tour-s2-parse` from latest **`main`** only. Own PR if asked. Do not merge unless I say ship.
 
-**Do:** Prefer util-level and mocked seams already used in repo (`parseRateLimit`, `parseResponse`, heuristics). No live Gemini. No real resumes. No production edits. `npm run test` green. Summarize coverage gaps still needing mocked `parse.post` handler tests if out of reach without prod changes.
+**Do:** Prefer util-level and mocked seams (`parseRateLimit`, `parseResponse`, heuristics). No live Gemini. No real resumes. No production edits. `npm run test` green. Write `docs/audits/QA_REPORT-s2-parse.md` with Action inbox + remaining gaps for mocked `parse.post` if out of reach.

@@ -19,6 +19,8 @@ const {
   inviteError,
   candidateId: inviteCandidateId,
   prefilledEmail,
+  prefilledFirstName,
+  prefilledLastName,
   intakeHeaders,
 } = useIntakeInvite()
 const {
@@ -209,6 +211,12 @@ async function bootstrapInvite(routeToken: string) {
 
   if (prefilledEmail.value && !form.value.email) {
     form.value.email = prefilledEmail.value
+  }
+  if (prefilledFirstName.value && !form.value.first_name) {
+    form.value.first_name = prefilledFirstName.value
+  }
+  if (prefilledLastName.value && !form.value.last_name) {
+    form.value.last_name = prefilledLastName.value
   }
 
   let initialStep = resolveInitialStep(route.query.step, currentStep.value)

@@ -9,7 +9,7 @@ PR test plans should reference [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKL
 
 ## Core MVP (every intake/DOCX PR)
 
-- [ ] Admin: sign in, create invite, copy/open link
+- [ ] Admin: sign in, create invite (name required), copy/open link
 - [ ] Intake: valid token → upload PDF/DOCX → prefill or manual path
 - [ ] Wizard: autosave, back nav, complete → DOCX download
 - [ ] Admin: candidate appears (toggle “Show drafts” if still draft)

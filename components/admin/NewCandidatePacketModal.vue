@@ -17,9 +17,19 @@ const loading = ref(false)
 const loadingKind = ref<'link' | 'upload' | 'scratch' | null>(null)
 const error = ref<string | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
-const linkResult = ref<{ url: string; copied: boolean } | null>(null)
+const linkResult = ref<{ url: string; copied: boolean; displayName: string } | null>(null)
 const copiedAgain = ref(false)
 const dragOver = ref(false)
+
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
+
+function resetIdentityFields() {
+  firstName.value = ''
+  lastName.value = ''
+  email.value = ''
+}
 
 watch(
   () => props.open,
@@ -31,6 +41,7 @@ watch(
       linkResult.value = null
       copiedAgain.value = false
       dragOver.value = false
+      resetIdentityFields()
     }
   },
 )
@@ -53,12 +64,40 @@ async function authHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
+function validateIdentity(): boolean {
+  const first = firstName.value.trim()
+  const last = lastName.value.trim()
+  if (!first || !last) {
+    error.value = 'First and last name are required.'
+    return false
+  }
+  const emailTrimmed = email.value.trim()
+  if (emailTrimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+    error.value = 'Enter a valid email, or leave it blank.'
+    return false
+  }
+  error.value = null
+  return true
+}
+
+function displayName() {
+  return `${firstName.value.trim()} ${lastName.value.trim()}`.trim()
+}
+
 async function createInviteAndCandidate() {
+  if (!validateIdentity()) {
+    throw new Error(error.value || 'First and last name are required.')
+  }
   const headers = await authHeaders()
   const invite = await $fetch<{ id: string; url: string; expires_at: string }>('/api/invites', {
     method: 'POST',
     headers,
-    body: { expires_in_days: 7 },
+    body: {
+      expires_in_days: 7,
+      candidate_first_name: firstName.value.trim(),
+      candidate_last_name: lastName.value.trim(),
+      candidate_email: email.value.trim() || undefined,
+    },
   })
   const created = await $fetch<{ id: string }>('/api/admin/candidates', {
     method: 'POST',
@@ -86,6 +125,7 @@ function isAllowedResume(file: File) {
 }
 
 async function createFromFile(file: File) {
+  if (!validateIdentity()) return
   if (!isAllowedResume(file)) {
     error.value = 'Use a PDF or Word (.docx) file.'
     return
@@ -127,6 +167,7 @@ function onFileInput(event: Event) {
 
 function chooseFile() {
   if (loading.value) return
+  if (!validateIdentity()) return
   fileInputRef.value?.click()
 }
 
@@ -145,13 +186,14 @@ function onDrop(event: DragEvent) {
 }
 
 async function onSendLinkPath() {
+  if (!validateIdentity()) return
   loading.value = true
   loadingKind.value = 'link'
   error.value = null
   copiedAgain.value = false
   try {
     const { invite, candidateId, copied } = await createInviteAndCandidate()
-    linkResult.value = { url: invite.url, copied }
+    linkResult.value = { url: invite.url, copied, displayName: displayName() }
     emit('linkReady', { candidateId, inviteId: invite.id, url: invite.url, copied })
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; message?: string }
@@ -174,6 +216,7 @@ async function copyLinkAgain() {
 }
 
 async function onScratchPath() {
+  if (!validateIdentity()) return
   loading.value = true
   loadingKind.value = 'scratch'
   error.value = null
@@ -207,7 +250,7 @@ async function onScratchPath() {
       <template v-if="linkResult">
         <h2 id="new-packet-title" class="text-lg font-semibold text-slate-900">Intake link ready</h2>
         <p class="mt-1 text-sm text-slate-600">
-          Send this link to the candidate. They can upload their resume and complete the packet on their phone.
+          Send this link to {{ linkResult.displayName }}. They can upload their resume and complete the packet on their phone.
         </p>
         <label class="mt-4 block text-xs font-medium text-slate-600" for="intake-link-url">Intake URL</label>
         <input
@@ -246,8 +289,47 @@ async function onScratchPath() {
       <template v-else>
         <h2 id="new-packet-title" class="text-lg font-semibold text-slate-900">New candidate packet</h2>
         <p class="mt-1 text-sm text-slate-600">
-          Send a link for the candidate to upload, or start the packet yourself.
+          Who is this packet for? Then send a link, upload a resume, or start from scratch.
         </p>
+
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="packet-first-name">First name</label>
+            <input
+              id="packet-first-name"
+              v-model="firstName"
+              type="text"
+              autocomplete="given-name"
+              required
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              :disabled="loading"
+            >
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600" for="packet-last-name">Last name</label>
+            <input
+              id="packet-last-name"
+              v-model="lastName"
+              type="text"
+              autocomplete="family-name"
+              required
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              :disabled="loading"
+            >
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-xs font-medium text-slate-600" for="packet-email">Email (optional)</label>
+          <input
+            id="packet-email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
+            :disabled="loading"
+            placeholder="For search and confirmation later"
+          >
+        </div>
 
         <div class="mt-5 space-y-4">
           <div>

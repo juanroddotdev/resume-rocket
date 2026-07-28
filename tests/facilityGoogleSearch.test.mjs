@@ -16,6 +16,8 @@ describe('facilityGoogleSearchUrl', () => {
     assert.match(decodeURIComponent(url), /"total beds"/)
     assert.match(decodeURIComponent(url), /"teaching hospital"/)
     assert.match(decodeURIComponent(url), /Magnet/)
+    assert.match(decodeURIComponent(url), /\bEMR\b/)
+    assert.match(decodeURIComponent(url), /"charting system"/)
   })
 
   it('omits empty location segments', () => {

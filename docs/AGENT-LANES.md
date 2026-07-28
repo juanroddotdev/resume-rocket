@@ -24,9 +24,11 @@ Default parallel set: **Main + Agent 1 (QA) + Agent 2 (Bug Hunter) + Agent 5 (Do
 
 | Agent | Prompt | Writes | Branch from `main` |
 |-------|--------|--------|-------------------|
-| **1 QA** | [`qa-edge-cases.md`](../.cursor/agents/qa-edge-cases.md) | `tests/*.test.mjs`, optionally `scripts/test-*.mjs` | `test/tour-sN-…` → own PR |
-| **2 Bug Hunter** | [`bug-hunter-audit.md`](../.cursor/agents/bug-hunter-audit.md) | Prefer chat; else `docs/audits/*.md` | Chat-only = no branch; docs = `docs/bug-audit-sN-…` |
-| **5 Docs Auditor** | [`docs-checklist-auditor.md`](../.cursor/agents/docs-checklist-auditor.md) | `docs/**` only | `docs/…` → own PR |
+| **1 QA** | [`qa-edge-cases.md`](../.cursor/agents/qa-edge-cases.md) | `tests/*.test.mjs`, `docs/audits/QA_REPORT-…`, optionally `scripts/test-*.mjs` | `test/tour-sN-…` → own PR |
+| **2 Bug Hunter** | [`bug-hunter-audit.md`](../.cursor/agents/bug-hunter-audit.md) | `docs/audits/BUG_AUDIT-…` (required) | `docs/bug-audit-sN-…` |
+| **5 Docs Auditor** | [`docs-checklist-auditor.md`](../.cursor/agents/docs-checklist-auditor.md) | `docs/**` including `docs/audits/DOCS_REPORT-…` | `docs/tour-sN-…` → own PR |
+
+**Every agent leaves an Action inbox** in `docs/audits/` (Must fix / Should fix / Suggested / Tests / Human smoke). See [audits/README.md](./audits/README.md).
 
 **Never** put Agents 1, 2, and 5 on the same branch. Prefer separate Cursor chats / cloud worktrees. Each starts from latest `main`, not from unmerged Main WIP.
 

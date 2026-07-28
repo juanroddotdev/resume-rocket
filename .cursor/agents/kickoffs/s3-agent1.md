@@ -11,9 +11,10 @@ Slice: 3
 Lane: Backfill
 Agent: 1 QA
 Ticket: Coverage tour slice 3 — vmsGapReview contract tests
-Allowed paths: tests/ ; scripts/test-*.mjs ; package.json (test wiring only)
+Allowed paths: tests/ ; scripts/test-*.mjs ; package.json (test wiring only) ; docs/audits/
 Locked paths:
 Ship: no
+Write report file: yes
 Focus module: utils/vmsGapReview.ts
 ```
 
@@ -22,4 +23,4 @@ Focus module: utils/vmsGapReview.ts
 
 **Git:** Branch `test/tour-s3-<module>` from latest **`main`** only (new branch per module/PR). Never reuse Agent 2/5 branches. Do not merge unless I say ship.
 
-**Do:** One module only. Edge cases: null/missing, long strings, special chars, empty vs missing. Extend existing tests when present. No production edits. `npm run test` green.
+**Do:** One module only. Edge cases: null/missing, long strings, special chars, empty vs missing. Extend existing tests when present. No production edits. `npm run test` green. Write `docs/audits/QA_REPORT-s3-<module>.md` with Action inbox.

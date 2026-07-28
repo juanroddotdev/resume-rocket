@@ -11,12 +11,12 @@ Slice: 5
 Lane: Backfill
 Agent: 2 Bug Hunter
 Ticket: Coverage tour slice 5 — admin + candidate API audit
-Allowed paths: server/api/admin/ ; server/api/candidates/ ; server/utils/requireAdmin.ts ; server/utils/patchCandidateRow.ts ; server/utils/candidateDraftResponse.ts ; server/api/candidates/[id]/send-confirmation.post.ts ; server/utils/sendEmail.ts
+Allowed paths: server/api/admin/ ; server/api/candidates/ ; server/utils/requireAdmin.ts ; server/utils/patchCandidateRow.ts ; server/utils/candidateDraftResponse.ts ; server/api/candidates/[id]/send-confirmation.post.ts ; server/utils/sendEmail.ts ; docs/audits/
 Locked paths:
 Ship: no
-Write report file: no
+Write report file: yes
 ```
 
-**Git:** Chat-only default. Optional `docs/bug-audit-s5-api` from **`main`**. No production rewrites. No merge unless ship.
+**Git:** Branch `docs/bug-audit-s5-api` from latest **`main`**. No production rewrites. No merge unless ship.
 
-**Do:** Auth gaps, PATCH normalization footguns, Resend soft-fail, draft vs submitted. Report High/Medium/Low. Suggest Agent 1 test seams if any pure helpers are uncovered.
+**Do:** Auth gaps, PATCH normalization footguns, Resend soft-fail, draft vs submitted. Write `docs/audits/BUG_AUDIT-s5-api.md` with Action inbox (High/Medium/Low). Suggest Agent 1 test seams if any pure helpers are uncovered.

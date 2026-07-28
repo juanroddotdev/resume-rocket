@@ -11,15 +11,15 @@ Slice: 4
 Lane: Backfill
 Agent: 2 Bug Hunter
 Ticket: Coverage tour slice 4 — intake UI audit
-Allowed paths: pages/intake/[token].vue ; components/intake/ ; composables/useCandidateForm.ts ; composables/useIntakeWizardNav.ts ; composables/useHospitalSearch.ts ; composables/useIntakePrefillHighlight.ts
+Allowed paths: pages/intake/[token].vue ; components/intake/ ; composables/useCandidateForm.ts ; composables/useIntakeWizardNav.ts ; composables/useHospitalSearch.ts ; composables/useIntakePrefillHighlight.ts ; docs/audits/
 Locked paths:
 Ship: no
-Write report file: no
+Write report file: yes
 Next file: pages/intake/[token].vue
 ```
 
 **Queue:** `[token].vue` → `HospitalAutocomplete.vue` → `EmployerCard.vue` → `FacilityNameCombobox.vue` → `SpecialtyChipInput.vue` → `EmrSystemCombobox.vue` → `LicenseRepeater.vue` → `CredentialsChecklist.vue` → `CertificationPicker.vue` → `ClinicalSummaryFields.vue` → `EducationRepeater.vue` → `IntakeReviewPanel.vue` → `DocxPreviewSlideOver.vue` / `DocxPreviewViewer.vue` → other intake components → `pages/intake/complete/[accessToken].vue`
 
-**Git:** Chat-only unless I ask for `docs/audits/` → then `docs/bug-audit-s4-intake` from **`main`**. No production rewrites. No merge unless ship.
+**Git:** Branch `docs/bug-audit-s4-intake` from latest **`main`** (or append to same docs branch if I say so). No production rewrites. No merge unless ship.
 
-**Do:** Audit **only** `Next file` this run (plus directly required imports). Empty/error/loading, a11y labels on icon buttons, controlled-input footguns. End with next queue file name.
+**Do:** Audit **only** `Next file` this run (plus directly required imports). Empty/error/loading, a11y labels on icon buttons, controlled-input footguns. Write `docs/audits/BUG_AUDIT-s4-<component>.md` with Action inbox. End with next queue file name.

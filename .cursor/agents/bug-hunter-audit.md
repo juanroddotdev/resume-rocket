@@ -23,7 +23,7 @@ Ticket: Coverage tour slice 2 — parse core audit
 Allowed paths: <paste Roots from slice card — read scan>
 Locked paths:
 Ship: no
-Write report file: no
+Write report file: yes
 Next file (slices 4–5 only):
 ```
 
@@ -32,15 +32,17 @@ Next file (slices 4–5 only):
 | Slice | Allowed paths (read) | Write report |
 | --- | --- | --- |
 | 0 | *(skip — Agent 5)* | — |
-| 1 | Slice 1 Roots | chat unless asked |
-| 2 | Slice 2 Roots | chat or `docs/audits/BUG_AUDIT-s2-parse.md` |
-| 3 | Light pass on next util if Agent 1 is busy; else skip | chat |
-| 4 | **One** intake file from Slice 4 queue | chat |
-| 5 | **One** admin file from Slice 5 queue (+ API roots when doing API pass) | chat |
-| 6 | `server/utils/docxBuilder.ts`, generate-docx, download helpers | chat |
+| 1 | Slice 1 Roots | `docs/audits/BUG_AUDIT-s1-invite.md` |
+| 2 | Slice 2 Roots | `docs/audits/BUG_AUDIT-s2-parse.md` |
+| 3 | Light pass on next util if Agent 1 is busy; else skip | `docs/audits/BUG_AUDIT-s3-<module>.md` |
+| 4 | **One** intake file from Slice 4 queue | `docs/audits/BUG_AUDIT-s4-<component>.md` |
+| 5 | **One** admin file from Slice 5 queue (+ API roots when doing API pass) | `docs/audits/BUG_AUDIT-s5-<slug>.md` |
+| 6 | `server/utils/docxBuilder.ts`, generate-docx, download helpers | `docs/audits/BUG_AUDIT-s6-docx.md` |
 | 7 | *(skip)* | — |
 
 For slices 4–5 set `Next file:` to the next unchecked queue item so you do not wander.
+
+**Always** write the report under `docs/audits/` (see [docs/audits/README.md](../../docs/audits/README.md)). Chat summary is optional; the file is the source of truth for later fixes. Branch `docs/bug-audit-s<N>-…` from `main`.
 
 ---
 
@@ -69,22 +71,24 @@ Find High/Medium/Low issues for the **current slice** only. Report; stop. Fixes 
 
 ## Output
 
-### High / Medium / Low
+Write `docs/audits/BUG_AUDIT-s<N>-<slug>.md` with the sections in [docs/audits/README.md](../../docs/audits/README.md):
 
-Each: **path + line** · **cause** · **fix snippet** (suggestion only).
+1. **Action inbox** — Must fix / Should fix / Suggested / Tests / Human smoke / Docs (owner + path)
+2. **High / Medium / Low** — each: **path + line** · **cause** · **fix snippet** (suggestion only)
+3. **Slice readiness** — ready for Agent 1? mark Done? next file?
 
-End with: **Slice status** — ready for Agent 1? needs human smoke? queue next file?
-
-Optional file: `docs/audits/BUG_AUDIT-s<N>-<slug>.md` on branch `docs/bug-audit-s<N>-<slug>` only if kickoff says write.
+Also paste a short chat pointer to the report path. Do **not** rewrite production code in this run.
 
 ## Full-app coverage (your part)
 
-Walk slices **1 → 6**. On 4–5, one SFC (or one small API group) per chat until the queue is empty. Skipping a file requires a defer note (why).
+Walk slices **1 → 6**. On 4–5, one SFC (or one small API group) per chat until the queue is empty. Skipping a file requires a defer note (why) **in the report**.
 
 ## Done
 
 - [ ] Slice (or single queue file) scanned
-- [ ] Report delivered; no production refactors
+- [ ] `docs/audits/BUG_AUDIT-s<N>-…` written (Action inbox filled)
+- [ ] `docs/audits/README.md` index row updated
+- [ ] No production refactors
 - [ ] PHI scrubbed
 - [ ] Next queue item named for the user
 

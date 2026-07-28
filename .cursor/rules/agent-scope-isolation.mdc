@@ -5,7 +5,12 @@ alwaysApply: true
 
 # Agent scope & isolation
 
-Used with [docs/AGENT-LANES.md](../../docs/AGENT-LANES.md) and prompts in `.cursor/agents/`.
+Used with [docs/AGENT-LANES.md](../../docs/AGENT-LANES.md), [docs/APP-COVERAGE-TOUR.md](../../docs/APP-COVERAGE-TOUR.md), and prompts in `.cursor/agents/`.
+
+## Coverage tour
+
+- Kickoff must include **Slice: N** when doing backfill. Stay on that slice until End criteria or an explicit user jump.
+- File-by-file queues on slices 4–5: one Vue SFC (or one small API group) per Agent 2 run.
 
 ## Path lock
 

@@ -4,8 +4,6 @@ import {
 } from './emrChartingSystems.ts'
 import { findCanonicalEmrPreset } from './emrSearch.ts'
 
-export { EMR_CHARTING_GROUPS, EMR_CHARTING_GROUP_LABELS }
-
 export const EMR_PRESET_OPTIONS = EMR_CHARTING_GROUP_LABELS.flatMap(
   label => EMR_CHARTING_GROUPS[label],
 )

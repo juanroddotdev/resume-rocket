@@ -88,5 +88,3 @@ export function certSearchRowId(index: number): string {
 export function findCertSearchIndex(rows: CertSearchRow[], value: string): number {
   return rows.findIndex(row => row.value === value)
 }
-
-export { CERTIFICATION_OPTIONS }

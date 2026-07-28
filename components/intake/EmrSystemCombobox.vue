@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { EmrChartingGroupLabel } from '~/utils/emrChartingSystems'
+import {
+  EMR_CHARTING_GROUPS,
+  EMR_CHARTING_GROUP_LABELS,
+  type EmrChartingGroupLabel,
+} from '~/utils/emrChartingSystems'
 import {
   buildEmrSearchRows,
   emrBrowseRowId,
@@ -8,8 +12,6 @@ import {
   type EmrSearchRow,
 } from '~/utils/emrSearch'
 import {
-  EMR_CHARTING_GROUPS,
-  EMR_CHARTING_GROUP_LABELS,
   commitEmrValue,
   resolveStoredEmrLabel,
 } from '~/utils/emrSystem'

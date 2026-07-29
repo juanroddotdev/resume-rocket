@@ -43,7 +43,7 @@ Optional date suffix if re-running the same slice: `BUG_AUDIT-s1-invite-2026-07-
 | --- | --- | --- | --- |
 | 0 | — | — | |
 | 1 | [BUG_AUDIT-s1-invite.md](./BUG_AUDIT-s1-invite.md) | | |
-| 2 | | | |
+| 2 | [BUG_AUDIT-s2-parse.md](./BUG_AUDIT-s2-parse.md) | | |
 | 3 | | | |
 | 4 | | | |
 | 5 | | | |

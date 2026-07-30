@@ -1,5 +1,6 @@
 import type { z } from 'zod'
 import { legacyScalarsFromLicenses } from '~/utils/licenseRows'
+import { isCandidatePatchLocked } from '~/utils/candidatePatchLock'
 import { candidatePatchSchema } from '~/server/utils/schemas'
 import { normalizeCandidateRow } from '~/server/utils/normalizeCandidate'
 import { buildProfessionalSnapshotFromCandidate } from '~/utils/professionalSnapshot'
@@ -30,16 +31,11 @@ export async function patchCandidateRow(candidateId: string, body: CandidatePatc
     .eq('id', candidateId)
     .single()
 
-  if (
-    existing?.status === 'submitted'
-    || existing?.status === 'confirmed'
-  ) {
-    if (body.status !== 'submitted') {
-      throw createError({
-        statusCode: 409,
-        statusMessage: 'Candidate already submitted',
-      })
-    }
+  if (isCandidatePatchLocked(existing?.status)) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Candidate already submitted',
+    })
   }
 
   const patch: Record<string, unknown> = { ...body }

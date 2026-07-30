@@ -16,7 +16,6 @@ import { formatEducationSchoolForDocx } from '../../utils/educationLocation.ts'
 import {
   activeLicensesListForDocx,
   formatLicenseRowForDocx,
-  primaryLicense,
   resolveCandidateLicenses,
 } from '../../utils/licenseRows.ts'
 import { orderedActiveCertificationKeys } from '../../utils/certificationOptions.ts'
@@ -247,9 +246,6 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     license_state: candidate.license_state,
     license_number: candidate.license_number,
   })
-  const primary = primaryLicense(licenses)
-  const licenseState = primary?.state || candidate.license_state
-  const licenseNumber = primary?.number || candidate.license_number
   const specialties = candidate.specialties || []
   const credentials = candidate.credentials
   const activeCerts = orderedActiveCertificationKeys(activeCertKeys(credentials))
@@ -263,7 +259,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     candidate_email: candidate.email || '',
     candidate_home_address: candidate.home_address || '',
     candidate_city: homeCity,
-    candidate_state: licenseState?.toUpperCase() || homeState,
+    candidate_state: homeState,
     active_licenses_list: activeLicensesList(licenses, candidate.license_state, candidate.license_number),
 
     total_years_nursing_experience: candidate.years_nursing_experience || '',

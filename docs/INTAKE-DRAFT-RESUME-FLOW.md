@@ -30,10 +30,10 @@ Recruiters create links from `/admin` → **+ New candidate** → **Create & cop
 
 Recruiters can complete the same packet in [`/admin`](../pages/admin.vue) without opening the invite URL:
 
-1. **Create link & start packet** — **Send intake link** (copy URL, stay on candidates table) or upload / scratch (opens builder); all create invite + draft row
+1. **Create link & start packet** — **Send candidate link** (copy URL, stay on candidates table) or upload / scratch (opens builder); all create invite + draft row
 2. **Upload / parse / edit** — section-based desktop UI; autosave via `PATCH /api/admin/candidates/:id`
 3. **Download draft DOCX** — does not change `status` (candidate link stays editable)
-4. **Copy invite link** — from the create success screen, or **Copy link** / **Open intake** in the candidates table
+4. **Copy invite link** — from the create success screen, or **Copy candidate link** / **Open candidate link** in the candidates table
 5. **Mark submitted** — downloads DOCX, sets `status: submitted`, locks the invite (same as candidate final submit)
 
 Same `candidates` row and invite token — handoff mid-draft works as in [Returning to the same link](#returning-to-the-same-link).
@@ -139,7 +139,7 @@ Neither path reopens the editable wizard.
 | Situation | Behavior |
 |-----------|----------|
 | **Link expired** (~7 days) | “This link has expired.” — draft may still exist in DB but link cannot be used |
-| **Link revoked** | “Ask your recruiter for a new intake link.” |
+| **Link revoked** | “Ask your recruiter for a new candidate link.” |
 | **Close tab mid-typing** | Last ~800ms of edits may not reach server or `localStorage` if autosave had not fired |
 | **Success step in URL** | After submit, invite validation fails before wizard loads |
 | **Admin recruiter preview** | Admin view can download a draft packet without changing candidate status — separate from real client submit |

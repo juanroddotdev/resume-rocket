@@ -30,7 +30,7 @@ Files under `supabase/migrations/` in order.
 
 ## Flow
 
-1. **Recruiter** signs in at `/admin`, creates an intake link, sends it to the candidate.
+1. **Recruiter** signs in at `/admin`, creates a candidate link, sends it to the candidate.
 2. **Candidate** opens `/intake/{token}`, uploads PDF/DOCX, completes the wizard.
 3. On submit: DOCX downloads + confirmation email with re-download link.
 

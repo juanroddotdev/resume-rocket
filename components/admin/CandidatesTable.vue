@@ -97,7 +97,7 @@ const filtered = computed(() => {
 
 const emptyMessage = computed(() => {
   if (!props.candidates.length) {
-    return 'No candidates yet — create an intake link or packet above.'
+    return 'No candidates yet — create a candidate link or packet above.'
   }
   const q = props.search.trim()
   if (q) {
@@ -274,7 +274,7 @@ function intakeLinkActive(c: CandidateRow) {
                       role="menuitem"
                       @click="copyIntakeLink(c)"
                     >
-                      {{ copiedIntakeId === c.id ? 'Copied!' : 'Copy intake link' }}
+                      {{ copiedIntakeId === c.id ? 'Copied!' : 'Copy candidate link' }}
                     </button>
                     <button
                       v-if="intakeLinkActive(c)"
@@ -283,7 +283,7 @@ function intakeLinkActive(c: CandidateRow) {
                       role="menuitem"
                       @click="runAndClose(() => emit('open-intake', c))"
                     >
-                      Open intake
+                      Open candidate link
                     </button>
                     <button
                       type="button"

@@ -199,7 +199,7 @@ function openCandidateIntake(candidate: CandidateRow) {
     window.open(candidate.intake_url, '_blank', 'noopener,noreferrer')
     return
   }
-  intakeOpenError.value = 'No intake link for this candidate. Create a new packet to generate one.'
+  intakeOpenError.value = 'No candidate link for this candidate. Create a new packet to generate one.'
 }
 
 async function deleteDraftCandidate(candidate: CandidateRow) {
@@ -210,7 +210,7 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
   }
   const name = `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Unnamed candidate'
   const ok = window.confirm(
-    `Delete “${name}”? This removes the draft and revokes its intake link. This cannot be undone.`,
+    `Delete “${name}”? This removes the draft and revokes its candidate link. This cannot be undone.`,
   )
   if (!ok) return
 

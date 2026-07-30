@@ -1,14 +1,21 @@
 import type { H3Event } from 'h3'
 import { getHeader } from 'h3'
+import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
 
 /** Authorize DOCX generation for a candidate row by id. */
 export async function authorizeCandidateDocxAccess(event: H3Event, candidateId: string) {
   const authHeader = getHeader(event, 'authorization')
   if (authHeader?.startsWith('Bearer ')) {
     try {
-      await requireAdminSession(event)
+      const user = await requireAdminSession(event)
+      await assertAdminOwnsCandidate(user.id, candidateId)
       return
-    } catch {
+    } catch (error) {
+      const statusCode = typeof error === 'object' && error && 'statusCode' in error
+        ? Number((error as { statusCode?: number }).statusCode)
+        : undefined
+      // Ownership denial must not fall through to invite auth.
+      if (statusCode === 403 || statusCode === 404) throw error
       // Fall through to invite auth when bearer is missing or invalid.
     }
   }

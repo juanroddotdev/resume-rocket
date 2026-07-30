@@ -1,4 +1,5 @@
 import { buildParseAuditView } from '~/server/utils/parseAuditView'
+import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -6,12 +7,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Parse audit UI is disabled' })
   }
 
-  await requireAdminSession(event)
+  const user = await requireAdminSession(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
+
+  await assertAdminOwnsCandidate(user.id, id)
 
   const supabase = useSupabaseAdmin()
   const { data, error } = await supabase

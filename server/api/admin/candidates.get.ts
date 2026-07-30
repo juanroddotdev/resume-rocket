@@ -1,4 +1,5 @@
 import { parseOutcomeFromBlob } from '~/server/utils/parseAuditView'
+import { listInviteIdsOwnedByAdmin } from '~/server/utils/adminCandidateOwnership'
 
 const ADMIN_CANDIDATE_SELECT = [
   'id',
@@ -21,13 +22,19 @@ const ADMIN_CANDIDATE_SELECT = [
 ].join(', ')
 
 export default defineEventHandler(async (event) => {
-  await requireAdminSession(event)
+  const user = await requireAdminSession(event)
+
+  const ownedInviteIds = await listInviteIdsOwnedByAdmin(user.id)
+  if (!ownedInviteIds.length) {
+    return []
+  }
 
   const config = useRuntimeConfig()
   const supabase = useSupabaseAdmin()
   const { data, error } = await supabase
     .from('candidates')
     .select(ADMIN_CANDIDATE_SELECT)
+    .in('intake_invite_id', ownedInviteIds)
     .order('updated_at', { ascending: false })
 
   if (error) throw error

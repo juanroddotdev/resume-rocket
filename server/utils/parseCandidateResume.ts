@@ -26,7 +26,7 @@ export interface ParseResumeFileInput {
 export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
   const { candidateId, buffer, filename, mime, rateLimitKey } = input
 
-  if (!isAllowedResumeMime(mime)) {
+  if (!isAllowedResumeMime(mime, filename)) {
     throw createError({
       statusCode: 415,
       statusMessage: 'Only PDF and DOCX files are supported',
@@ -169,10 +169,17 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
     })
   }
 
-  await supabase
+  const { error: updateError } = await supabase
     .from('candidates')
     .update(updatePayload)
     .eq('id', candidateId)
+
+  if (updateError) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Could not save parse results. Try again.',
+    })
+  }
 
   const suggestedEmployers = apiFields.suggested_employers?.length
     ? await attachEmployerHospitalSuggestions(apiFields.suggested_employers)

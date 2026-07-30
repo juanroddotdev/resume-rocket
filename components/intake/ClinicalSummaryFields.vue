@@ -2,11 +2,15 @@
 const yearsNursingExperience = defineModel<string>('yearsNursingExperience', { default: '' })
 const specializedMedicalEquipment = defineModel<string>('specializedMedicalEquipment', { default: '' })
 
+defineProps<{
+  disabled?: boolean
+}>()
+
 const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
 </script>
 
 <template>
-  <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+  <fieldset class="min-w-0 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3 disabled:opacity-60" :disabled="disabled">
     <p class="text-sm font-medium text-slate-800">Clinical summary</p>
     <label class="block">
       <span class="field-label-compact">Years of nursing experience</span>
@@ -31,5 +35,5 @@ const { fieldClasses, clearParseHighlight } = useIntakePrefillHighlight()
         @input="clearParseHighlight('specialized_medical_equipment')"
       >
     </label>
-  </div>
+  </fieldset>
 </template>

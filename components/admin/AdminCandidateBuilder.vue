@@ -57,6 +57,7 @@ const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => bool
 const { devFixtureRequest } = useAdminHubMenu()
 
 const actionError = ref<string | null>(null)
+const actionErrorRetry = ref<'download' | 'submit' | null>(null)
 const actionLoading = ref(false)
 const previewSaving = ref(false)
 const previewSaveError = ref<string | null>(null)
@@ -138,13 +139,30 @@ function scrollToSectionPaused(section: AdminSectionId) {
   scrollToSection(section)
 }
 
+function dismissActionError() {
+  actionError.value = null
+  actionErrorRetry.value = null
+}
+
+function retryActionError() {
+  if (actionErrorRetry.value === 'download') {
+    void onDownloadDraft()
+    return
+  }
+  if (actionErrorRetry.value === 'submit') {
+    void onMarkSubmitted()
+  }
+}
+
 async function onDownloadDraft() {
   actionError.value = null
+  actionErrorRetry.value = null
   actionLoading.value = true
   try {
     await downloadDraftDocx()
-  } catch (e: unknown) {
-    actionError.value = e instanceof Error ? e.message : 'Could not download DOCX.'
+  } catch {
+    actionError.value = 'Could not download DOCX.'
+    actionErrorRetry.value = 'download'
   } finally {
     actionLoading.value = false
   }
@@ -255,12 +273,14 @@ async function onSectionSelect(sectionId: AdminSectionId) {
 async function onMarkSubmitted() {
   markConfirmOpen.value = false
   actionError.value = null
+  actionErrorRetry.value = null
   actionLoading.value = true
   try {
     await markSubmitted()
     emit('reload')
-  } catch (e: unknown) {
-    actionError.value = e instanceof Error ? e.message : 'Could not mark submitted.'
+  } catch {
+    actionError.value = 'Could not mark submitted.'
+    actionErrorRetry.value = 'submit'
   } finally {
     actionLoading.value = false
   }
@@ -286,6 +306,7 @@ async function onDevFixture(mode: 'partial' | 'complete') {
   const scrollTop = canvasRef.value?.scrollTop ?? 0
   devPrefilling.value = true
   actionError.value = null
+  actionErrorRetry.value = null
   try {
     const {
       buildDevIntakeParsePayload,
@@ -304,6 +325,7 @@ async function onDevFixture(mode: 'partial' | 'complete') {
     syncActiveSectionFromScroll()
   } catch (e: unknown) {
     actionError.value = e instanceof Error ? e.message : 'Could not load dev fixture.'
+    actionErrorRetry.value = null
   } finally {
     devPrefilling.value = false
   }
@@ -417,7 +439,7 @@ watch(devFixtureRequest, (mode) => {
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-          <IntakeSaveStatus :status="saveStatus" />
+          <IntakeSaveStatus :status="saveStatus" @retry="flushAutosave" />
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -440,7 +462,23 @@ watch(devFixtureRequest, (mode) => {
       </div>
       </div>
       <p v-if="actionError" class="shrink-0 border-b border-red-100 bg-red-50">
-        <span class="block px-4 py-2 text-sm text-red-600 sm:px-6">{{ actionError }}</span>
+        <span class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-sm text-red-600 sm:px-6">
+          <span>{{ actionError }}</span>
+          <span class="inline-flex items-center gap-2">
+            <button
+              v-if="actionErrorRetry"
+              type="button"
+              class="font-medium underline"
+              :disabled="actionLoading"
+              @click="retryActionError"
+            >
+              Retry
+            </button>
+            <button type="button" class="font-medium underline" @click="dismissActionError">
+              Dismiss
+            </button>
+          </span>
+        </span>
       </p>
 
       <AdminSectionTabs
@@ -602,6 +640,7 @@ watch(devFixtureRequest, (mode) => {
               label="Specialties / units"
               placeholder="e.g. ICU, ER, Med-Surg"
               field-id="specialties"
+              :disabled="!isEditable"
             />
             <HospitalAutocomplete
               ref="hospitalAutocompleteRef"
@@ -610,6 +649,7 @@ watch(devFixtureRequest, (mode) => {
               deck-mode="multi"
               :sticky-chrome-offset-px="0"
               :persist-immediate="flushAutosave"
+              :disabled="!isEditable"
               @update:employers="form.employers = $event"
               @active-change="employersActiveIndex = $event"
             />
@@ -625,14 +665,16 @@ watch(devFixtureRequest, (mode) => {
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
               :licenses="form.licenses"
+              :disabled="!isEditable"
               @update:credentials="form.credentials = $event"
               @update:licenses="form.licenses = $event"
             />
             <ClinicalSummaryFields
               v-model:years-nursing-experience="form.years_nursing_experience"
               v-model:specialized-medical-equipment="form.specialized_medical_equipment"
+              :disabled="!isEditable"
             />
-            <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />
+            <EducationRepeater ref="educationRepeaterRef" v-model="form.education" :disabled="!isEditable" />
           </section>
 
           <!-- Review -->

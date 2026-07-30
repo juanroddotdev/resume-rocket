@@ -13,6 +13,7 @@ const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { defau
 const props = defineProps<{
   credentials: CredentialsMap
   licenses: import('~/types/candidate').LicenseEntry[]
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -90,7 +91,7 @@ function validateExpiry(cert: string) {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <fieldset class="min-w-0 space-y-4 border-0 p-0 disabled:opacity-60" :disabled="disabled">
     <div>
       <p class="mb-2 text-sm font-medium text-slate-700">Certifications</p>
 
@@ -172,5 +173,5 @@ function validateExpiry(cert: string) {
         @update:model-value="emit('update:licenses', $event)"
       />
     </div>
-  </div>
+  </fieldset>
 </template>

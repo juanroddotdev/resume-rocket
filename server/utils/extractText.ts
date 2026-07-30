@@ -6,8 +6,10 @@ const DOCX_MIMES = [
   'application/msword',
 ]
 
-export function isAllowedResumeMime(mime: string) {
-  return PDF_MIMES.includes(mime) || DOCX_MIMES.includes(mime)
+export function isAllowedResumeMime(mime: string, filename = '') {
+  if (PDF_MIMES.includes(mime) || DOCX_MIMES.includes(mime)) return true
+  const lower = filename.toLowerCase()
+  return lower.endsWith('.pdf') || lower.endsWith('.docx')
 }
 
 export async function extractTextFromBuffer(

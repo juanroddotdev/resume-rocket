@@ -34,30 +34,39 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'id or access_token required' })
   }
 
-  const buffer = await buildResumeDocx({
-    first_name: candidate.first_name as string | null,
-    last_name: candidate.last_name as string | null,
-    email: candidate.email as string | null,
-    phone: candidate.phone as string | null,
-    license_number: candidate.license_number as string | null,
-    license_state: candidate.license_state as string | null,
-    licenses: candidate.licenses as import('../../types/candidate').LicenseEntry[] | null,
-    emr_system: candidate.emr_system as string | null,
-    specialties: candidate.specialties as string[] | null,
-    employers: candidate.employers,
-    credentials: candidate.credentials,
-    education: candidate.education,
-    years_nursing_experience: candidate.years_nursing_experience as string | null,
-    compact_license_status: candidate.compact_license_status as string | null,
-    average_patient_ratios: candidate.average_patient_ratios as string | null,
-    specialized_medical_equipment: candidate.specialized_medical_equipment as string | null,
-    home_address: candidate.home_address as string | null,
-    home_city: candidate.home_city as string | null,
-    home_state: candidate.home_state as string | null,
-    professional_snapshot: candidate.professional_snapshot as
-      | import('../../utils/professionalSnapshot').ProfessionalSnapshot
-      | null,
-  })
+  let buffer: Buffer
+  try {
+    buffer = await buildResumeDocx({
+      first_name: candidate.first_name as string | null,
+      last_name: candidate.last_name as string | null,
+      email: candidate.email as string | null,
+      phone: candidate.phone as string | null,
+      license_number: candidate.license_number as string | null,
+      license_state: candidate.license_state as string | null,
+      licenses: candidate.licenses as import('../../types/candidate').LicenseEntry[] | null,
+      emr_system: candidate.emr_system as string | null,
+      specialties: candidate.specialties as string[] | null,
+      employers: candidate.employers,
+      credentials: candidate.credentials,
+      education: candidate.education,
+      years_nursing_experience: candidate.years_nursing_experience as string | null,
+      compact_license_status: candidate.compact_license_status as string | null,
+      average_patient_ratios: candidate.average_patient_ratios as string | null,
+      specialized_medical_equipment: candidate.specialized_medical_equipment as string | null,
+      home_address: candidate.home_address as string | null,
+      home_city: candidate.home_city as string | null,
+      home_state: candidate.home_state as string | null,
+      professional_snapshot: candidate.professional_snapshot as
+        | import('../../utils/professionalSnapshot').ProfessionalSnapshot
+        | null,
+    })
+  } catch (error) {
+    console.error('[generate-docx] build failed', error instanceof Error ? error.name : 'unknown')
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Could not generate the resume packet. Try again, or contact your recruiter.',
+    })
+  }
 
   const filename = buildResumeDownloadFilename({
     firstName: candidate.first_name as string | null,

@@ -4,6 +4,7 @@ const props = defineProps<{
   label?: string
   placeholder?: string
   fieldId?: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +22,7 @@ function clearSpecialtiesHighlight() {
 }
 
 function addChip() {
+  if (props.disabled) return
   const value = draft.value.trim()
   if (!value) return
   clearSpecialtiesHighlight()
@@ -48,6 +50,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function removeChip(index: number) {
+  if (props.disabled) return
   clearSpecialtiesHighlight()
   const next = [...props.modelValue]
   next.splice(index, 1)
@@ -56,7 +59,9 @@ function removeChip(index: number) {
 </script>
 
 <template>
-  <div
+  <fieldset
+    class="min-w-0 border-0 p-0 disabled:opacity-60"
+    :disabled="disabled"
     :class="isParseHighlighted(specialtiesFieldId) ? 'rounded-lg bg-brand-50/50 p-2 ring-1 ring-brand-600/20' : null"
   >
     <label v-if="label" class="field-label">{{ label }}</label>
@@ -85,5 +90,5 @@ function removeChip(index: number) {
       </span>
     </div>
     <p v-else class="mt-1 text-xs text-slate-500">Add units you have worked in (e.g. ICU, ER, Med-Surg).</p>
-  </div>
+  </fieldset>
 </template>

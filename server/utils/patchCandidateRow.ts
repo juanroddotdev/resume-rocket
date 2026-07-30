@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 import { legacyScalarsFromLicenses } from '~/utils/licenseRows'
 import { isCandidatePatchLocked } from '~/utils/candidatePatchLock'
+import { isAllowedStatusPatch } from '~/utils/candidateStatusPatch'
 import { candidatePatchSchema } from '~/server/utils/schemas'
 import { normalizeCandidateRow } from '~/server/utils/normalizeCandidate'
 import { buildProfessionalSnapshotFromCandidate } from '~/utils/professionalSnapshot'
@@ -35,6 +36,13 @@ export async function patchCandidateRow(candidateId: string, body: CandidatePatc
     throw createError({
       statusCode: 409,
       statusMessage: 'Candidate already submitted',
+    })
+  }
+
+  if (!isAllowedStatusPatch(existing?.status, body.status)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid status transition',
     })
   }
 

@@ -2,9 +2,11 @@
 
 Copy-paste QA for intake and admin UX. Run **after CI is green** (`npm run test` + build) and for deeper UX passes before release.
 
-**Related:** [`README.md`](./README.md) (doc index) · [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) (shorter pre-release smoke) · [`TODO.md`](./TODO.md) (backlog)
+**Related:** [`README.md`](./README.md) (doc index) · [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) (shorter pre-release smoke + **Automated/Manual/Optional** tags) · [`TODO.md`](./TODO.md) (backlog) · [`audits/DOCS_REPORT-s7-release.md`](./audits/DOCS_REPORT-s7-release.md)
 
 **Scope:** Intake wizard, hospital linking, admin hub — through June 2026 polish batch ([archive/RELEASE-CHECKLIST-2026-06-07-09.md](./archive/RELEASE-CHECKLIST-2026-06-07-09.md)). Employer deck plan: [archive/EMPLOYER-CARD-DECK-PLAN.md](./archive/EMPLOYER-CARD-DECK-PLAN.md).
+
+**Before deep UX QA:** run RELEASE automated block (`npm run test:release` + `npm run build`), then the **short human smoke** in [`DOCS_REPORT-s7-release.md`](./audits/DOCS_REPORT-s7-release.md). Use sections below only when hunting regressions or polishing UX — do not treat every box as a release gate.
 
 ---
 
@@ -19,16 +21,12 @@ Copy-paste QA for intake and admin UX. Run **after CI is green** (`npm run test`
   - [ ] Resume with recognizable hospital names
   - [ ] Resume with unit bed count vs hospital-wide bed count (prompt quality)
 
-**Automated (run first):**
+**Automated (run first — also in CI as `npm run test:release`):**
 
 ```bash
-npm run test
+npm run test:release
 npm run build
-node scripts/test-gemini-parse-map.mjs
-node scripts/test-docx-mapping.mjs
-node scripts/smoke-docx-template.mjs
-node scripts/test-normalize-candidate.mjs
-# Optional — requires .env + seeded hospitals:
+# Optional — requires .env + seeded hospitals / Gemini:
 node --env-file=.env scripts/test-hospital-match.mjs
 node --env-file=.env scripts/test-pdf-vision.mjs
 ```

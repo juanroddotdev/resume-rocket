@@ -330,6 +330,30 @@ function canAdvanceStep3() {
   return step3LicenseMissing.value.length === 0
 }
 
+const step1AdvanceHint = computed(() => {
+  if (!isClientView.value || canAdvanceStep1()) return null
+  const missing: string[] = []
+  if (!form.value.first_name?.trim()) missing.push('first name')
+  if (!form.value.last_name?.trim()) missing.push('last name')
+  if (!form.value.email?.trim()) missing.push('email')
+  if (!form.value.phone?.trim()) missing.push('phone')
+  if (!missing.length) return null
+  if (missing.length === 1) return `Add your ${missing[0]} before continuing.`
+  if (missing.length === 2) return `Add your ${missing[0]} and ${missing[1]} before continuing.`
+  const last = missing[missing.length - 1]
+  return `Add your ${missing.slice(0, -1).join(', ')}, and ${last} before continuing.`
+})
+
+const step1AdvanceDescribedBy = computed(() =>
+  step1AdvanceHint.value ? 'intake-advance-hint-1' : undefined,
+)
+const step2AdvanceDescribedBy = computed(() =>
+  isClientView.value && !canAdvanceStep2() ? 'intake-advance-hint-2' : undefined,
+)
+const step3AdvanceDescribedBy = computed(() =>
+  isClientView.value && !canAdvanceStep3() ? 'intake-advance-hint-3' : undefined,
+)
+
 async function goToField(step: number, fieldId: string) {
   const stepChanging = currentStep.value !== step
   await goToStep(step)
@@ -650,12 +674,20 @@ async function onReviewPreview() {
             >
           </label>
         </div>
+        <p
+          v-if="step1AdvanceHint"
+          id="intake-advance-hint-1"
+          class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
+        >
+          {{ step1AdvanceHint }}
+        </p>
         <div class="mt-6 flex gap-2 border-t border-slate-100 pt-4 lg:ml-auto lg:max-w-sm">
           <button type="button" class="flex-1 rounded-lg border py-3" @click="goToStep(0)">Back</button>
           <button
             type="button"
             class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep1()"
+            :aria-describedby="step1AdvanceDescribedBy"
             @click="goToStep(2)"
           >
             Next
@@ -685,12 +717,14 @@ async function onReviewPreview() {
         />
         <p
           v-if="isClientView && !form.employers.length"
+          id="intake-advance-hint-2"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Add at least one hospital where you worked before continuing.
         </p>
         <p
           v-else-if="isClientView && form.employers.length && !employersEmrComplete"
+          id="intake-advance-hint-2"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Select an EMR / charting system on each employer card. If you choose Other, enter the system name — required before continuing.
@@ -701,6 +735,7 @@ async function onReviewPreview() {
             type="button"
             class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep2()"
+            :aria-describedby="step2AdvanceDescribedBy"
             @click="goToStep(3)"
           >
             Next
@@ -726,6 +761,7 @@ async function onReviewPreview() {
         <EducationRepeater ref="educationRepeaterRef" v-model="form.education" />
         <p
           v-if="isClientView && step3LicenseMissing.length"
+          id="intake-advance-hint-3"
           class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950"
         >
           Add your RN license number and state before review — required for your VMS packet.
@@ -742,6 +778,7 @@ async function onReviewPreview() {
             type="button"
             class="flex-1 rounded-lg bg-accent-500 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
             :disabled="!canAdvanceStep3()"
+            :aria-describedby="step3AdvanceDescribedBy"
             @click="goToStep(4)"
           >
             Review

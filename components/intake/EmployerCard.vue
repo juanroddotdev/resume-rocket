@@ -3,7 +3,11 @@ import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
 import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employerLink'
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
-import { facilityGoogleSearchUrl } from '~/utils/facilityGoogleSearch'
+import {
+  FACILITY_GOOGLE_SEARCH_LABELS,
+  facilityGoogleEmrSearchUrl,
+  facilityGoogleSearchUrl,
+} from '~/utils/facilityGoogleSearch'
 import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClinicalFlags'
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
@@ -259,9 +263,16 @@ function onEmploymentTypeChange(event: Event) {
   patchField('type', next)
 }
 
+const googleSearchPromptsSummary = FACILITY_GOOGLE_SEARCH_LABELS.join(', ')
+
 function openFacilityGoogleSearch() {
   if (!import.meta.client) return
   window.open(facilityGoogleSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
+}
+
+function openFacilityGoogleEmrSearch() {
+  if (!import.meta.client) return
+  window.open(facilityGoogleEmrSearchUrl(props.employer), '_blank', 'noopener,noreferrer')
 }
 
 function onClinicalFlagChange(
@@ -492,7 +503,7 @@ function onTraumaLevelChange(event: Event) {
               </div>
 
               <div
-                class="inline-flex max-w-full rounded-md border px-2.5 py-1.5"
+                class="flex max-w-full flex-col gap-1 rounded-md border px-2.5 py-1.5"
                 :class="missingFacilityStats
                   ? 'border-amber-200 bg-amber-50'
                   : 'border-brand-100 bg-brand-50/70'"
@@ -514,6 +525,24 @@ function onTraumaLevelChange(event: Event) {
                     Verify “{{ googleVerifyLabel }}” on Google
                   </span>
                   <span class="ml-1 opacity-70" aria-hidden="true">↗</span>
+                </button>
+                <p
+                  class="text-[11px] leading-snug"
+                  :class="missingFacilityStats ? 'text-amber-900/80' : 'text-brand-900/70'"
+                >
+                  Searches for: {{ googleSearchPromptsSummary }}. Google may not list every item.
+                </p>
+                <button
+                  type="button"
+                  class="self-start text-left text-[11px] leading-snug underline decoration-brand-300/80 underline-offset-2 transition-colors"
+                  :class="missingFacilityStats
+                    ? 'text-amber-950 hover:text-amber-900'
+                    : 'text-brand-900 hover:text-brand-800'"
+                  :aria-label="`Search EMR and charting system for ${googleVerifyLabel} on Google`"
+                  @click="openFacilityGoogleEmrSearch"
+                >
+                  Search EMR / charting only
+                  <span class="ml-0.5 opacity-70" aria-hidden="true">↗</span>
                 </button>
               </div>
             </template>

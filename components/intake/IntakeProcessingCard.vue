@@ -22,21 +22,11 @@ const progressWidth = computed(() =>
   `${Math.min(100, Math.max(0, props.progress))}%`,
 )
 
-const showUploadDoc = computed(() =>
-  props.mode === 'parse' || props.mode === 'generate',
-)
-
-const showOutputDoc = computed(() =>
-  props.mode === 'generate' && (props.status === 'success' || props.progress >= 40),
-)
-
 const uploadVisible = computed(() => {
   if (props.reducedMotion) return props.status === 'active' && props.mode === 'parse'
   if (props.mode === 'parse') return props.status === 'active'
   return props.status === 'active' && props.progress < 40
 })
-
-const spinnerVisible = computed(() => !props.reducedMotion && props.status === 'active')
 
 const outputVisible = computed(() => {
   if (props.reducedMotion) return props.status === 'success' && props.mode === 'generate'
@@ -45,6 +35,16 @@ const outputVisible = computed(() => {
   }
   return props.status === 'success'
 })
+
+const activeCaption = computed(() => {
+  if (uploadVisible.value) return 'Reading Upload'
+  if (props.mode === 'parse') return 'Fields Extracted'
+  return 'Assembling Resume'
+})
+
+const activeCaptionClass = computed(() =>
+  uploadVisible.value ? 'text-brand-600' : 'text-emerald-600',
+)
 </script>
 
 <template>
@@ -56,40 +56,61 @@ const outputVisible = computed(() => {
   >
     <div
       v-if="!reducedMotion"
-      class="relative mb-6 flex h-40 w-full items-center justify-center overflow-hidden"
+      class="relative mb-6 flex h-40 w-full flex-col items-center justify-center"
       aria-hidden="true"
     >
-      <!-- Upload document -->
+      <!-- Active: document sits inside concentric rings -->
       <div
-        v-if="showUploadDoc"
-        class="absolute flex flex-col items-center transition-all duration-1000"
-        :class="uploadVisible ? 'translate-x-0 scale-100 opacity-100' : '-translate-x-24 scale-75 opacity-0'"
+        v-if="status === 'active'"
+        class="flex flex-col items-center transition-opacity duration-700"
       >
-        <div class="relative flex h-20 w-16 animate-pulse flex-col gap-1.5 rounded-lg border-2 border-brand-600 bg-brand-50 p-2 shadow-md">
-          <div class="h-2 w-full rounded bg-brand-600/30" />
-          <div class="h-2 w-5/6 rounded bg-brand-50" />
-          <div class="h-2 w-4/5 rounded bg-brand-50" />
-          <div class="absolute inset-x-0 top-0 h-1 animate-[bounce_2s_infinite] bg-gradient-to-r from-transparent via-brand-600 to-transparent" />
+        <div class="relative flex h-[7.5rem] w-[7.5rem] items-center justify-center">
+          <div
+            class="pointer-events-none absolute inset-0 animate-[spin_12s_linear_infinite] rounded-full border-4 border-dashed border-slate-200"
+          />
+          <div
+            class="pointer-events-none absolute inset-[0.7rem] animate-[spin_6s_linear_infinite_reverse] rounded-full border-4 border-dotted border-brand-600"
+          />
+
+          <div class="relative z-10 h-20 w-16">
+            <div
+              class="absolute inset-0 transition-all duration-700"
+              :class="uploadVisible ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'"
+            >
+              <div class="relative flex h-full w-full animate-pulse flex-col gap-1.5 rounded-lg border-2 border-brand-600 bg-brand-50 p-2 shadow-md">
+                <div class="h-2 w-full rounded bg-brand-600/30" />
+                <div class="h-2 w-5/6 rounded bg-brand-50" />
+                <div class="h-2 w-4/5 rounded bg-brand-50" />
+                <div class="absolute inset-x-0 top-0 h-1 animate-[bounce_2s_infinite] bg-gradient-to-r from-transparent via-brand-600 to-transparent" />
+              </div>
+            </div>
+
+            <div
+              class="absolute inset-0 transition-all duration-700"
+              :class="outputVisible ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'"
+            >
+              <div class="relative flex h-full w-full flex-col gap-1.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 p-2 shadow-lg">
+                <div class="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-bl bg-emerald-500 text-[8px] font-bold text-white">W</div>
+                <div class="h-2 w-2/3 rounded bg-emerald-400" />
+                <div class="h-1.5 w-full rounded bg-slate-200" />
+                <div class="h-1.5 w-full rounded bg-slate-200" />
+                <div class="h-1.5 w-4/5 rounded bg-slate-200" />
+              </div>
+            </div>
+          </div>
         </div>
-        <span class="mt-2 text-xs font-semibold uppercase tracking-wide text-brand-600">Reading Upload</span>
+        <span
+          class="mt-2 text-xs font-semibold uppercase tracking-wide transition-colors duration-500"
+          :class="activeCaptionClass"
+        >
+          {{ activeCaption }}
+        </span>
       </div>
 
-      <!-- Spinner -->
+      <!-- Success: output document without rings -->
       <div
-        v-if="spinnerVisible"
-        class="absolute flex items-center justify-center transition-all duration-700"
-        :class="status === 'active' ? 'scale-100 opacity-100' : 'scale-50 opacity-0'"
-      >
-        <div class="flex h-24 w-24 animate-[spin_12s_linear_infinite] items-center justify-center rounded-full border-4 border-dashed border-slate-200">
-          <div class="h-16 w-16 animate-[spin_6s_linear_infinite_reverse] rounded-full border-4 border-dotted border-brand-600" />
-        </div>
-      </div>
-
-      <!-- Output document -->
-      <div
-        v-if="showOutputDoc || (mode === 'parse' && status === 'success')"
-        class="absolute flex flex-col items-center transition-all duration-1000"
-        :class="outputVisible ? 'translate-x-0 scale-100 opacity-100' : 'translate-x-24 scale-75 opacity-0'"
+        v-else
+        class="flex flex-col items-center"
       >
         <div class="relative flex h-20 w-16 flex-col gap-1.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 p-2 shadow-lg">
           <div class="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-bl bg-emerald-500 text-[8px] font-bold text-white">W</div>
@@ -97,10 +118,7 @@ const outputVisible = computed(() => {
           <div class="h-1.5 w-full rounded bg-slate-200" />
           <div class="h-1.5 w-full rounded bg-slate-200" />
           <div class="h-1.5 w-4/5 rounded bg-slate-200" />
-          <div
-            v-if="status === 'success'"
-            class="absolute -bottom-2 -right-2 animate-bounce rounded-full bg-emerald-500 p-0.5 text-white shadow-md"
-          >
+          <div class="absolute -bottom-2 -right-2 animate-bounce rounded-full bg-emerald-500 p-0.5 text-white shadow-md">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>

@@ -48,6 +48,6 @@ Optional date suffix if re-running the same slice: `BUG_AUDIT-s1-invite-2026-07-
 | 4 | | | |
 | 5 | | | |
 | 6 | | | |
-| 7 | | | |
+| 7 | — | — | [DOCS_REPORT-s7-release.md](./DOCS_REPORT-s7-release.md) |
 
 See [AGENT-LANES.md](../AGENT-LANES.md), [APP-COVERAGE-TOUR.md](../APP-COVERAGE-TOUR.md), and [`.cursor/agents/`](../../.cursor/agents/).

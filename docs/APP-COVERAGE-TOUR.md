@@ -23,14 +23,14 @@ Update when a slice closes (optional PR #).
 
 | Slice | Name | Status | Closed |
 | --- | --- | --- | --- |
-| 0 | Map / docs truth | [ ] Not started | |
-| 1 | Invite + upload gate | [ ] Not started | |
-| 2 | Parse core | [ ] Not started | |
-| 3 | Wizard data utils | [ ] Not started | |
-| 4 | Intake UI | [ ] Not started | |
-| 5 | Admin UI | [ ] Not started | |
-| 6 | DOCX + template | [ ] Not started | |
-| 7 | Release close | [ ] Not started | |
+| 0 | Map / docs truth | Deferred — run `s0-agent5` if map backlog still needed | |
+| 1 | Invite + upload gate | Agent 2 audit filed (`BUG_AUDIT-s1`); End criteria not fully closed | open audit PRs as applicable |
+| 2 | Parse core | Agent 2 audit filed; Agent 1 partial | open PRs #148–#149 class |
+| 3 | Wizard data utils | Agent 2 + Agent 1 partial (`vmsGapReview` tests) | open PRs #150–#151 class |
+| 4 | Intake UI | Agent 2 queue done (file-by-file audits) | #152 class |
+| 5 | Admin UI | Agent 2 UI + API audits filed | #160 + `docs/bug-audit-s5-api` |
+| 6 | DOCX + template | Agent 2 audit + Agent 1 QA filed; Word smoke + S6-H1 fix remain | #161 / #162 |
+| 7 | Release close | Docs matrix in progress (this report) | |
 
 **Tour complete when** Slice 7 is Done: RELEASE rows tagged Automated vs Manual, `npm run test:release` green, human smoke list is short and honest.
 

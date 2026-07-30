@@ -38,5 +38,6 @@ Use a **separate chat / worktree** per agent so they do not dirty your Main chec
 | 7b | [s6-agent1.md](./s6-agent1.md) | 1 | `test/tour-s6-…` + QA report |
 | 8 | [s7-agent5.md](./s7-agent5.md) | 5 | `docs/tour-s7-…` + DOCS report |
 | * | [wrapup-agent5.md](./wrapup-agent5.md) | 5 | optional after any slice closes |
+| * | [candidate-seamless-pr.md](./candidate-seamless-pr.md) | Main | `feat/intake-seamless-prN-…` — **one PR per chat**; fill `Implement ONLY: PR1\|2\|3` |
 
 Parent prompts: [`qa-edge-cases.md`](../qa-edge-cases.md) · [`bug-hunter-audit.md`](../bug-hunter-audit.md) · [`docs-checklist-auditor.md`](../docs-checklist-auditor.md)

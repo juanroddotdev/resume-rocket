@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { facilityGoogleSearchUrl } from '../utils/facilityGoogleSearch.ts'
+import {
+  FACILITY_GOOGLE_SEARCH_LABELS,
+  FACILITY_GOOGLE_SEARCH_PROMPTS,
+  facilityGoogleEmrSearchUrl,
+  facilityGoogleSearchUrl,
+} from '../utils/facilityGoogleSearch.ts'
 
 describe('facilityGoogleSearchUrl', () => {
   it('builds a Google search URL from employer card fields', () => {
@@ -9,15 +14,25 @@ describe('facilityGoogleSearchUrl', () => {
       city: 'Austin',
       state: 'TX',
     })
+    const decoded = decodeURIComponent(url)
     assert.match(url, /^https:\/\/www\.google\.com\/search\?q=/)
-    assert.match(decodeURIComponent(url), /Metro General/)
-    assert.match(decodeURIComponent(url), /Austin, TX/)
-    assert.match(decodeURIComponent(url), /"trauma level"/)
-    assert.match(decodeURIComponent(url), /"total beds"/)
-    assert.match(decodeURIComponent(url), /"teaching hospital"/)
-    assert.match(decodeURIComponent(url), /Magnet/)
-    assert.match(decodeURIComponent(url), /\bEMR\b/)
-    assert.match(decodeURIComponent(url), /"charting system"/)
+    assert.match(decoded, /Metro General/)
+    assert.match(decoded, /Austin, TX/)
+    for (const prompt of FACILITY_GOOGLE_SEARCH_PROMPTS) {
+      assert.match(decoded, new RegExp(prompt.replace(/[?*+^${}()|[\]\\]/g, '\\$&')))
+    }
+    assert.doesNotMatch(decoded, /"trauma level"/)
+  })
+
+  it('exposes readable labels without trailing question marks', () => {
+    assert.deepEqual(FACILITY_GOOGLE_SEARCH_LABELS, [
+      'trauma level',
+      'total beds',
+      'teaching hospital',
+      'Magnet',
+      'EMR',
+      'charting system',
+    ])
   })
 
   it('omits empty location segments', () => {
@@ -36,7 +51,7 @@ describe('facilityGoogleSearchUrl', () => {
     assert.match(url, /Trinity Health Grand Rapids/)
     assert.doesNotMatch(url, /Metro General/)
     assert.match(url, /Austin, TX/)
-    assert.match(url, /"trauma level"/)
+    assert.match(url, /trauma level\?/)
   })
 
   it('does not duplicate location already present in searchQuery', () => {
@@ -47,5 +62,25 @@ describe('facilityGoogleSearchUrl', () => {
       ),
     )
     assert.equal(url.match(/Austin, TX/g)?.length, 1)
+  })
+})
+
+describe('facilityGoogleEmrSearchUrl', () => {
+  it('builds a focused EMR / charting search without facility metrics prompts', () => {
+    const decoded = decodeURIComponent(
+      facilityGoogleEmrSearchUrl({
+        name: 'Metro General',
+        city: 'Austin',
+        state: 'TX',
+      }),
+    )
+    assert.match(decoded, /Metro General/)
+    assert.match(decoded, /Austin, TX/)
+    assert.match(decoded, /\bEMR\?/)
+    assert.match(decoded, /charting system\?/)
+    assert.doesNotMatch(decoded, /trauma level/)
+    assert.doesNotMatch(decoded, /total beds/)
+    assert.doesNotMatch(decoded, /teaching hospital/)
+    assert.doesNotMatch(decoded, /Magnet/)
   })
 })

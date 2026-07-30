@@ -826,12 +826,15 @@ async function onReviewPreview() {
         <p class="mt-2 text-slate-600">
           Your VMS-ready placement packet (DOCX) was downloaded. Your recruiter receives the same file for hospital submission.
         </p>
+        <p class="mt-2 text-sm text-slate-500">
+          Your recruiter may finalize a few packet details before sending it to the hospital.
+        </p>
         <p v-if="confirmationEmailSent" class="mt-2 text-slate-600">
           Check your inbox at <strong>{{ form.email }}</strong> for a confirmation link.
         </p>
         <button
           type="button"
-          class="mt-6 rounded-lg border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 disabled:opacity-50"
+          class="mt-6 rounded-lg bg-accent-500 px-6 py-3 font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
           :disabled="redownloading"
           @click="onDownloadAgain"
         >
@@ -839,7 +842,7 @@ async function onReviewPreview() {
         </button>
         <p
           v-if="redownloadError"
-          class="mt-2 text-sm text-red-600"
+          class="mt-4 text-sm text-red-600"
         >
           {{ redownloadError }}
           <button type="button" class="ml-1 underline" @click="onDownloadAgain">Retry</button>

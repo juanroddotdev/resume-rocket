@@ -422,7 +422,7 @@ watch(devFixtureRequest, (mode) => {
             <button
               type="button"
               class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-              :disabled="previewSaving || !isEditable || devPrefilling"
+              :disabled="previewSaving || devPrefilling"
               @click="openPreview"
             >
               {{ previewSaving && previewOpen ? 'Preparing…' : 'Preview packet' }}
@@ -430,7 +430,7 @@ watch(devFixtureRequest, (mode) => {
             <button
               type="button"
               class="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-brand-900 hover:bg-accent-600 disabled:opacity-50"
-              :disabled="actionLoading || !isEditable || devPrefilling"
+              :disabled="actionLoading || devPrefilling"
               @click="onDownloadDraft"
             >
               Download draft

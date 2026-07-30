@@ -298,7 +298,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(lines.some(line => line.includes('EMR Systems')), false)
   })
 
-  it('documents S6-H1: candidate_state currently prefers license state over home state', () => {
+  it('uses home state for candidate_state, not license state (S6-H1)', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',
       last_name: 'Doe',
@@ -308,9 +308,8 @@ describe('mapCandidateToTemplateData', () => {
       license_number: 'RN-1',
     })
 
-    // Desired product behavior after S6-H1: candidate_state === 'TX'
     assert.equal(data.candidate_city, 'Austin')
-    assert.equal(data.candidate_state, 'CA')
+    assert.equal(data.candidate_state, 'TX')
   })
 })
 describe('buildResumeDocx smoke', () => {

@@ -1,21 +1,20 @@
+import { clearInviteCookie, setInviteCookie } from '~/server/utils/requireInvite'
+import { inviteValidateFailure } from '~/utils/inviteValidateFailure'
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const token = String(query.token || '')
 
   if (!token) {
-    return { valid: false, reason: 'missing' }
+    clearInviteCookie(event)
+    return inviteValidateFailure('missing')
   }
 
   const result = await validateInviteToken(token)
 
   if (!result.valid) {
-    return {
-      valid: false,
-      reason: result.reason,
-      candidate_email: 'invite' in result ? result.invite?.candidate_email : undefined,
-      candidate_first_name: 'invite' in result ? result.invite?.candidate_first_name : undefined,
-      candidate_last_name: 'invite' in result ? result.invite?.candidate_last_name : undefined,
-    }
+    clearInviteCookie(event)
+    return inviteValidateFailure(result.reason)
   }
 
   setInviteCookie(event, token)

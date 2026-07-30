@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { getCookie, getHeader } from 'h3'
+import { deleteCookie, getCookie, getHeader } from 'h3'
 
 const COOKIE_NAME = 'intake_token'
 
@@ -17,6 +17,11 @@ export function setInviteCookie(event: H3Event, token: string) {
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
+}
+
+/** Drop intake_token so a prior valid invite cannot linger after a failed validate. */
+export function clearInviteCookie(event: H3Event) {
+  deleteCookie(event, COOKIE_NAME, { path: '/' })
 }
 
 export async function validateInviteToken(
@@ -44,7 +49,7 @@ export async function validateInviteToken(
       .eq('id', invite.candidate_id)
       .maybeSingle()
     if (candidate?.status === 'submitted' || candidate?.status === 'confirmed') {
-      return { valid: false as const, reason: 'completed' as const, invite }
+      return { valid: false as const, reason: 'completed' as const }
     }
   }
 

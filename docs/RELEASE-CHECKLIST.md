@@ -29,7 +29,7 @@ npm run build
 ## Happy path — invite → upload → wizard → DOCX
 
 - [ ] **Admin sign-in** — `/admin` loads; recruiter can log in
-- [ ] **Create invite** — first + last name required; email optional; copy/open intake link works; table shows the name (not “Unnamed candidate”)
+- [ ] **Create invite** — first + last name required; email optional; copy/open candidate link works; table shows the name (not “Unnamed candidate”)
 - [ ] **Valid token** — `/intake/{token}` loads upload step (not “Link unavailable”)
 - [ ] **Upload resume** — PDF or DOCX; parse prefills or shows manual continue
 - [ ] **Wizard step 1** — identity fields; autosave shows Saved; Next works

@@ -470,7 +470,7 @@ watch(devFixtureRequest, (mode) => {
           <!-- Identity (upload/parse notices live here — no Resume tab) -->
           <section id="admin-section-identity" class="scroll-mt-4 space-y-4">
             <p v-if="!resumeFilename && isEditable" class="text-sm text-slate-600">
-              No resume uploaded yet. Continue manually below, or share the intake link with the candidate.
+              No resume uploaded yet. Continue manually below, or share the candidate link with the candidate.
             </p>
             <ParseNoticeBanner
               :meta="parseMeta"
@@ -723,7 +723,7 @@ watch(devFixtureRequest, (mode) => {
       <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h3 id="mark-submitted-title" class="text-lg font-semibold text-slate-900">Mark submitted?</h3>
         <p class="mt-2 text-sm text-slate-600">
-          This downloads the DOCX, sets status to submitted, and locks the intake link for editing. The candidate can no longer finish in the app unless you create a new invite.
+          This downloads the DOCX, sets status to submitted, and locks the candidate link for editing. The candidate can no longer finish in the app unless you create a new invite.
         </p>
         <div class="mt-6 flex justify-end gap-2">
           <button type="button" class="rounded-lg border px-4 py-2 text-sm" @click="markConfirmOpen = false">

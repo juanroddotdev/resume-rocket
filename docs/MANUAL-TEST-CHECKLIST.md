@@ -45,7 +45,7 @@ node --env-file=.env scripts/test-pdf-vision.mjs
 
 ### Candidates table
 
-- [ ] Empty table: “No candidates yet — create an intake link above”
+- [ ] Empty table: “No candidates yet — create a candidate link or packet above.”
 - [ ] Loading shows skeleton (not plain “loading” text)
 - [ ] After candidate starts intake: row appears (toggle “Show drafts” if still draft)
 - [ ] Parse failure row: parse status column shows error icon when `parse_error` set

@@ -467,7 +467,7 @@ async function onReviewPreview() {
         <template v-if="inviteError === 'expired'">This link has expired.</template>
         <template v-else-if="inviteError === 'completed'">This application was already submitted.</template>
         <template v-else-if="inviteError === 'unavailable'">We could not verify this link. Check your connection and try again.</template>
-        <template v-else>Ask your recruiter for a new intake link.</template>
+        <template v-else>Ask your recruiter for a new candidate link.</template>
       </p>
       <button
         v-if="inviteError === 'unavailable'"

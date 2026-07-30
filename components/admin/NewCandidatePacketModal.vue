@@ -197,7 +197,7 @@ async function onSendLinkPath() {
     emit('linkReady', { candidateId, inviteId: invite.id, url: invite.url, copied })
   } catch (e: unknown) {
     const err = e as { data?: { statusMessage?: string }; message?: string }
-    error.value = err.data?.statusMessage || err.message || 'Could not create intake link'
+    error.value = err.data?.statusMessage || err.message || 'Could not create candidate link'
   } finally {
     loading.value = false
     loadingKind.value = null
@@ -248,11 +248,11 @@ async function onScratchPath() {
       aria-labelledby="new-packet-title"
     >
       <template v-if="linkResult">
-        <h2 id="new-packet-title" class="text-lg font-semibold text-slate-900">Intake link ready</h2>
+        <h2 id="new-packet-title" class="text-lg font-semibold text-slate-900">Candidate link ready</h2>
         <p class="mt-1 text-sm text-slate-600">
           Send this link to {{ linkResult.displayName }}. They can upload their resume and complete the packet on their phone.
         </p>
-        <label class="mt-4 block text-xs font-medium text-slate-600" for="intake-link-url">Intake URL</label>
+        <label class="mt-4 block text-xs font-medium text-slate-600" for="intake-link-url">Candidate link</label>
         <input
           id="intake-link-url"
           type="text"
@@ -339,7 +339,7 @@ async function onScratchPath() {
               :disabled="loading"
               @click="onSendLinkPath"
             >
-              {{ loadingKind === 'link' ? 'Creating…' : 'Create & copy intake link' }}
+              {{ loadingKind === 'link' ? 'Creating…' : 'Create & copy candidate link' }}
             </button>
             <p class="mt-1.5 text-xs text-slate-500">Candidate uploads when they open the link · expires in 7 days</p>
           </div>

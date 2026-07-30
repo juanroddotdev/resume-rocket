@@ -12,7 +12,7 @@
 
 ## Summary
 
-`professionalSnapshotToLines` correctly **skips empty / not-included** snapshot rows (no empty bullets). Template↔builder inventory reports **all template tags mapped**. `test-docx-mapping.mjs` passes on this tip. Gaps: **`candidate_state` prefers license state over home state** (wrong city/state block risk); **`generate-docx` does not catch Docxtemplater/`buildResumeDocx` failures** (opaque 500s); many builder keys are **not in the current template** (dead mappings / data only via snapshot). Client download/preview helpers surface `statusMessage` reasonably.
+`professionalSnapshotToLines` correctly **skips empty / not-included** snapshot rows (no empty bullets). Template↔builder inventory reports **all template tags mapped**. `test-docx-mapping.mjs` passes. **S6-H1** (home state) and **S6-M1** (friendly generate-docx errors) shipped in #165 / #168. Remaining Medium: orphan builder keys vs template (**S6-M2**).
 
 ---
 
@@ -20,16 +20,20 @@
 
 ### Must fix
 
-| ID | Priority | Owner | What | Where |
-| --- | --- | --- | --- | --- |
-| S6-H1 | High | Main | Fix `candidate_state` (and related) to use **home** state/city, not license state. Today: `licenseState?.toUpperCase() \|\| homeState` | `docxBuilder.ts` `mapCandidateToTemplateData` ~257–266 |
+_None remaining — **S6-H1** resolved in #165._
 
 ### Should fix
 
 | ID | Priority | Owner | What | Where |
 | --- | --- | --- | --- | --- |
-| S6-M1 | Medium | Main | Wrap `buildResumeDocx` / `doc.render` in `generate-docx.post.ts` with try/catch → 500 + friendly `statusMessage` (no stack to client; no PHI in logs) | `generate-docx.post.ts` ~37–70 |
 | S6-M2 | Medium | Main | Confirm intentional: 23+ builder scalars/loops **not** in template (years, compact, EMR summary, per-employer detail fields, etc.). Either restore tags, or document “snapshot-only / metrics_line-only” and trim dead keys | inventory output vs `docxBuilder.ts` |
+
+### Resolved
+
+| ID | Resolved in | Notes |
+| --- | --- | --- |
+| S6-H1 | #165 | `candidate_state` uses home state |
+| S6-M1 | #168 | Friendly 500 on DOCX build failure |
 
 ### Suggested
 
@@ -104,8 +108,8 @@ Blob sanity; access_token; explicit nullGetter.
 | Question | Answer |
 | --- | --- |
 | Slice 6 Agent 2 done? | **Yes** (this report) |
-| Ready for Agent 1? | **Yes** — especially S6-H1 regression + snapshot line tests |
-| Mark Slice 6 Done? | **No** until mapping/inventory stay green in CI + human Word smoke |
+| Ready for Agent 1? | **Yes** — S6-H1 regression + snapshot line tests landed |
+| Mark Slice 6 Done? | **No** until human Word smoke |
 | Ship | **no** until user asks for PR |
 
 ## PHI

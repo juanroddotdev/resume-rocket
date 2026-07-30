@@ -230,17 +230,26 @@ async function bootstrapInvite(routeToken: string) {
   return true
 }
 
-onMounted(async () => {
+async function loadInvite(routeToken: string) {
   loading.value = true
-  await bootstrapInvite(token.value)
-  loading.value = false
+  try {
+    await bootstrapInvite(routeToken)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function retryInvite() {
+  await loadInvite(token.value)
+}
+
+onMounted(async () => {
+  await loadInvite(token.value)
 })
 
 watch(token, async (newToken, oldToken) => {
   if (!newToken || newToken === oldToken) return
-  loading.value = true
-  await bootstrapInvite(newToken)
-  loading.value = false
+  await loadInvite(newToken)
 })
 
 watch(
@@ -426,7 +435,7 @@ async function onReviewPreview() {
       />
     </div>
 
-    <div v-if="loading" class="py-20 text-center text-slate-500">Loading…</div>
+    <IntakeWizardSkeleton v-if="loading" />
 
     <div v-else-if="!inviteValid" class="py-16 text-center">
       <h1 class="text-xl font-semibold text-slate-900">Link unavailable</h1>
@@ -436,6 +445,14 @@ async function onReviewPreview() {
         <template v-else-if="inviteError === 'unavailable'">We could not verify this link. Check your connection and try again.</template>
         <template v-else>Ask your recruiter for a new intake link.</template>
       </p>
+      <button
+        v-if="inviteError === 'unavailable'"
+        type="button"
+        class="mt-6 rounded-lg bg-accent-500 px-6 py-3 font-medium text-brand-900 hover:bg-accent-600"
+        @click="retryInvite"
+      >
+        Try again
+      </button>
     </div>
 
     <template v-else>

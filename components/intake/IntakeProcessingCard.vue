@@ -69,32 +69,32 @@ const activeCaptionClass = computed(() =>
             class="pointer-events-none absolute inset-0 animate-[spin_12s_linear_infinite] rounded-full border-4 border-dashed border-slate-200"
           />
           <div
-            class="pointer-events-none absolute inset-[0.7rem] animate-[spin_6s_linear_infinite_reverse] rounded-full border-4 border-dotted border-brand-600"
+            class="pointer-events-none absolute inset-3 animate-[spin_6s_linear_infinite_reverse] rounded-full border-4 border-dotted border-brand-600"
           />
 
-          <div class="relative z-10 h-20 w-16">
+          <div class="relative z-10 flex h-14 w-11 items-center justify-center">
             <div
-              class="absolute inset-0 transition-all duration-700"
+              class="absolute inset-0 flex items-center justify-center transition-all duration-700"
               :class="uploadVisible ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'"
             >
-              <div class="relative flex h-full w-full animate-pulse flex-col gap-1.5 rounded-lg border-2 border-brand-600 bg-brand-50 p-2 shadow-md">
-                <div class="h-2 w-full rounded bg-brand-600/30" />
-                <div class="h-2 w-5/6 rounded bg-brand-50" />
-                <div class="h-2 w-4/5 rounded bg-brand-50" />
-                <div class="absolute inset-x-0 top-0 h-1 animate-[bounce_2s_infinite] bg-gradient-to-r from-transparent via-brand-600 to-transparent" />
+              <div class="relative flex h-full w-full animate-pulse flex-col gap-1 rounded-md border-2 border-brand-600 bg-brand-50 p-1.5 shadow-md">
+                <div class="h-1.5 w-full rounded bg-brand-600/30" />
+                <div class="h-1.5 w-5/6 rounded bg-brand-50" />
+                <div class="h-1.5 w-4/5 rounded bg-brand-50" />
+                <div class="absolute inset-x-0 top-0 h-0.5 animate-[bounce_2s_infinite] bg-gradient-to-r from-transparent via-brand-600 to-transparent" />
               </div>
             </div>
 
             <div
-              class="absolute inset-0 transition-all duration-700"
+              class="absolute inset-0 flex items-center justify-center transition-all duration-700"
               :class="outputVisible ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'"
             >
-              <div class="relative flex h-full w-full flex-col gap-1.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 p-2 shadow-lg">
-                <div class="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-bl bg-emerald-500 text-[8px] font-bold text-white">W</div>
-                <div class="h-2 w-2/3 rounded bg-emerald-400" />
-                <div class="h-1.5 w-full rounded bg-slate-200" />
-                <div class="h-1.5 w-full rounded bg-slate-200" />
-                <div class="h-1.5 w-4/5 rounded bg-slate-200" />
+              <div class="relative flex h-full w-full flex-col gap-1 rounded-md border-2 border-emerald-500 bg-emerald-50 p-1.5 shadow-lg">
+                <div class="absolute right-0 top-0 flex h-3 w-3 items-center justify-center rounded-bl bg-emerald-500 text-[7px] font-bold text-white">W</div>
+                <div class="h-1.5 w-2/3 rounded bg-emerald-400" />
+                <div class="h-1 w-full rounded bg-slate-200" />
+                <div class="h-1 w-full rounded bg-slate-200" />
+                <div class="h-1 w-4/5 rounded bg-slate-200" />
               </div>
             </div>
           </div>

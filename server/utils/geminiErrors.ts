@@ -5,6 +5,12 @@ export const GEMINI_CAPACITY_PARSE_MESSAGE =
 export const GEMINI_CAPACITY_VISION_MESSAGE =
   'Our AI scanner is busy right now. Please try again in a few minutes, or continue manually to enter your details.'
 
+export const GEMINI_GENERIC_PARSE_MESSAGE =
+  'AI parse failed. We used basic detection where possible — please review your fields, try again, or continue manually.'
+
+export const GEMINI_GENERIC_VISION_MESSAGE =
+  'AI scan failed. Please try again, or continue manually to enter your details.'
+
 export type GeminiErrorDetails = {
   code?: number
   status?: string
@@ -75,8 +81,7 @@ export function userFacingGeminiError(error: unknown, context: 'text' | 'vision'
   if (isGeminiCapacityError(error)) {
     return context === 'vision' ? GEMINI_CAPACITY_VISION_MESSAGE : GEMINI_CAPACITY_PARSE_MESSAGE
   }
-  if (error instanceof Error && error.message.trim()) return error.message
-  return context === 'vision' ? 'AI scan failed' : 'AI parse failed'
+  return context === 'vision' ? GEMINI_GENERIC_VISION_MESSAGE : GEMINI_GENERIC_PARSE_MESSAGE
 }
 
 export function sleep(ms: number): Promise<void> {

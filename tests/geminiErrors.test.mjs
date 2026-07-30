@@ -6,6 +6,8 @@ import {
   userFacingGeminiError,
   GEMINI_CAPACITY_PARSE_MESSAGE,
   GEMINI_CAPACITY_VISION_MESSAGE,
+  GEMINI_GENERIC_PARSE_MESSAGE,
+  GEMINI_GENERIC_VISION_MESSAGE,
 } from '../server/utils/geminiErrors.ts'
 
 describe('getGeminiErrorDetails', () => {
@@ -53,5 +55,11 @@ describe('userFacingGeminiError', () => {
     const err = new Error('{"error":{"code":503,"status":"UNAVAILABLE","message":"high demand"}}')
     assert.equal(userFacingGeminiError(err, 'text'), GEMINI_CAPACITY_PARSE_MESSAGE)
     assert.equal(userFacingGeminiError(err, 'vision'), GEMINI_CAPACITY_VISION_MESSAGE)
+  })
+
+  it('does not leak raw Gemini messages for other failures', () => {
+    const err = new Error('Invalid API key xyz')
+    assert.equal(userFacingGeminiError(err, 'text'), GEMINI_GENERIC_PARSE_MESSAGE)
+    assert.equal(userFacingGeminiError(err, 'vision'), GEMINI_GENERIC_VISION_MESSAGE)
   })
 })

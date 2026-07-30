@@ -10,6 +10,7 @@ import {
 
 const props = defineProps<{
   modelValue: EducationEntry[]
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -31,10 +32,12 @@ watch(
 )
 
 function addRow() {
+  if (props.disabled) return
   emit('update:modelValue', [...props.modelValue, {}])
 }
 
 function removeRow(index: number) {
+  if (props.disabled) return
   const next = [...props.modelValue]
   next.splice(index, 1)
   emit('update:modelValue', next)
@@ -113,7 +116,7 @@ defineExpose({ openEducationField })
 </script>
 
 <template>
-  <div class="space-y-3">
+  <fieldset class="min-w-0 space-y-3 border-0 p-0 disabled:opacity-60" :disabled="disabled">
     <div class="flex items-center justify-between">
       <p class="text-sm font-medium text-slate-700">Education</p>
       <button type="button" class="text-sm text-brand-700" @click="addRow">+ Add school</button>
@@ -275,5 +278,5 @@ defineExpose({ openEducationField })
         </div>
       </li>
     </ul>
-  </div>
+  </fieldset>
 </template>

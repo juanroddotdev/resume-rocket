@@ -15,6 +15,7 @@ const props = defineProps<{
   stickyChromeOffsetPx?: number
   /** Show a "View employers" control that opens the jump drawer (intake). Admin wires its own link. */
   showEmployersJumpLink?: boolean
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -184,7 +185,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="relative space-y-4">
+  <fieldset class="relative min-w-0 space-y-4 border-0 p-0 disabled:opacity-60" :disabled="disabled">
     <div>
       <div class="flex flex-wrap items-end justify-between gap-2">
         <label class="field-label mb-0" for="intake-field-employers">Search facilities</label>
@@ -311,5 +312,5 @@ defineExpose({
       @move-up="(index) => moveEmployer(index, -1)"
       @move-down="(index) => moveEmployer(index, 1)"
     />
-  </div>
+  </fieldset>
 </template>

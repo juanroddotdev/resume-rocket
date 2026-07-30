@@ -1,12 +1,14 @@
 import { z } from 'zod'
+import { assertAdminOwnsInvite } from '~/server/utils/adminCandidateOwnership'
 
 const adminCreateCandidateSchema = z.object({
   intake_invite_id: z.string().uuid(),
 })
 
 export default defineEventHandler(async (event) => {
-  await requireAdminSession(event)
+  const user = await requireAdminSession(event)
   const body = adminCreateCandidateSchema.parse(await readBody(event))
+  await assertAdminOwnsInvite(user.id, body.intake_invite_id)
   const supabase = useSupabaseAdmin()
 
   const { data: invite, error: inviteError } = await supabase

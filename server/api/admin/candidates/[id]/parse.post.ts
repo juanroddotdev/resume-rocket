@@ -1,4 +1,5 @@
 import { parseCandidateResumeFile } from '~/server/utils/parseCandidateResume'
+import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
 
 const MAX_BYTES = 10 * 1024 * 1024
 
@@ -9,6 +10,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
+
+  await assertAdminOwnsCandidate(user.id, id)
 
   const supabase = useSupabaseAdmin()
   const { data: candidate, error: candidateError } = await supabase

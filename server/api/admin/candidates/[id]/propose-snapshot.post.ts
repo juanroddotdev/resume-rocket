@@ -2,14 +2,17 @@ import { isGeminiConfigured } from '~/server/utils/geminiShared'
 import { proposeProfessionalSnapshotWithGemini } from '~/server/utils/geminiSnapshotPropose'
 import { loadResumeTextForSnapshotPropose } from '~/server/utils/resumeTextForCandidate'
 import { userFacingGeminiError } from '~/server/utils/geminiErrors'
+import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
 
 export default defineEventHandler(async (event) => {
-  await requireAdminSession(event)
+  const user = await requireAdminSession(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
+
+  await assertAdminOwnsCandidate(user.id, id)
 
   const config = useRuntimeConfig()
   if (!isGeminiConfigured(config.geminiApiKey)) {

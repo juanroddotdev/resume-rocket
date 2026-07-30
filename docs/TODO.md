@@ -29,6 +29,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | **B** | Step 4 | DOCX preview shipped (#89–#91); Phase 2 admin per-employment DOCX layout deferred |
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
 | **D** | Optional | Storage upload filenames |
+| **Defer** | Multi-tenant | RLS owner policies; org/team sharing; `created_by` on candidates; admin “Show all”; null-`created_by` invite backfill — see [Recruiter admin UX](#recruiter-admin-ux) |
 | **Defer** | — | `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
 ---
@@ -340,6 +341,7 @@ MVP table action is DOCX download only — no candidate profile drill-down.
 - [x] **Submitted column date layout** — `whitespace-nowrap` ([`CandidatesTable.vue`](../components/admin/CandidatesTable.vue))
 - [x] **Filter-specific empty copy** — search vs drafts vs empty table
 - [x] **Table row action clarity** — `hover:bg-slate-50`; **Download DOCX** label
+- [x] **Scope admin list + APIs to invite owner** — filter `GET /api/admin/candidates` by `intake_invites.created_by`; assert ownership on create/draft/patch/delete/parse/audit/snapshot + admin DOCX path ([`adminCandidateOwnership.ts`](../server/utils/adminCandidateOwnership.ts)). Follow-ups under Backlog.
 
 ### Planned UI polish
 
@@ -361,6 +363,12 @@ Incremental admin hub / builder UX tweaks — implement in small PRs after layou
 
 ### Backlog
 
+- [ ] **Per-recruiter candidate ownership (follow-ups)** — Immediate fix scopes list + admin APIs via `intake_invites.created_by`. Still deferred:
+  - [ ] **RLS:** replace `candidates_read_authenticated` `USING (true)` with invite-owner (or org) checks so authenticated clients cannot SELECT peers’ rows
+  - [ ] **Org / team sharing** — membership table or `org_id` so a desk can share packets without a global pool
+  - [ ] **`created_by` on `candidates`** — denormalize owner for simpler queries / audit (optional if invite join stays authoritative)
+  - [ ] **Admin “Show all” toggle** — optional shared view for small teams that still want a desk-wide list
+  - [ ] **Backfill null `created_by` invites** — assign, hide, or unassigned bucket so legacy rows are not invisible forever
 - [ ] **DOCX style editor (admin, session-only v1)** — Toolbar row above the packet preview with style options that apply to **both** preview and download (same `style` options passed to `/api/generate-docx`; post-process `word/document.xml` in [`docxBuilder.ts`](../server/utils/docxBuilder.ts)). **v1:** toggle "Divider lines under section headers" (on by default), session/in-memory only, admin-only. **Later:** font picker (Inter + a small curated set; each font must be embedded in the DOCX), persist per candidate via `docx_style` JSONB if recruiters want stickiness.
 - [ ] **App notifications & toasts (cross-cutting)** — Replace ad-hoc inline banners with a shared notification layer (toast stack or compact status rail). **Scope:** post-create packet success (“builder ready”, clipboard copied), save/autosave errors, DOCX download failures, parse outcomes, confirmation email skipped, real-time “updated elsewhere” when candidate edits via invite. **Principles:** non-blocking, dismissible, no full-width dashboard chrome; reuse across admin hub, builder, and intake where appropriate. **Deferred:** removed green “Packet created — builder ready” banner from [`pages/admin.vue`](../pages/admin.vue); create flow still auto-opens builder (intake handoff via **Open intake** in table).
 - [ ] **Optional:** Real-time “updated elsewhere” banner when candidate edits via invite while admin has builder open (fold into notifications project above)

@@ -32,4 +32,49 @@ describe('checkParseRateLimit', () => {
     assert.equal(checkParseRateLimit('token-c', OPTIONS).allowed, false)
     assert.equal(checkParseRateLimit('token-d', OPTIONS).allowed, true)
   })
+
+  it('treats empty-string token as its own bucket', () => {
+    assert.equal(checkParseRateLimit('', { max: 1, windowMs: 60_000 }).allowed, true)
+    assert.equal(checkParseRateLimit('', { max: 1, windowMs: 60_000 }).allowed, false)
+    assert.equal(checkParseRateLimit('other', { max: 1, windowMs: 60_000 }).allowed, true)
+  })
+
+  it('blocks every request when max is 0', () => {
+    const blocked = checkParseRateLimit('token-zero', { max: 0, windowMs: 60_000 })
+    assert.equal(blocked.allowed, false)
+    assert.ok(blocked.retryAfterSec && blocked.retryAfterSec >= 1)
+  })
+
+  it('allows exactly max requests then blocks', () => {
+    const opts = { max: 2, windowMs: 60_000 }
+    assert.equal(checkParseRateLimit('token-exact', opts).allowed, true)
+    assert.equal(checkParseRateLimit('token-exact', opts).allowed, true)
+    const blocked = checkParseRateLimit('token-exact', opts)
+    assert.equal(blocked.allowed, false)
+    assert.equal(typeof blocked.retryAfterSec, 'number')
+  })
+
+  it('retryAfterSec is at least 1 second', () => {
+    const opts = { max: 1, windowMs: 1 }
+    assert.equal(checkParseRateLimit('token-fast', opts).allowed, true)
+    const blocked = checkParseRateLimit('token-fast', opts)
+    assert.equal(blocked.allowed, false)
+    assert.ok(blocked.retryAfterSec >= 1)
+  })
+
+  it('resets the window after windowMs elapses', async () => {
+    const opts = { max: 1, windowMs: 40 }
+    assert.equal(checkParseRateLimit('token-window', opts).allowed, true)
+    assert.equal(checkParseRateLimit('token-window', opts).allowed, false)
+    await new Promise((resolve) => setTimeout(resolve, 55))
+    assert.equal(checkParseRateLimit('token-window', opts).allowed, true)
+  })
+
+  it('does not carry blocked state across resetParseRateLimitStore', () => {
+    const opts = { max: 1, windowMs: 60_000 }
+    checkParseRateLimit('token-reset', opts)
+    assert.equal(checkParseRateLimit('token-reset', opts).allowed, false)
+    resetParseRateLimitStore()
+    assert.equal(checkParseRateLimit('token-reset', opts).allowed, true)
+  })
 })

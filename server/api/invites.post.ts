@@ -10,9 +10,8 @@ export default defineEventHandler(async (event) => {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + body.expires_in_days)
 
-  const label =
-    body.label?.trim()
-    || `${body.candidate_first_name} ${body.candidate_last_name}`.trim()
+  const namedLabel = [body.candidate_first_name, body.candidate_last_name].filter(Boolean).join(' ').trim()
+  const label = body.label?.trim() || namedLabel || null
 
   const { data, error } = await supabase
     .from('intake_invites')
@@ -20,8 +19,8 @@ export default defineEventHandler(async (event) => {
       token,
       label,
       candidate_email: body.candidate_email,
-      candidate_first_name: body.candidate_first_name,
-      candidate_last_name: body.candidate_last_name,
+      candidate_first_name: body.candidate_first_name ?? null,
+      candidate_last_name: body.candidate_last_name ?? null,
       created_by: user.id,
       expires_at: expiresAt.toISOString(),
     })

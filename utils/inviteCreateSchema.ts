@@ -1,9 +1,17 @@
 import { z } from 'zod'
 
-/** Admin create-invite body — first/last required; email optional. */
+const optionalName = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? undefined : typeof v === 'string' ? v.trim() : v),
+  z.string().min(1).max(100).optional(),
+)
+
+/**
+ * Admin create-invite body.
+ * Names required for the Send-link path (validated in UI); optional for upload/scratch drafts.
+ */
 export const inviteCreateSchema = z.object({
-  candidate_first_name: z.string().trim().min(1).max(100),
-  candidate_last_name: z.string().trim().min(1).max(100),
+  candidate_first_name: optionalName,
+  candidate_last_name: optionalName,
   candidate_email: z.preprocess(
     (v) => (typeof v === 'string' && v.trim() === '' ? undefined : typeof v === 'string' ? v.trim() : v),
     z.string().email().optional(),

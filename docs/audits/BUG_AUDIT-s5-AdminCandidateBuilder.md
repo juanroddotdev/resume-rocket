@@ -12,7 +12,7 @@
 
 ## Summary
 
-Load skeleton + `loadError` **Retry** are solid. Preview prepare errors flow into `DocxPreviewSlideOver` / review panel. **Submitted packets contradict themselves:** copy says use **Download draft**, but that button (and Preview) are `:disabled` when `!isEditable`. Autosave `IntakeSaveStatus` still has **no `@retry`** (same as **S4-SS-M1**). `actionError` is message-only. Several child editors lack `:disabled="!isEditable"` so submitted forms look editable while autosave is off.
+Load skeleton + `loadError` **Retry** are solid. Preview prepare errors flow into `DocxPreviewSlideOver` / review panel. **S5-AB-H1 / M1 / M2 / M3** shipped in #165 / #168 (Download/Preview when submitted; autosave Retry; actionError Dismiss/Retry; child editors `:disabled` when `!isEditable`). Remaining items are Low polish.
 
 ---
 
@@ -20,24 +20,27 @@ Load skeleton + `loadError` **Retry** are solid. Preview prepare errors flow int
 
 ### Must fix
 
-| ID | Priority | Owner | What | Where |
-| --- | --- | --- | --- | --- |
-| S5-AB-H1 | High | Main | Allow **Download draft** (and optionally Preview) when status ≠ draft — only lock field edits. Today `:disabled="… \|\| !isEditable"` blocks download while banner tells recruiters to use it | toolbar ~422–437 + copy ~479–481 |
+_None remaining — **S5-AB-H1** resolved in #165._
 
 ### Should fix
 
-| ID | Priority | Owner | What | Where |
-| --- | --- | --- | --- | --- |
-| S5-AB-M1 | Medium | Main | Wire `@retry` on `IntakeSaveStatus` → `scheduleAutosave` / `flushAutosave` (**S4-SS-M1**) | ~420 |
-| S5-AB-M2 | Medium | Main | `actionError`: Dismiss + Retry where applicable (download / mark submitted) | ~442–444 |
-| S5-AB-M3 | Medium | Main | Pass `:disabled="!isEditable"` into SpecialtyChipInput, HospitalAutocomplete, CredentialsChecklist, ClinicalSummaryFields, EducationRepeater (identity already disables) | employment/credentials sections ~600–635 |
+_None remaining — **S5-AB-M1 / M2 / M3** resolved in #168._
+
+### Resolved
+
+| ID | Resolved in | Notes |
+| --- | --- | --- |
+| S5-AB-H1 | #165 | Preview + Download enabled when not editable |
+| S5-AB-M1 | #168 | `IntakeSaveStatus` `@retry` → `flushAutosave` |
+| S5-AB-M2 | #168 | actionError Dismiss + Retry |
+| S5-AB-M3 | #168 | Employment/credentials editors respect `!isEditable` |
+| S5-AB-L2 | #168 | Friendly fixed strings for download / mark-submitted errors |
 
 ### Suggested
 
 | ID | Priority | Owner | What | Where |
 | --- | --- | --- | --- | --- |
 | S5-AB-L1 | Low | Main | Mark-submitted dialog: focus trap / Escape | ~715–741 |
-| S5-AB-L2 | Low | Main | Prefer fixed friendly strings over raw `e.message` for actionError | ~147, ~263 |
 | S5-AB-L3 | Low | Main | Narrow slide margin when helper open + sidebar collapsed — verify small viewports don’t clip | `formSlidForHelper` ~345–347 |
 
 ### Human smoke
@@ -53,7 +56,7 @@ Load skeleton + `loadError` **Retry** are solid. Preview prepare errors flow int
 
 Next: AdminProfessionalSnapshot → AdminExtraDetailsDrawer → AdminSupplementalBucket → ParseQAPanel → EmployersJumpDrawer (shared) → remaining admin components  
 
-Cross-ref: API **S5-H1** still allows PATCH when status re-sent as submitted — UI lock alone is not enough.
+Cross-ref: API **S5-H1** resolved in #165 — UI lock is no longer the only defense.
 
 ---
 

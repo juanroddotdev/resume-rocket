@@ -20,7 +20,7 @@ Hub shell: sign-in, sidebar list, builder/table toggle, packet modal, Parse QA. 
 
 ### Must fix
 
-_None for this page alone_ (API immutability / admin role remain **S5-H1** / **S5-M2** in `BUG_AUDIT-s5-api.md` if present).
+_None for this page alone_ (API Musts **S5-H1** resolved in #165; remaining API Medium **S5-M2** role allowlist in `BUG_AUDIT-s5-api.md`).
 
 ### Should fix
 

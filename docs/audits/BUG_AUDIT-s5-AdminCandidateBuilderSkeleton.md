@@ -49,7 +49,7 @@ Loading semantics present; layout mirrors builder chrome.
 | API (`BUG_AUDIT-s5-api.md`) | Separate branch `docs/bug-audit-s5-api` |
 | UI (this branch) | **Done** — admin.vue through skeleton |
 
-**Highest-signal UI findings:** **S5-AB-H1** (submitted Download disabled), list empty copy (**S5-CL-M1**), clipboard silence (**S5-CT-M1** / **S5-SB-M1**), packet modal partial parse (**S5-NP-M1**), save Retry (**S5-AB-M1**), read-only mutate via jump drawer (**S5-JD-M1**).
+**Highest-signal UI findings remaining:** list empty copy (**S5-CL-M1**), clipboard silence (**S5-CT-M1** / **S5-SB-M1**), packet modal partial parse (**S5-NP-M1**), read-only mutate via jump drawer (**S5-JD-M1**). (**S5-AB-H1** / **S5-AB-M1** resolved in #165 / #168.)
 
 | Question | Answer |
 | --- | --- |

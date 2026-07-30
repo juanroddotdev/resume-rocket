@@ -13,7 +13,7 @@
 
 Invite UI gate is solid: invalid/expired/completed/missing tokens do not reach the wizard; parse failure stays on upload with error + **Continue manually**. No High blockers for Slice 1 End criteria on the UI path.
 
-Mediums are mostly PHI hygiene on validate failure, cookie cleanup, recovery UX, and making `allowSubmitted` opt-in so post-submit API callers do not regress.
+**S1-M1 / S1-M2 / S1-M5** (and adjacent **S1-X1 / S1-X2**) shipped in #165–#167. Remaining Mediums: unavailable Retry (**S1-M3**), no Continue manually on parse 401/403 (**S1-M4**).
 
 ---
 
@@ -27,11 +27,18 @@ _None required to unblock Agent 1 or human smoke._ Gate works.
 
 | ID | Priority | Owner | What | Where |
 | --- | --- | --- | --- | --- |
-| S1-M1 | Medium | Main | Stop returning PII on **invalid** validate responses (`completed` currently echoes email + first/last name) | `server/api/invites/validate.get.ts` |
-| S1-M2 | Medium | Main | Clear `intake_token` cookie when validate fails (expired/invalid/revoked/completed) | `validate.get.ts` + `requireInvite.ts` (`deleteCookie` / `maxAge: 0`) |
 | S1-M3 | Medium | Main | Add **Retry** on `inviteError === 'unavailable'` (re-run `bootstrapInvite`) | `pages/intake/[token].vue` |
 | S1-M4 | Medium | Main | On parse 401/403, do not offer **Continue manually** (same auth will fail on `ensureDraft`); show recruiter / re-validate copy | `components/intake/FileDropZone.vue` (+ parent if needed) |
-| S1-M5 | Medium | Main | Make `requireInviteForCandidate` default `allowSubmitted: false`; pass `true` only for docx / confirmation / GET-after-submit | `server/utils/requireInvite.ts` + callers |
+
+### Resolved
+
+| ID | Resolved in | Notes |
+| --- | --- | --- |
+| S1-M1 | #167 | Failed validate returns `{ valid, reason }` only |
+| S1-M2 | #167 | Clears `intake_token` on failed validate |
+| S1-M5 | #166 | `allowSubmitted` opt-in on `requireInviteForCandidate` |
+| S1-X1 | #166 | Post-submit parse blocked (same as S2-H1 coverage) |
+| S1-X2 | #165 | Submitted PATCH lock (S5-H1) |
 
 ### Suggested (nice-to-have)
 
@@ -44,10 +51,7 @@ _None required to unblock Agent 1 or human smoke._ Gate works.
 
 ### Adjacent (out of Slice 1 Allowed paths — do not forget)
 
-| ID | Priority | Owner | What | Notes |
-| --- | --- | --- | --- | --- |
-| S1-X1 | Medium | Main / Slice 2 | Post-submit `POST /api/parse` with retained token + `candidateId` still authorizes via `allowSubmitted: true` | Confirm immutability in parse pipeline; Agent 1 Slice 2 |
-| S1-X2 | Medium | Main / Slice 5 API | `patchCandidateRow` allows field updates if body includes `status: 'submitted'` while already submitted | Audit on Slice 5 API pass |
+_None open — **S1-X1** / **S1-X2** resolved in #166 / #165 (see Resolved table)._
 
 ### Tests (Agent 1 — kickoff `s1-agent1.md`)
 

@@ -28,8 +28,8 @@ Tagged RELEASE rows Automated / Manual / Optional with script/CI evidence. Trimm
 
 | ID | What |
 | --- | --- |
-| S7-M1 | Main: clear Agent 2 Musts (esp. S5-AB-H1, S5-H1 PATCH, S6-H1 state) before “hardened” |
-| S7-M2 | Agent 1 backfill QA for slices 1–3 if still open |
+| S7-M1 | ~~Main: clear Agent 2 Musts (S5-AB-H1, S5-H1, S6-H1)~~ — **Resolved** in #165–#168; remaining Mediums are optional hardening |
+| S7-M2 | Agent 1 backfill QA for slices 1 / 4 / 5 if still open |
 
 ### Suggested
 

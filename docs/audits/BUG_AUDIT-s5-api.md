@@ -13,7 +13,7 @@
 
 ## Summary
 
-Admin routes consistently call `requireAdminSession`; invite-scoped candidate GET/PATCH/send-confirmation call `requireInviteForCandidate`. Draft vs submitted stripping in `buildCandidateDraftResponse` is solid. Resend missing key soft-skips (intentional). **Must:** `patchCandidateRow` immutability hole — already-submitted/confirmed rows accept further field writes when the body includes `status: 'submitted'` (confirms **S1-X2**; can also **downgrade** `confirmed` → `submitted`). No automated tests cover these helpers/routes yet.
+Admin routes consistently call `requireAdminSession`; invite-scoped candidate GET/PATCH/send-confirmation call `requireInviteForCandidate`. Draft vs submitted stripping in `buildCandidateDraftResponse` is solid. Resend missing key soft-skips (intentional). **S5-H1 / S5-M1 / S5-M3** shipped in #165–#166 (PATCH lock + status transitions + invite `allowSubmitted` opt-in). Remaining Mediums: admin role allowlist (**S5-M2**), Resend log hygiene (**S5-M4**).
 
 ---
 
@@ -21,18 +21,23 @@ Admin routes consistently call `requireAdminSession`; invite-scoped candidate GE
 
 ### Must fix
 
-| ID | Priority | Owner | What | Where |
-| --- | --- | --- | --- | --- |
-| S5-H1 | High | Main | Lock submitted/confirmed candidates: reject PATCH field updates (and status downgrades). Do not treat `body.status === 'submitted'` as a bypass. Prefer hard 409 for any non-empty patch when `existing.status` ∈ {submitted, confirmed}, unless a dedicated admin “reopen” exists | `server/utils/patchCandidateRow.ts` ~33–43, ~67–81 |
+_None remaining — **S5-H1** resolved in #165._
 
 ### Should fix
 
 | ID | Priority | Owner | What | Where |
 | --- | --- | --- | --- | --- |
-| S5-M1 | Medium | Main | Restrict `status` transitions in schema or `patchCandidateRow` (e.g. only `draft`→`submitted` via submit path; `confirmed` only via send-confirmation). Today invite/admin can PATCH `confirmed` / `archived` from draft | `schemas.ts` `candidatePatchSchema` + `patchCandidateRow.ts` |
 | S5-M2 | Medium | Main | `requireAdminSession` accepts **any** valid Supabase user JWT — no role/allowlist. Document “Auth users = recruiters only” or check `app_metadata` / allowlist | `server/utils/requireAdmin.ts` ~27–32 |
-| S5-M3 | Medium | Main | Candidate PATCH still authorized post-submit because `requireInviteForCandidate` hardcodes `allowSubmitted: true` (**S1-M5**). Pair with S5-H1 so token retention cannot mutate | `requireInvite.ts` ~63 (call sites under `server/api/candidates/`) |
 | S5-M4 | Medium | Main | Soft-fail path logs full Resend/`catch` error — strip recipient / message body from `console.error` | `send-confirmation.post.ts` ~53–54; `sendEmail.ts` |
+
+### Resolved
+
+| ID | Resolved in | Notes |
+| --- | --- | --- |
+| S5-H1 | #165 | Submitted/confirmed PATCH always 409 |
+| S5-M1 | #166 | PATCH `status` only `draft`→`submitted` |
+| S5-M3 / S1-M5 | #166 | `allowSubmitted` opt-in; PATCH/parse blocked post-submit |
+| S1-X2 | #165 | Same hole as S5-H1 |
 
 ### Suggested
 
@@ -67,8 +72,8 @@ Write `docs/audits/QA_REPORT-s5-api.md` when done.
 
 ### Docs / tour
 
-- [ ] Agent 5: note API pass complete; UI queue still open for Slice 5  
-- [ ] Cross-link S1-X2 / S1-M5 as closed when S5-H1 + S5-M3 land  
+- [ ] Agent 5: note API pass Musts closed in #165–#166; UI Mediums still open
+- [x] Cross-link S1-X2 / S1-M5 closed with S5-H1 + S5-M3 (#165 / #166)
 
 ---
 

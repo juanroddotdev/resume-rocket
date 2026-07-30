@@ -12,7 +12,7 @@
 
 ## Summary
 
-Parse pipeline soft-fails as designed: Gemini missing/503 → heuristics or friendly errors; `partial_parse` / `document_scan` / `parse_failed` are coherent; 401/415/413/429 are thrown before or inside shared `parseCandidateResumeFile`. **Must fix:** intake `POST /api/parse` can still mutate a **submitted** candidate when `candidateId` + invite token are retained (admin parse already 409s). Other Mediums: ignored Supabase update errors, MIME-only gate vs filename, and raw Gemini messages leaking to `parse_error`.
+Parse pipeline soft-fails as designed: Gemini missing/503 → heuristics or friendly errors; `partial_parse` / `document_scan` / `parse_failed` are coherent; 401/415/413/429 are thrown before or inside shared `parseCandidateResumeFile`. **S2-H1** closed via invite lockdown (#166 — `requireInviteForCandidate` defaults `allowSubmitted: false`, so post-submit parse gets 403). **S2-M3/M4/M5** shipped in #168. Remaining Medium: heuristics-only `partial_parse` honesty (**S2-M6**).
 
 ---
 
@@ -20,18 +20,22 @@ Parse pipeline soft-fails as designed: Gemini missing/503 → heuristics or frie
 
 ### Must fix (before calling Slice 2 “hardened”)
 
-| ID | Priority | Owner | What | Where |
-| --- | --- | --- | --- | --- |
-| **S2-H1** | **High** | Main | Reject parse when candidate `status` is `submitted` / `confirmed` (match admin route). Closes Slice 1 **S1-X1**. | `server/api/parse.post.ts` and/or early check in `parseCandidateResume.ts` |
+_None remaining — **S2-H1** covered by #166 (invite auth), not a separate parse-status 409._
 
 ### Should fix (Side / Main ticket — recommend one small PR)
 
 | ID | Priority | Owner | What | Where |
 | --- | --- | --- | --- | --- |
-| S2-M3 | Medium | Main | Check Supabase `.update()` error; throw 500 / do not return a success-shaped body if persist failed | `parseCandidateResume.ts` ~172–175 |
-| S2-M4 | Medium | Main | Allow resume when **filename** is `.pdf`/`.docx` even if MIME is `application/octet-stream` (align with `extractTextFromBuffer`) | `extractText.ts` `isAllowedResumeMime` **or** call site in `parseCandidateResume.ts` |
-| S2-M5 | Medium | Main | Do not return raw `error.message` from Gemini to the client; map non-capacity failures to stable user copy (keep kind in `classifyParseError` / logs only) | `geminiErrors.ts` `userFacingGeminiError` ~78 |
 | S2-M6 | Medium | Main | When Gemini is **not configured** and only heuristics run, consider `partial_parse: true` (or equivalent banner signal) so UI honesty matches “basic detection” | `parseCandidateResume.ts` outcome flags ~125–131 |
+
+### Resolved
+
+| ID | Resolved in | Notes |
+| --- | --- | --- |
+| S2-H1 / S1-X1 | #166 | Post-submit parse blocked by invite `allowSubmitted` default |
+| S2-M3 | #168 | Supabase update error → 500 |
+| S2-M4 | #168 | Filename `.pdf`/`.docx` allowed with `octet-stream` |
+| S2-M5 | #168 | Stable Gemini user-facing copy (no raw messages) |
 
 ### Suggested (nice-to-have)
 
@@ -71,7 +75,7 @@ Prefer extending `test/tour-s2-parse` / #14 rather than a new branch unless aske
 
 ### Docs / tour (Agent 5 wrap-up)
 
-- [ ] Mark Slice 2 Done only when S2-H1 fixed or explicitly deferred + smoke/QA End criteria met
+- [ ] Mark Slice 2 Done only after human smoke + remaining Mediums deferred in writing
 - [ ] Do not fake-check RELEASE boxes
 
 ---
@@ -137,8 +141,8 @@ Prefer extending `test/tour-s2-parse` / #14 rather than a new branch unless aske
 
 | Question | Answer |
 | --- | --- |
-| Ready for Agent 1? | **Yes** — util seams + mocked `parse.post` (#14). Prioritize tests for **S2-H1** (submitted → 409) once Main lands the fix. |
-| Ready to mark Slice 2 Done? | **No** until **S2-H1** fixed or deferred in writing + human smoke |
+| Ready for Agent 1? | **Yes** — util seams + mocked `parse.post` (#14). S2-H1 covered by #166 (invite 403); optional explicit parse-status 409 still nice-to-have |
+| Ready to mark Slice 2 Done? | **No** until human smoke (+ defer **S2-M6** in writing if skipping) |
 | Next Agent 2? | Slice 3 light pass (`s3-agent2.md`) or jump to Slice 4 file queue when you say |
 
 ## PHI

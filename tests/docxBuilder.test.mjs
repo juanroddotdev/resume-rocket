@@ -278,8 +278,41 @@ describe('mapCandidateToTemplateData', () => {
       list: ['ok'],
     })
   })
-})
 
+  it('omits empty or not-included professional snapshot lines from snapshot_lines', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      professional_snapshot: {
+        snapshot_specialty: { value: 'ICU', included: true },
+        snapshot_years_experience: { value: '', included: true },
+        snapshot_emr_systems: { value: 'Epic', included: false },
+        snapshot_travel_experience: { value: 'Yes', included: true },
+      },
+    })
+
+    const lines = data.snapshot_lines.map(row => row.snapshot_line)
+    assert.ok(lines.some(line => line.startsWith('Specialty: ICU')))
+    assert.ok(lines.some(line => line.startsWith('Travel Experience: Yes')))
+    assert.equal(lines.some(line => line.includes('Years of Experience')), false)
+    assert.equal(lines.some(line => line.includes('EMR Systems')), false)
+  })
+
+  it('documents S6-H1: candidate_state currently prefers license state over home state', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      home_city: 'Austin',
+      home_state: 'TX',
+      license_state: 'CA',
+      license_number: 'RN-1',
+    })
+
+    // Desired product behavior after S6-H1: candidate_state === 'TX'
+    assert.equal(data.candidate_city, 'Austin')
+    assert.equal(data.candidate_state, 'CA')
+  })
+})
 describe('buildResumeDocx smoke', () => {
   it('renders experience metrics without orphan bullet separators', async () => {
     const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')

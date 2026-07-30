@@ -54,13 +54,16 @@ export async function validateInviteToken(
 export async function requireInviteForCandidate(
   event: H3Event,
   candidateId: string,
+  options?: { allowSubmitted?: boolean },
 ) {
   const token = getInviteTokenFromEvent(event)
   if (!token) {
     throw createError({ statusCode: 401, statusMessage: 'Invite token required' })
   }
 
-  const result = await validateInviteToken(token, { allowSubmitted: true })
+  const result = await validateInviteToken(token, {
+    allowSubmitted: options?.allowSubmitted === true,
+  })
   if (!result.valid) {
     throw createError({ statusCode: 403, statusMessage: `Invite ${result.reason}` })
   }

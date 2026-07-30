@@ -25,5 +25,5 @@ export async function authorizeCandidateDocxAccess(event: H3Event, candidateId: 
     throw createError({ statusCode: 401, statusMessage: 'Invite token required' })
   }
 
-  await requireInviteForCandidate(event, candidateId)
+  await requireInviteForCandidate(event, candidateId, { allowSubmitted: true })
 }

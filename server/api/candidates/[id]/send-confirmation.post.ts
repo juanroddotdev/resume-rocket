@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
 
-  await requireInviteForCandidate(event, id)
+  await requireInviteForCandidate(event, id, { allowSubmitted: true })
   const supabase = useSupabaseAdmin()
 
   const { data: candidate, error } = await supabase

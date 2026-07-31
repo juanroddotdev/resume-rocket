@@ -6,7 +6,7 @@ Living task list for Resume Rocket. Epic context: [#16 hardening sprint](https:/
 
 **Related:** [MVP-PLAN.md](./MVP-PLAN.md) (historical spec) · [VMS-FIELD-MANIFEST.md](./VMS-FIELD-MANIFEST.md) · [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) · [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) · [RELEASE-CHECKLIST.md](./RELEASE-CHECKLIST.md) · [MANUAL-TEST-CHECKLIST.md](./MANUAL-TEST-CHECKLIST.md) · [AGENT-LANES.md](./AGENT-LANES.md) (parallel side agents) · **Archived plans:** [archive/](./archive/)
 
-**Quick nav:** [What's next](#whats-next) · [New template & Professional Snapshot](#new-template--professional-snapshot) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports) · [Agent lanes](./AGENT-LANES.md)
+**Quick nav:** [What's next](#whats-next) · [New template & Professional Snapshot](#new-template--professional-snapshot) · [Done recently](#done-recently) · [Test automation plan](#test-automation-plan) · [Candidate intake UX](#candidate-intake-ux) · [Recruiter admin UX](#recruiter-admin-ux) · [Parse audit](#parse-audit--regression) · [Hospital parse](#hospital-parse-ux) · [Files & exports](#files--exports) · [Agent lanes](./AGENT-LANES.md) · [Shared snapshot (defer)](#defer--shared-snapshot-editor-recruiter-free--same-core)
 
 One concern per PR when implementing. Check items off when merged (optionally add PR number inline).
 
@@ -30,6 +30,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | **C** | Admin hub | Open intake from table row (done in list view); optional real-time sync banner |
 | **D** | Optional | Storage upload filenames |
 | **Defer** | Multi-tenant | RLS owner policies; org/team sharing; `created_by` on candidates; admin “Show all”; null-`created_by` invite backfill — see [Recruiter admin UX](#recruiter-admin-ux) |
+| **Defer** | Snapshot | Shared Snapshot editor + intake step (same core as admin; admin keeps extras) — see [Shared snapshot](#defer--shared-snapshot-editor-recruiter-free--same-core) |
 | **Defer** | — | `pg_trgm` tuning (prod-only), parse debug UI (Phase C) |
 
 ---
@@ -76,6 +77,26 @@ Only if recruiters need bullets beyond the fixed 12 contract tags. Prefer one PR
 - [ ] **Optional: Gemini → custom_lines** — Phase 4 proposals for magnet/nuance can land in `custom_lines` (or fill `snapshot_magnet_*`) so admin Add and AI share one bucket
 
 **PR split:** (1) snapshot tags + manifest → (2) JSONB + derivation → (3) admin editor → (4) Gemini propose + bucket → (5) custom lines if needed. Phase labels: A = 1, B = 2–3, C = 4.
+
+### Defer — Shared Snapshot editor (recruiter-free / same core)
+
+**Product rule:** Same snapshot artifact, same editor **core**; admin = core + tools. Candidates and admins both *make* a Professional Snapshot — not a skimpy candidate-only “approve derived lines” strip vs a full admin form.
+
+Today: wizard/parse **derive** `professional_snapshot`; only admin edits it ([`AdminProfessionalSnapshot.vue`](../components/admin/AdminProfessionalSnapshot.vue), UX polish [#172](https://github.com/juanroddotdev/resume-rocket/pull/172)). Intake has no snapshot step. Recruiter-free / self-serve intake remains deferred (see MVP scope); when that path is real, ship the shared core below — do not invent a second snapshot product.
+
+| Layer | Who | Capabilities |
+| --- | --- | --- |
+| **Core** | Candidate + admin | 12 lines; include/exclude for packet; Yes/No + progressive detail; edit values; empty keys fillable (e.g. Magnet) |
+| **Extras** | Admin only | Regenerate from resume; Extra details / supplemental apply; Reset from wizard; mismatch → Employment; optional Parse QA |
+
+- [ ] **Extract shared Snapshot editor** — pull core field grid + include toggles + experience flags out of admin into a shared component (e.g. `components/snapshot/ProfessionalSnapshotEditor.vue`); props for disabled / read-only; no admin chrome in the core
+- [ ] **Admin wraps core** — [`AdminProfessionalSnapshot.vue`](../components/admin/AdminProfessionalSnapshot.vue) becomes thin shell: Reset / Regenerate / Extra details / mismatch jumps around the shared editor
+- [ ] **Intake Snapshot step** — real wizard step (or review section) that mounts the **same** core editor; seed from derivation; PATCH `professional_snapshot`; once the candidate saves snapshot edits, suppress auto-overwrite from feed fields (same ownership rule as admin sending `professional_snapshot`)
+- [ ] **Copy** — candidate-facing: “These lines appear on your packet”; keep admin helper copy for extras only
+- [ ] **Optional later:** rate-limited “Suggest from resume” on intake (never auto-include) — same propose model as admin, behind flag
+- [ ] **Still out of core v1:** custom lines (see above); candidate auth/return-edit (separate track)
+
+**Suggested PR split when un-deferred:** (1) extract shared editor + admin wrap → (2) intake step + PATCH ownership → (3) optional self-serve propose.
 
 ---
 
@@ -269,6 +290,10 @@ Automate the **browser** sections of RELEASE-CHECKLIST. Heavier maintenance — 
 ---
 
 ### Backlog
+
+#### Professional Snapshot (deferred — shared core)
+
+Same snapshot as admin; see [Shared Snapshot editor](#defer--shared-snapshot-editor-recruiter-free--same-core). Do not ship a candidate-only “approve lines” strip.
 
 #### Shared UI & labeling (remaining)
 

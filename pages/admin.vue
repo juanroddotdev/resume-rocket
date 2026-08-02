@@ -2,7 +2,7 @@
 import type { CandidateRow } from '~/types/candidate'
 import { downloadResumeDocxFromApi } from '~/utils/downloadResumeDocxClient'
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: 'admin', middleware: 'auth' })
 
 type AdminView = 'builder' | 'table'
 
@@ -11,9 +11,6 @@ const user = useSupabaseUser()
 const route = useRoute()
 const router = useRouter()
 
-const email = ref('')
-const password = ref('')
-const authError = ref<string | null>(null)
 const candidates = ref<CandidateRow[]>([])
 const search = ref('')
 const listFilter = ref<'all' | 'draft' | 'submitted'>('all')
@@ -94,15 +91,6 @@ function setAdminView(view: AdminView) {
   router.replace({ query })
 }
 
-async function signIn() {
-  authError.value = null
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value,
-  })
-  if (error) authError.value = error.message
-}
-
 async function loadCandidates(preferredId?: string) {
   if (!user.value) return
   loadingCandidates.value = true
@@ -134,6 +122,7 @@ watch(user, (u) => {
     candidates.value = []
     selectedCandidate.value = null
     setAdminView('builder')
+    router.replace('/')
   }
 }, { immediate: true })
 
@@ -233,23 +222,7 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
 
 <template>
   <div class="h-full">
-    <div v-if="!user" class="flex h-full items-center justify-center py-8">
-      <div class="mx-auto w-full max-w-sm rounded-xl border bg-white p-6 shadow-sm">
-      <h1 class="text-xl font-bold">Recruiter sign in</h1>
-      <input v-model="email" type="email" autocomplete="email" placeholder="Email" class="field mt-4">
-      <input v-model="password" type="password" autocomplete="current-password" placeholder="Password" class="field mt-2">
-      <button
-        type="button"
-        class="mt-4 w-full rounded-lg bg-accent-500 py-2 font-medium text-brand-900 hover:bg-accent-600"
-        @click="signIn"
-      >
-        Sign in
-      </button>
-      <p v-if="authError" class="mt-2 text-sm text-red-600">{{ authError }}</p>
-      </div>
-    </div>
-
-    <template v-else>
+    <template v-if="user">
       <div class="flex h-full min-h-0 flex-col">
         <div
           v-if="docxError || intakeOpenError || deleteError"
@@ -528,5 +501,9 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
         @close="parseQaOpen = false"
       />
     </template>
+
+    <div v-else class="flex h-full items-center justify-center rounded-xl bg-white text-sm text-slate-600">
+      Redirecting to recruiter sign in...
+    </div>
   </div>
 </template>

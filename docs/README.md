@@ -47,6 +47,7 @@ After editing `server/assets/template.docx`: `node scripts/inventory-template-ta
 | --- | --- |
 | [MVP-PLAN.md](./MVP-PLAN.md) | Historical MVP architecture spec (shipped) |
 | [PROJECT-REVIEW.md](./PROJECT-REVIEW.md) | Architecture notes, risks, current priorities |
+| [DOC-VERIFICATION-ENGINE-DECISION.md](./DOC-VERIFICATION-ENGINE-DECISION.md) | Stub → canonical docs in [document-verification-engine](https://github.com/juanroddotdev/document-verification-engine) |
 
 ---
 

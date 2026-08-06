@@ -55,6 +55,7 @@ const hospitalAutocompleteRef = ref<{
 } | null>(null)
 const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => boolean } | null>(null)
 const { devFixtureRequest } = useAdminHubMenu()
+const { platformToolsActive } = usePlatformDevTools()
 
 const actionError = ref<string | null>(null)
 const actionErrorRetry = ref<'download' | 'submit' | null>(null)
@@ -311,7 +312,7 @@ async function goToField(step: number, fieldId: string) {
 }
 
 async function onDevFixture(mode: 'partial' | 'complete') {
-  if (!import.meta.dev || !isEditable.value) return
+  if (!platformToolsActive.value || !isEditable.value) return
   if (hasExistingFormData.value && !confirm(REPLACE_RESUME_CONFIRM)) return
 
   const scrollTop = canvasRef.value?.scrollTop ?? 0

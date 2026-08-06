@@ -8,7 +8,7 @@ export async function authorizeCandidateDocxAccess(event: H3Event, candidateId: 
   if (authHeader?.startsWith('Bearer ')) {
     try {
       const user = await requireAdminSession(event)
-      await assertAdminOwnsCandidate(user.id, candidateId)
+      await assertAdminOwnsCandidate(user, candidateId)
       return
     } catch (error) {
       const statusCode = typeof error === 'object' && error && 'statusCode' in error

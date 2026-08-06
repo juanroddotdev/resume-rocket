@@ -26,12 +26,20 @@ const newPacketModalOpen = ref(false)
 const builderReloadKey = ref(0)
 const SIDEBAR_COLLAPSED_KEY = 'rr-admin-sidebar-collapsed'
 const sidebarCollapsed = ref(false)
+const canShowAllCandidates = ref(false)
+const showAllCandidates = ref(false)
 
 const { hasSelectedCandidate, parseQaTrigger, devFixtureRequest } = useAdminHubMenu()
+const {
+  platformToolsActive,
+  SHOW_ALL_KEY,
+  refreshCapabilities,
+} = usePlatformDevTools()
 
 onMounted(() => {
   try {
     sidebarCollapsed.value = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'
+    showAllCandidates.value = localStorage.getItem(SHOW_ALL_KEY) === '1'
   } catch {
     /* ignore */
   }
@@ -44,6 +52,32 @@ watch(sidebarCollapsed, (collapsed) => {
     /* ignore */
   }
 })
+
+watch(platformToolsActive, (active) => {
+  if (!active) {
+    parseQaOpen.value = false
+    if (showAllCandidates.value) {
+      showAllCandidates.value = false
+      try {
+        localStorage.setItem(SHOW_ALL_KEY, '0')
+      } catch {
+        /* ignore */
+      }
+      if (user.value) loadCandidates()
+    }
+  }
+})
+
+function setShowAllCandidates(showAll: boolean) {
+  if (!platformToolsActive.value && showAll) return
+  showAllCandidates.value = showAll
+  try {
+    localStorage.setItem(SHOW_ALL_KEY, showAll ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+  if (user.value) loadCandidates()
+}
 
 function toggleSidebarCollapsed() {
   sidebarCollapsed.value = !sidebarCollapsed.value
@@ -101,9 +135,24 @@ async function loadCandidates(preferredId?: string) {
       candidatesError.value = 'Sign in required.'
       return
     }
-    candidates.value = await $fetch<CandidateRow[]>('/api/admin/candidates', {
+    const scope = platformToolsActive.value && showAllCandidates.value ? 'all' : 'mine'
+    const res = await $fetch<{
+      candidates: CandidateRow[]
+      canShowAllCandidates: boolean
+    }>('/api/admin/candidates', {
+      query: { scope },
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
+    canShowAllCandidates.value = res.canShowAllCandidates
+    if ((!res.canShowAllCandidates || !platformToolsActive.value) && showAllCandidates.value) {
+      showAllCandidates.value = false
+      try {
+        localStorage.setItem(SHOW_ALL_KEY, '0')
+      } catch {
+        /* ignore */
+      }
+    }
+    candidates.value = res.candidates
     if (preferredId) {
       selectedCandidate.value = candidates.value.find(c => c.id === preferredId) ?? null
     } else if (selectedCandidate.value) {
@@ -116,9 +165,11 @@ async function loadCandidates(preferredId?: string) {
   }
 }
 
-watch(user, (u) => {
-  if (u) loadCandidates()
-  else {
+watch(user, async (u) => {
+  if (u) {
+    await refreshCapabilities()
+    loadCandidates()
+  } else {
     candidates.value = []
     selectedCandidate.value = null
     setAdminView('builder')
@@ -159,7 +210,7 @@ function openInBuilder(candidate: CandidateRow | null) {
 }
 
 function openParseQa() {
-  if (!selectedCandidate.value) return
+  if (!platformToolsActive.value || !selectedCandidate.value) return
   parseQaOpen.value = true
 }
 
@@ -376,6 +427,18 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
                     Submitted
                   </button>
                 </div>
+                <label
+                  v-if="platformToolsActive && canShowAllCandidates"
+                  class="flex cursor-pointer items-center gap-2 px-0.5 pt-0.5 text-[11px] text-slate-600"
+                >
+                  <input
+                    type="checkbox"
+                    class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    :checked="showAllCandidates"
+                    @change="setShowAllCandidates(($event.target as HTMLInputElement).checked)"
+                  >
+                  Show all recruiters
+                </label>
               </div>
               <div class="min-h-0 flex-1 overflow-y-auto pb-3 pl-3 pr-5">
                 <div

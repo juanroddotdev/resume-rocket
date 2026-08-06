@@ -1,5 +1,6 @@
 import { parseOutcomeFromBlob } from '~/server/utils/parseAuditView'
 import { listInviteIdsOwnedByAdmin } from '~/server/utils/adminCandidateOwnership'
+import { isPlatformAdmin } from '~/server/utils/platformAdmin'
 
 const ADMIN_CANDIDATE_SELECT = [
   'id',
@@ -23,37 +24,46 @@ const ADMIN_CANDIDATE_SELECT = [
 
 export default defineEventHandler(async (event) => {
   const user = await requireAdminSession(event)
+  const canShowAllCandidates = isPlatformAdmin(user)
 
-  const ownedInviteIds = await listInviteIdsOwnedByAdmin(user.id)
-  if (!ownedInviteIds.length) {
-    return []
-  }
+  const query = getQuery(event)
+  const showAll = query.scope === 'all' && canShowAllCandidates
 
   const config = useRuntimeConfig()
   const supabase = useSupabaseAdmin()
-  const { data, error } = await supabase
+
+  let queryBuilder = supabase
     .from('candidates')
     .select(ADMIN_CANDIDATE_SELECT)
-    .in('intake_invite_id', ownedInviteIds)
     .order('updated_at', { ascending: false })
+
+  if (!showAll) {
+    const ownedInviteIds = await listInviteIdsOwnedByAdmin(user.id)
+    if (!ownedInviteIds.length) {
+      return { candidates: [], canShowAllCandidates }
+    }
+    queryBuilder = queryBuilder.in('intake_invite_id', ownedInviteIds)
+  }
+
+  const { data, error } = await queryBuilder
 
   if (error) throw error
 
-  const inviteIds = [...new Set((data ?? []).map(row => row.intake_invite_id).filter(Boolean))]
+  const rowInviteIds = [...new Set((data ?? []).map(row => row.intake_invite_id).filter(Boolean))]
   const inviteUrlById = new Map<string, string>()
 
-  if (inviteIds.length) {
+  if (rowInviteIds.length) {
     const { data: invites } = await supabase
       .from('intake_invites')
       .select('id, token')
-      .in('id', inviteIds)
+      .in('id', rowInviteIds)
 
     for (const invite of invites ?? []) {
       inviteUrlById.set(invite.id, `${config.public.siteUrl}/intake/${invite.token}`)
     }
   }
 
-  return (data ?? []).map((row) => {
+  const candidates = (data ?? []).map((row) => {
     const { parsed_resume, intake_invite_id, ...candidate } = row as typeof row & {
       parsed_resume?: unknown
       intake_invite_id?: string
@@ -65,4 +75,6 @@ export default defineEventHandler(async (event) => {
       parse_outcome: parseOutcomeFromBlob(parsed_resume),
     }
   })
+
+  return { candidates, canShowAllCandidates }
 })

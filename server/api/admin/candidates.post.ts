@@ -8,7 +8,7 @@ const adminCreateCandidateSchema = z.object({
 export default defineEventHandler(async (event) => {
   const user = await requireAdminSession(event)
   const body = adminCreateCandidateSchema.parse(await readBody(event))
-  await assertAdminOwnsInvite(user.id, body.intake_invite_id)
+  await assertAdminOwnsInvite(user, body.intake_invite_id)
   const supabase = useSupabaseAdmin()
 
   const { data: invite, error: inviteError } = await supabase

@@ -247,6 +247,10 @@ onMounted(async () => {
   await loadInvite(token.value)
 })
 
+onBeforeUnmount(() => {
+  void flushAutosave()
+})
+
 watch(token, async (newToken, oldToken) => {
   if (!newToken || newToken === oldToken) return
   await loadInvite(newToken)

@@ -159,8 +159,14 @@ function mapEducation(education: EducationEntry[] | null | undefined) {
 
 function formatEmploymentTypeForDocx(employer: DocxEmployer): string {
   const type = normalizeEmploymentType(employer.employmentType) || employer.employmentType || ''
-  const schedule = employer.prnSchedule?.trim()
-  if (type === 'PRN' && schedule) return `${type} — ${schedule}`
+  if (type === 'PRN') {
+    const schedule = employer.prnSchedule?.trim()
+    return schedule ? `${type} — ${schedule}` : type
+  }
+  if (type === 'Travel') {
+    const detail = employer.travelDetail?.trim()
+    return detail ? `${type} — ${detail}` : type
+  }
   return type
 }
 

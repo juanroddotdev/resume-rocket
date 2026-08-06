@@ -52,7 +52,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(data.candidate_first_name)
     assert.ok(data.education.length)
     assert.equal(data.education[0].education_graduation_year, '05/2016')
-    assert.equal(data.education[0].education_school_name, 'State U (Austin, TX)')
+    assert.equal(data.education[0].education_school_name, 'State U, Austin, TX')
     assert.ok(data.professional_experiences.length)
     assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')
@@ -77,6 +77,14 @@ describe('mapCandidateToTemplateData', () => {
       'Charge nurse experience',
       'Preceptor experience',
     ])
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Charge nurse experience/,
+    )
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Preceptor experience/,
+    )
   })
 
   it('maps per-employer EMR and union proficiencies', () => {
@@ -172,6 +180,23 @@ describe('mapCandidateToTemplateData', () => {
     })
 
     assert.equal(data.professional_experiences[0].experience_employment_type, 'PRN — 2 shifts/month')
+  })
+
+  it('appends Travel detail to employment type in DOCX', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['Med-Surg'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'Travel RN',
+        employmentType: 'Travel',
+        travelDetail: '13-week contract',
+        emrSystem: 'Epic',
+      }],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_employment_type, 'Travel — 13-week contract')
   })
 
   it('maps manual trauma and teaching for unlinked employers', () => {

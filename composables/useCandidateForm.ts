@@ -9,6 +9,7 @@ import type {
 } from '~/types/candidate'
 import type { HospitalSuggestion } from '~/types/hospital'
 import { employersForPatch, mapParsedEmployers } from '~/utils/employerLink'
+import { createLatestWinsSaveQueue } from '~/utils/latestWinsSaveQueue'
 import type { FinalizePhase } from '~/utils/intakeProcessing'
 import type { PrefillHighlightSnapshot } from '~/composables/useIntakePrefillHighlight'
 import type { ParseMeta } from '~/types/parse'
@@ -150,6 +151,7 @@ export function useCandidateForm() {
   const { snapshotHighlights, restoreHighlights, clearAllPrefillHighlights } = useIntakePrefillHighlight()
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   let localSavedAt: string | undefined
+  const saveQueue = createLatestWinsSaveQueue<CandidateDraftInput & { status?: string }>()
 
   function resetWizard() {
     candidateId.value = null
@@ -271,18 +273,22 @@ export function useCandidateForm() {
   async function patchCandidate(partial: CandidateDraftInput & { status?: string }) {
     if (!candidateId.value) return
     saveStatus.value = 'saving'
-    try {
-      const data = await $fetch<{ updated_at?: string }>(`/api/candidates/${candidateId.value}`, {
-        method: 'PATCH',
-        headers: intakeHeaders(),
-        body: partial,
-      })
-      saveStatus.value = 'saved'
-      if (data?.updated_at) localSavedAt = data.updated_at
-      persistLocal()
-    } catch {
-      saveStatus.value = 'error'
-    }
+    const id = candidateId.value
+    await saveQueue.enqueue(partial, async (body) => {
+      if (!candidateId.value || candidateId.value !== id) return
+      try {
+        const data = await $fetch<{ updated_at?: string }>(`/api/candidates/${id}`, {
+          method: 'PATCH',
+          headers: intakeHeaders(),
+          body,
+        })
+        saveStatus.value = 'saved'
+        if (data?.updated_at) localSavedAt = data.updated_at
+        persistLocal()
+      } catch {
+        saveStatus.value = 'error'
+      }
+    })
   }
 
   async function flushAutosave() {

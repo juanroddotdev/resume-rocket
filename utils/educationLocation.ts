@@ -5,13 +5,13 @@ export function formatEducationLocation(entry: Pick<EducationEntry, 'city' | 'st
   return [entry.city?.trim(), entry.state?.trim()].filter(Boolean).join(', ')
 }
 
-/** School name with optional (City, ST) for DOCX education_school_name. */
+/** School name with optional City, ST for DOCX education_school_name (no parentheses). */
 export function formatEducationSchoolForDocx(entry: EducationEntry): string {
   const school = entry.school?.trim() || ''
   const location = formatEducationLocation(entry)
-  if (!school) return location ? `(${location})` : ''
+  if (!school) return location
   if (!location) return school
-  return `${school} (${location})`
+  return `${school}, ${location}`
 }
 
 export function educationHasLocationSuggestion(entry: EducationEntry): boolean {

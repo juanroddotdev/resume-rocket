@@ -1,4 +1,8 @@
 import type { EmployerEntry } from '../types/candidate'
+import {
+  CHARGE_NURSE_HIGHLIGHT_LABEL,
+  PRECEPTOR_HIGHLIGHT_LABEL,
+} from './employerClinicalFlags.ts'
 
 /** Matches VMS experience metrics separators in `template.docx`. */
 export const EMPLOYER_METRICS_LINE_SEP = ' • '
@@ -12,6 +16,8 @@ export type EmployerMetricsLineInput = Pick<
   | 'magnetStatus'
   | 'emrSystem'
   | 'patientScope'
+  | 'chargeNurseExperience'
+  | 'preceptorExperience'
 >
 
 export type EmployerMetricsLineFields = {
@@ -91,6 +97,7 @@ export function employerMetricsLineFields(
 /**
  * Ordered segments matching the Professional Experience metrics line.
  * Empty slots kept for index alignment with DOCX tags.
+ * Charge/preceptor append when Yes so per-job packets show them (highlights loop is template-removed).
  */
 export function employerMetricsLineParts(
   employer: EmployerMetricsLineInput,
@@ -105,6 +112,8 @@ export function employerMetricsLineParts(
     fields.magnetFacility,
     fields.emrSystem,
     fields.patientScope,
+    employer.chargeNurseExperience === true ? CHARGE_NURSE_HIGHLIGHT_LABEL : '',
+    employer.preceptorExperience === true ? PRECEPTOR_HIGHLIGHT_LABEL : '',
   ]
 }
 

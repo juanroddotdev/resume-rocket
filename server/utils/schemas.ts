@@ -55,6 +55,8 @@ export const employerInputSchema = z.object({
   emr_system: z.string().optional(),
   prnSchedule: z.string().optional(),
   prn_schedule: z.string().optional(),
+  travelDetail: z.string().optional(),
+  travel_detail: z.string().optional(),
 })
 
 const credentialInputSchema = z.union([

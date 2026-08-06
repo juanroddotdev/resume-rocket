@@ -257,8 +257,12 @@ function onEmrSystemChange(value: string) {
 function onEmploymentTypeChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value
   const next: Partial<EmployerEntry> = { employmentType: value }
-  if (normalizeEmploymentType(value) !== 'PRN') {
+  const canonical = normalizeEmploymentType(value)
+  if (canonical !== 'PRN') {
     next.prnSchedule = undefined
+  }
+  if (canonical !== 'Travel') {
+    next.travelDetail = undefined
   }
   patchField('type', next)
 }
@@ -655,6 +659,25 @@ function onTraumaLevelChange(event: Event) {
             >
             <span class="mt-1 block text-xs text-slate-500">
               How often you typically work at this PRN assignment.
+            </span>
+          </label>
+
+          <label
+            v-if="employmentTypeValue === 'Travel'"
+            class="block"
+            :for="`intake-field-${employerFieldId('travel-detail')}`"
+          >
+            <span class="field-label-compact">Travel details</span>
+            <input
+              :id="`intake-field-${employerFieldId('travel-detail')}`"
+              :value="employer.travelDetail || ''"
+              type="text"
+              placeholder="e.g. 13-week contract, nights"
+              :class="fieldClasses(employerFieldId('travel-detail'))"
+              @input="patchField('travel-detail', { travelDetail: ($event.target as HTMLInputElement).value })"
+            >
+            <span class="mt-1 block text-xs text-slate-500">
+              Contract length, shift pattern, or other travel assignment notes.
             </span>
           </label>
           </fieldset>

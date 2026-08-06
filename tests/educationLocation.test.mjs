@@ -13,10 +13,10 @@ import {
 import { normalizeEducation } from '../server/utils/normalizeCandidate.ts'
 
 describe('formatEducationSchoolForDocx', () => {
-  it('appends (City, ST) when both present', () => {
+  it('appends City, ST when both present (no parentheses)', () => {
     assert.equal(
       formatEducationSchoolForDocx({ school: 'State U', city: 'Austin', state: 'TX' }),
-      'State U (Austin, TX)',
+      'State U, Austin, TX',
     )
   })
 
@@ -26,7 +26,11 @@ describe('formatEducationSchoolForDocx', () => {
 
   it('formats city only', () => {
     assert.equal(formatEducationLocation({ city: 'Austin' }), 'Austin')
-    assert.equal(formatEducationSchoolForDocx({ school: 'State U', city: 'Austin' }), 'State U (Austin)')
+    assert.equal(formatEducationSchoolForDocx({ school: 'State U', city: 'Austin' }), 'State U, Austin')
+  })
+
+  it('returns location alone when school empty', () => {
+    assert.equal(formatEducationSchoolForDocx({ city: 'Austin', state: 'TX' }), 'Austin, TX')
   })
 })
 

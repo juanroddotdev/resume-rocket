@@ -4,7 +4,7 @@
 
 This backlog contains the translation of client feedback clips (Clips 1-8) into structured, developer-ready implementation tickets. Tasks are prioritized by severity.
 📊 Quick-View Progress Dashboard
-* [ ] High Priority (0/2 Completed) — Core parsing errors and major keyboard interaction blocks.
+* [x] High Priority (1/2 Completed) — FR-001 charge/preceptor save+render done; FR-005 spacing still open.
 * [ ] Medium Priority (0/5 Completed) — Input field expansions, logic swaps, and citation queries.
 * [ ] Low Priority (0/4 Completed) — Styling touch-ups, label modifications, and redundant field removals.
 🚨 HIGH SEVERITY ISSUES (Core Engine & Input Blockers)
@@ -13,11 +13,12 @@ This backlog contains the translation of client feedback clips (Clips 1-8) into 
 * Severity: High (Blocks core compliance metrics)
 * Client Clip Context: Clip 1"I didn't add any charge nurse experience or preceptor experience before, so I went back into his top job... and then I click, I had 'no' but I'll click 'yes', and I'll click 'yes' again... it's saying it's saving it, but it's not, or populating that."
 * Technical Root Cause:
-The frontend UI displays a standard transient "Saving..." notification on state toggle, but the database mutation hook or POST request payload serializer fails to register or map the updated boolean states (preceptorExperience / chargeNurseExperience). Because of this, the database row doesn't update, and the document compiler ignores these loops during final Word draft generations.
+The frontend UI displays a standard transient "Saving..." notification on state toggle, but overlapping full-draft PATCHes (or leaving employment before flush) could drop `preceptorExperience` / `chargeNurseExperience` on `employers[]` JSONB. July template also removed `{#experience_highlights}`, so flags that saved still did not print on the job block.
 🛠️ Developer Checklist:
-   * [ ] Audit the /api/candidates/save endpoint payload validator. Ensure charge_nurse_experience (boolean) and preceptor_experience (boolean) are explicitly typed and mapped in the database schema.
-   * [ ] Inspect the client state management file (stores/candidate.js or equivalent) to confirm state variables bind correctly to the toggle input changes.
-   * [ ] Verify that the document generator compiler loop parses these toggles to dynamically show or hide the "Charge Nurse Roles" and "Preceptor Actions" layout sub-blocks inside the .docx template.
+   * [x] Audit PATCH validators — camelCase booleans on `employerInputSchema` / `normalizeEmployer` (not a separate `/api/candidates/save`).
+   * [x] Serialize saves (latest-wins queue) + flush when leaving employment UI (admin drawer/section/unmount; intake unmount + step flush).
+   * [x] Surface Yes flags on the live packet metrics line (`experience_metrics_line`) in addition to highlight merge helpers.
+* Aug 5 follow-up clips: autosave leave-employment, job-level charge/preceptor populate, education city/state parens, Travel detail field — tracked in [`TODO.md` Aug 5 UAT](./TODO.md#aug-5-uat-2026-08-05).
 🎫 FR-005: Fix Spacing & Keystroke Input Restraints in Form Fields · GitHub [#100](https://github.com/juanroddotdev/resume-rocket/issues/100)
    * Category: Form Interaction Bug
    * Severity: High (Blocks user input and slows down review)
@@ -123,3 +124,14 @@ The "Highlights" input text block prints before/above key unit metrics in the co
 🛠️ Developer Checklist:
                                  * [ ] Reorder the template's XML markup block. Shift the {experience_highlights} rendering parameter below the key numerical data points (Ratios, Beds, EMR).
                                  * [ ] Adjust the Vue editor UI so that the "Highlights" text area is positioned below these metrics fields, keeping the editor's visual flow matching the final printed layout.
+
+---
+
+## Aug 5 UAT clips (2026-08-05)
+
+See [`TODO.md` Aug 5 UAT](./TODO.md#aug-5-uat-2026-08-05). Summary:
+
+* **Autosave on leave employment** — latest-wins PATCH queue + flush on drawer/section/unmount (extends FR-001).
+* **Charge/preceptor on job entry** — surface on `experience_metrics_line` (highlights loop template-removed).
+* **City/state parentheses** — education DOCX `School, City, ST`.
+* **Travel detail field** — mirror PRN `prnSchedule` with `travelDetail`.

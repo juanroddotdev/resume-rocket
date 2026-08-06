@@ -1,20 +1,19 @@
 import { buildParseAuditView } from '~/server/utils/parseAuditView'
 import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
+import { isPlatformAdmin } from '~/server/utils/platformAdmin'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  if (!config.enableParseAuditUi) {
-    throw createError({ statusCode: 404, statusMessage: 'Parse audit UI is disabled' })
-  }
-
   const user = await requireAdminSession(event)
+  if (!isPlatformAdmin(user)) {
+    throw createError({ statusCode: 403, statusMessage: 'Parse QA is restricted to platform admins' })
+  }
 
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
 
-  await assertAdminOwnsCandidate(user.id, id)
+  await assertAdminOwnsCandidate(user, id)
 
   const supabase = useSupabaseAdmin()
   const { data, error } = await supabase

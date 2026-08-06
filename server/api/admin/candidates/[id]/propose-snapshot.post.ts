@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Candidate id required' })
   }
 
-  await assertAdminOwnsCandidate(user.id, id)
+  await assertAdminOwnsCandidate(user, id)
 
   const config = useRuntimeConfig()
   if (!isGeminiConfigured(config.geminiApiKey)) {

@@ -2,40 +2,56 @@
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const open = ref(false)
-const devOpen = ref(false)
+const fixturesOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
 const { hasSelectedCandidate, requestParseQa, requestDevFixture } = useAdminHubMenu()
-const isDev = import.meta.dev
+const {
+  isPlatformAdmin,
+  platformToolsActive,
+  refreshCapabilities,
+  setDevToolsEnabled,
+  devToolsEnabled,
+} = usePlatformDevTools()
+
+watch(user, () => {
+  refreshCapabilities()
+}, { immediate: true })
 
 async function signOut() {
   open.value = false
-  devOpen.value = false
+  fixturesOpen.value = false
   await supabase.auth.signOut()
 }
 
 function toggleMenu() {
   open.value = !open.value
-  if (!open.value) devOpen.value = false
+  if (!open.value) fixturesOpen.value = false
 }
 
 function onParseQa() {
   open.value = false
-  devOpen.value = false
+  fixturesOpen.value = false
   requestParseQa()
 }
 
 function onDevFixture(mode: 'partial' | 'complete') {
   open.value = false
-  devOpen.value = false
+  fixturesOpen.value = false
   requestDevFixture(mode)
+}
+
+function onDevToolsToggle(event: Event) {
+  const checked = (event.target as HTMLInputElement).checked
+  setDevToolsEnabled(checked)
+  if (!checked) fixturesOpen.value = false
 }
 
 function onDocumentClick(event: MouseEvent) {
   if (!open.value || !menuRef.value) return
   if (!menuRef.value.contains(event.target as Node)) {
     open.value = false
-    devOpen.value = false
+    fixturesOpen.value = false
   }
 }
 
@@ -54,6 +70,12 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick))
       @click.stop="toggleMenu"
     >
       Admin
+      <span
+        v-if="platformToolsActive"
+        class="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
+      >
+        Dev
+      </span>
       <svg
         class="h-4 w-4 transition-transform"
         :class="open ? 'rotate-180' : ''"
@@ -72,37 +94,55 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick))
 
     <div
       v-if="user && open"
-      class="absolute right-0 z-50 mt-2 min-w-[12rem] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+      class="absolute right-0 z-50 mt-2 min-w-[13rem] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
       role="menu"
     >
-      <button
-        type="button"
-        class="block w-full px-4 py-2 text-left text-sm disabled:cursor-not-allowed disabled:text-slate-400"
-        :class="hasSelectedCandidate ? 'text-slate-700 hover:bg-slate-50' : 'text-slate-400'"
-        role="menuitem"
-        :disabled="!hasSelectedCandidate"
-        :aria-disabled="!hasSelectedCandidate"
-        @click="onParseQa"
+      <label
+        v-if="isPlatformAdmin"
+        class="flex cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+        role="menuitemcheckbox"
+        :aria-checked="devToolsEnabled"
+        @click.stop
       >
-        Parse QA
-      </button>
-      <template v-if="isDev">
+        <span>Dev tools</span>
+        <input
+          type="checkbox"
+          class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          :checked="devToolsEnabled"
+          @change="onDevToolsToggle"
+        >
+      </label>
+
+      <template v-if="platformToolsActive">
         <div class="my-1 border-t border-slate-100" role="separator" />
+        <button
+          type="button"
+          class="block w-full px-4 py-2 text-left text-sm disabled:cursor-not-allowed disabled:text-slate-400"
+          :class="hasSelectedCandidate ? 'text-slate-700 hover:bg-slate-50' : 'text-slate-400'"
+          role="menuitem"
+          :disabled="!hasSelectedCandidate"
+          :aria-disabled="!hasSelectedCandidate"
+          :title="hasSelectedCandidate ? undefined : 'Select a candidate first'"
+          @click="onParseQa"
+        >
+          Parse QA
+        </button>
         <button
           type="button"
           class="flex w-full items-center justify-between px-4 py-2 text-left text-sm disabled:cursor-not-allowed disabled:text-slate-400"
           :class="hasSelectedCandidate ? 'text-amber-900 hover:bg-amber-50' : 'text-slate-400'"
           role="menuitem"
           aria-haspopup="menu"
-          :aria-expanded="devOpen"
+          :aria-expanded="fixturesOpen"
           :disabled="!hasSelectedCandidate"
           :aria-disabled="!hasSelectedCandidate"
-          @click.stop="hasSelectedCandidate && (devOpen = !devOpen)"
+          :title="hasSelectedCandidate ? undefined : 'Select a candidate first'"
+          @click.stop="hasSelectedCandidate && (fixturesOpen = !fixturesOpen)"
         >
           Load parse fixture
           <svg
             class="h-3.5 w-3.5 transition-transform"
-            :class="devOpen ? 'rotate-180' : ''"
+            :class="fixturesOpen ? 'rotate-180' : ''"
             viewBox="0 0 20 20"
             fill="currentColor"
             aria-hidden="true"
@@ -114,7 +154,7 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick))
             />
           </svg>
         </button>
-        <div v-if="devOpen" class="border-t border-amber-100 bg-amber-50/50 py-1">
+        <div v-if="fixturesOpen" class="border-t border-amber-100 bg-amber-50/50 py-1">
           <button
             type="button"
             class="block w-full px-4 py-2 pl-6 text-left text-sm text-amber-950 hover:bg-amber-100"
@@ -133,6 +173,7 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick))
           </button>
         </div>
       </template>
+
       <div class="my-1 border-t border-slate-100" role="separator" />
       <button
         type="button"

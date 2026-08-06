@@ -5,14 +5,10 @@ import type {
   ProfessionalSnapshotKey,
   ProfessionalSnapshotLine,
   SnapshotExperienceAnswer,
-  SnapshotProposals,
 } from '~/utils/professionalSnapshot'
 import {
-  PROFESSIONAL_SNAPSHOT_KEYS,
   PROFESSIONAL_SNAPSHOT_LABELS,
   SNAPSHOT_EXPERIENCE_FLAG_KEYS,
-  applySnapshotProposals,
-  buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
   ensureProfessionalSnapshotLines,
   formatExperienceFlagValue,
@@ -41,23 +37,20 @@ const props = defineProps<{
   specializedMedicalEquipment: string
   emrSystem: string
   employers: EmployerEntry[]
+  /** Clears baseline when the open candidate changes. */
   candidateId?: string
-  getAuthHeaders?: () => Promise<Record<string, string>>
-  hasResume?: boolean
-  extraDetailsCount?: number
+  /** When true, draft is still loading — defer baseline capture. */
+  loading?: boolean
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{
   'go-to-employment': []
-  'open-extra-details': []
 }>()
 
-const proposing = ref(false)
-const proposeError = ref<string | null>(null)
-const proposeNotice = ref<string | null>(null)
-/** Keys last filled by regenerate — used for batch “Include all proposed”. */
-const pendingProposedKeys = ref<ProfessionalSnapshotKey[]>([])
+/** Snapshot as loaded for this candidate — Reset restores this. */
+const baseline = ref<ProfessionalSnapshot | null>(null)
+const baselineFingerprint = ref<string | null>(null)
 
 const lines = computed({
   get: () => ensureProfessionalSnapshotLines(model.value),
@@ -85,11 +78,48 @@ const mismatchByKey = computed(() => {
   return map
 })
 
-const pendingProposedCount = computed(() =>
-  pendingProposedKeys.value.filter((key) => {
-    const line = lines.value[key]
-    return Boolean(line?.value.trim()) && !line.included
-  }).length,
+function fingerprint(snapshot: ProfessionalSnapshot | null | undefined): string {
+  return JSON.stringify(ensureProfessionalSnapshotLines(snapshot))
+}
+
+function clearBaseline() {
+  baseline.value = null
+  baselineFingerprint.value = null
+}
+
+function captureBaseline() {
+  const next = ensureProfessionalSnapshotLines(model.value)
+  baseline.value = JSON.parse(JSON.stringify(next)) as ProfessionalSnapshot
+  baselineFingerprint.value = fingerprint(next)
+}
+
+const isDirty = computed(() => {
+  if (baselineFingerprint.value == null) return false
+  return fingerprint(model.value) !== baselineFingerprint.value
+})
+
+function resetToBaseline() {
+  if (props.disabled || !baseline.value || !isDirty.value) return
+  model.value = JSON.parse(JSON.stringify(baseline.value)) as ProfessionalSnapshot
+}
+
+watch(
+  () => props.candidateId,
+  () => {
+    clearBaseline()
+  },
+)
+
+watch(
+  () => props.loading,
+  (loading) => {
+    if (loading) {
+      clearBaseline()
+      return
+    }
+    nextTick(() => captureBaseline())
+  },
+  { immediate: true },
 )
 
 function patchLine(key: ProfessionalSnapshotKey, patch: Partial<ProfessionalSnapshotLine>) {
@@ -150,71 +180,6 @@ function clearFlag(key: ProfessionalSnapshotKey) {
   patchLine(key, { value: '', included: false })
 }
 
-function resetFromWizard() {
-  proposeError.value = null
-  proposeNotice.value = null
-  pendingProposedKeys.value = []
-  model.value = ensureProfessionalSnapshotLines(
-    buildProfessionalSnapshotFromCandidate({
-      specialties: props.specialties,
-      years_nursing_experience: props.yearsNursingExperience,
-      average_patient_ratios: props.averagePatientRatios,
-      specialized_medical_equipment: props.specializedMedicalEquipment,
-      emr_system: props.emrSystem,
-      employers: props.employers,
-    }),
-  )
-}
-
-async function regenerateFromResume() {
-  if (!props.candidateId || proposing.value) return
-  proposing.value = true
-  proposeError.value = null
-  proposeNotice.value = null
-  pendingProposedKeys.value = []
-  try {
-    const headers = props.getAuthHeaders ? await props.getAuthHeaders() : {}
-    const res = await $fetch<{
-      proposals: SnapshotProposals
-      proposal_count: number
-    }>(`/api/admin/candidates/${props.candidateId}/propose-snapshot`, {
-      method: 'POST',
-      headers,
-    })
-    model.value = applySnapshotProposals(model.value, res.proposals || {})
-    const proposedKeys = PROFESSIONAL_SNAPSHOT_KEYS.filter((key) => {
-      const value = res.proposals?.[key]?.value?.trim()
-      return Boolean(value)
-    })
-    pendingProposedKeys.value = proposedKeys
-    const count = res.proposal_count ?? proposedKeys.length
-    proposeNotice.value = count
-      ? `Filled ${count} line${count === 1 ? '' : 's'} from the resume. They stay hidden from the packet until you include them.`
-      : 'No snapshot lines found in the resume text. You can still edit manually or open Extra details.'
-  } catch (e: unknown) {
-    const err = e as { data?: { statusMessage?: string }; statusMessage?: string; message?: string }
-    proposeError.value =
-      err?.data?.statusMessage
-      || err?.statusMessage
-      || err?.message
-      || 'Could not regenerate Snapshot from resume.'
-  } finally {
-    proposing.value = false
-  }
-}
-
-function includeAllProposed() {
-  if (props.disabled || !pendingProposedCount.value) return
-  const next = ensureProfessionalSnapshotLines(model.value)
-  for (const key of pendingProposedKeys.value) {
-    if (!next[key].value.trim() || next[key].included) continue
-    next[key] = { ...next[key], included: true }
-  }
-  model.value = { ...next }
-  pendingProposedKeys.value = []
-  proposeNotice.value = null
-}
-
 function toggleIncluded(key: ProfessionalSnapshotKey) {
   if (props.disabled) return
   patchLine(key, { included: !lines.value[key].included })
@@ -257,65 +222,24 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         </p>
         <details class="mt-1 text-sm text-slate-500">
           <summary class="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700">
-            How packet visibility &amp; AI propose work
+            How packet visibility works
           </summary>
           <p class="mt-1.5 text-xs leading-relaxed text-slate-500">
-            Use the eye on each row to show or hide that line in the packet. Regenerate from resume fills values with snippets but never includes them automatically — approve each line, or use Include all proposed.
+            Use the eye on each row to show or hide that line in the packet. Reset restores this section to how it looked when you opened the candidate.
           </p>
         </details>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <button
-          type="button"
-          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          :disabled="disabled || proposing"
-          @click="resetFromWizard"
-        >
-          Reset from wizard
-        </button>
-        <button
-          type="button"
-          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          :disabled="disabled || proposing || !candidateId || hasResume === false"
-          @click="regenerateFromResume"
-        >
-          {{ proposing ? 'Proposing…' : 'Regenerate from resume' }}
-        </button>
-        <button
-          type="button"
-          class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          :disabled="disabled"
-          @click="emit('open-extra-details')"
-        >
-          Extra details{{ extraDetailsCount ? ` (${extraDetailsCount})` : '' }}
-        </button>
-      </div>
-    </div>
-
-    <p v-if="proposeError" class="text-sm text-red-700" role="alert">{{ proposeError }}</p>
-    <div
-      v-else-if="proposeNotice || pendingProposedCount"
-      class="flex flex-wrap items-center gap-2"
-      role="status"
-    >
-      <p v-if="proposeNotice" class="text-sm text-slate-600">{{ proposeNotice }}</p>
       <button
-        v-if="pendingProposedCount"
+        v-if="isDirty"
         type="button"
-        class="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-800 hover:bg-brand-100 disabled:opacity-50"
+        class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         :disabled="disabled"
-        @click="includeAllProposed"
+        title="Restore snapshot to values from when this candidate was opened"
+        @click="resetToBaseline"
       >
-        Include all proposed ({{ pendingProposedCount }})
+        Reset
       </button>
     </div>
-    <p
-      v-if="hasResume === false"
-      class="text-sm text-amber-800"
-      role="status"
-    >
-      Upload a resume via the sidebar to enable regenerate from resume.
-    </p>
 
     <!-- Short free-text: 2-column grid -->
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
@@ -389,7 +313,8 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           <button
             v-if="hasMismatchJump(key)"
             type="button"
-            class="ml-1 font-medium underline hover:no-underline"
+            class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
             @click="emit('go-to-employment')"
           >
             Go to Employment
@@ -585,7 +510,8 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           <button
             v-if="hasMismatchJump(key)"
             type="button"
-            class="ml-1 font-medium underline hover:no-underline"
+            class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
             @click="emit('go-to-employment')"
           >
             Go to Employment

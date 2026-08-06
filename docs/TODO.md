@@ -22,6 +22,7 @@ Prioritized remaining work (updated 2026-07-11). New contract template landed; *
 | **UX** | Employment | Employer accordion expand-in-place (all-open + sticky for now) — see Recruiter admin UX backlog |
 | **UX** | DOCX | Visual restyle in progress on `feat/docx-visual-restyle` (Inter + section rules + title\|date) — preview = download |
 | **Client UAT** | VMS backlog | Recruiter feedback Clips 1–8 — epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97); detail in [`VMS_BACKLOG.md`](./VMS_BACKLOG.md) |
+| **Client UAT** | Aug 5 clips | Autosave / charge+preceptor on job metrics · education location parens · Travel detail field — see [Aug 5 UAT](#aug-5-uat-2026-08-05) |
 | **Release** | Release | One manual happy-path smoke on target env; sign off [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) |
 | **1** | Test automation | Phased plan below — script/API coverage first, E2E last; closes [#14](https://github.com/juanroddotdev/resume-rocket/issues/14) — use [Agent 1 QA](../.cursor/agents/qa-edge-cases.md) |
 | **Agents** | Side lanes | Active: Agents **1 / 2 / 5** via [`AGENT-LANES.md`](./AGENT-LANES.md). **Whole-app path:** [`APP-COVERAGE-TOUR.md`](./APP-COVERAGE-TOUR.md) slices 0–7. **Deferred:** Agent 3 (design/a11y) + Agent 4 (DX/refactor) until after one full tour + human smoke |
@@ -97,6 +98,17 @@ Today: wizard/parse **derive** `professional_snapshot`; only admin edits it ([`A
 - [ ] **Still out of core v1:** custom lines (see above); candidate auth/return-edit (separate track)
 
 **Suggested PR split when un-deferred:** (1) extract shared editor + admin wrap → (2) intake step + PATCH ownership → (3) optional self-serve propose.
+
+---
+
+## Aug 5 UAT (2026-08-05)
+
+Source: recruiter screen recordings (`VID_20260805_205814`, employment profile review). Related epic [#97](https://github.com/juanroddotdev/resume-rocket/issues/97) / FR-001 [#98](https://github.com/juanroddotdev/resume-rocket/issues/98). Ops-only notes (Helena Porter / Staffmax) are out of eng scope.
+
+- [x] **Employment autosave race** — latest-wins PATCH queue (intake + admin); flush on admin employers drawer close, leave Employment section, and unmount; intake unmount flush
+- [x] **Charge/preceptor on job packets** — flags still merge into `experience_highlights`; also append to live `experience_metrics_line` (highlights loop is template-removed)
+- [x] **Education location parentheses** — DOCX school line is `School, City, ST` (no wrapping parens)
+- [x] **Travel detail field** — employer `travelDetail` mirrors PRN schedule; DOCX `Travel — {detail}`
 
 ---
 

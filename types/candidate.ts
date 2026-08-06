@@ -120,6 +120,8 @@ export interface EmployerEntry {
   emrSystem?: string
   /** Typical schedule when employmentType is PRN (appended to DOCX employment type) */
   prnSchedule?: string
+  /** Contract / assignment detail when employmentType is Travel (appended to DOCX employment type) */
+  travelDetail?: string
 }
 
 export interface CandidateDraftInput {

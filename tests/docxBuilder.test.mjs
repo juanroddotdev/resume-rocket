@@ -182,6 +182,23 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_employment_type, 'PRN — 2 shifts/month')
   })
 
+  it('appends Travel detail to employment type in DOCX', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['Med-Surg'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'Travel RN',
+        employmentType: 'Travel',
+        travelDetail: '13-week contract',
+        emrSystem: 'Epic',
+      }],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_employment_type, 'Travel — 13-week contract')
+  })
+
   it('maps manual trauma and teaching for unlinked employers', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

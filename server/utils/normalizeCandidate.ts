@@ -75,6 +75,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   )
   const emrSystem = optionalString(e.emrSystem ?? e.emr_system)
   const prnSchedule = optionalString(e.prnSchedule ?? e.prn_schedule)
+  const travelDetail = optionalString(e.travelDetail ?? e.travel_detail)
 
   if (role) entry.role = role
   if (startDate) entry.startDate = startDate
@@ -104,6 +105,7 @@ export function normalizeEmployer(raw: unknown): EmployerEntry | null {
   if (preceptorExperience != null) entry.preceptorExperience = preceptorExperience
   if (emrSystem) entry.emrSystem = emrSystem
   if (prnSchedule) entry.prnSchedule = prnSchedule
+  if (travelDetail) entry.travelDetail = travelDetail
 
   return entry
 }

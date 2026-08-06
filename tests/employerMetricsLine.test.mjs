@@ -70,14 +70,25 @@ describe('formatEmployerMetricsLine', () => {
 })
 
 describe('employerMetricsLineParts', () => {
-  it('keeps seven ordered labeled slots including blanks', () => {
+  it('keeps facility slots then blank clinical flags when unset', () => {
     assert.deepEqual(
       employerMetricsLineParts({
         unitBedCount: '24',
         teachingStatus: true,
         magnetStatus: true,
       }),
-      ['24 unit beds', '', '', 'Teaching Yes', 'Magnet Yes', '', ''],
+      ['24 unit beds', '', '', 'Teaching Yes', 'Magnet Yes', '', '', '', ''],
+    )
+  })
+
+  it('appends charge and preceptor labels when Yes', () => {
+    assert.equal(
+      formatEmployerMetricsLine({
+        beds: 450,
+        chargeNurseExperience: true,
+        preceptorExperience: true,
+      }),
+      '450 hospital beds • Charge nurse experience • Preceptor experience',
     )
   })
 })

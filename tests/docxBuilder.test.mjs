@@ -77,6 +77,14 @@ describe('mapCandidateToTemplateData', () => {
       'Charge nurse experience',
       'Preceptor experience',
     ])
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Charge nurse experience/,
+    )
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Preceptor experience/,
+    )
   })
 
   it('maps per-employer EMR and union proficiencies', () => {

@@ -635,12 +635,9 @@ watch(devFixtureRequest, (mode) => {
               :emr-system="form.emr_system"
               :employers="form.employers"
               :candidate-id="candidate.id"
-              :get-auth-headers="authHeaders"
-              :has-resume="hasResumeFile"
-              :extra-details-count="extraDetailsItems.length"
+              :loading="loading"
               :disabled="!isEditable"
               @go-to-employment="scrollToSectionPaused('employment')"
-              @open-extra-details="openExtraDetails"
             />
           </section>
 

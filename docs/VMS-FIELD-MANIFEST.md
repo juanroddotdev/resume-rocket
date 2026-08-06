@@ -86,12 +86,12 @@ Static labels + values via `{#snapshot_lines}{snapshot_line}{/snapshot_lines}` (
 
 | Former scalar tag (source key) | Planned source | Parse (Gemini) | Wizard / admin | Required | Status |
 |--------------|----------------|----------------|----------------|----------|--------|
-| `snapshot_specialty` | `specialties[0]` | Partial | **Admin Snapshot section** (+ Reset from wizard) | TBD | Derived / Live |
+| `snapshot_specialty` | `specialties[0]` | Partial | **Admin Snapshot section** (+ Reset to opened values) | TBD | Derived / Live |
 | `snapshot_years_experience` | `years_nursing_experience` | Yes | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_travel_experience` | Travel contracts from `employers[]` | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_trauma_experience` | Union of `employers[].traumaLevel` | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_teaching_facility_experience` | Any `employers[].teachingStatus === true` | No (hospital DB) | Admin Snapshot | TBD | Derived / Live |
-| `snapshot_magnet_facility_experience` | Resume / facility metadata | Yes (admin propose) | Admin Snapshot + Regenerate from resume | TBD | Live (propose) |
+| `snapshot_magnet_facility_experience` | Resume / facility metadata | Yes (admin propose API; UI parked) | Admin Snapshot (+ Extra details apply) | TBD | Live (manual / supplemental) |
 | `snapshot_charge_nurse_experience` | Any employer charge-nurse flag | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_preceptor_experience` | Any employer preceptor flag | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_float_experience` | Union of `employers[].floatedUnits[]` | Partial | Admin Snapshot | TBD | Derived / Live |
@@ -99,7 +99,7 @@ Static labels + values via `{#snapshot_lines}{snapshot_line}{/snapshot_lines}` (
 | `snapshot_patient_ratios_managed` | `average_patient_ratios` + per-employer scope | Partial | Admin Snapshot | TBD | Derived / Live |
 | `snapshot_equipment_skills` | `specialized_medical_equipment` + equipment procedures | Partial | Admin Snapshot | TBD | Derived / Live |
 
-Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). **Reset from wizard** re-derives. **Regenerate from resume** calls `POST /api/admin/candidates/:id/propose-snapshot` (Gemini proposals + `sourceSnippet`; never auto-include). DOCX renders `{#snapshot_lines}` from `professionalSnapshotToLines()` — only `included: true` rows, so unchecked lines do not leave empty bullets. Mismatch helpers: `computeSnapshotMismatches()`. Extra profile details: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts) via admin non-modal right panel [`AdminExtraDetailsDrawer.vue`](../components/admin/AdminExtraDetailsDrawer.vue).
+Derivation: [`utils/professionalSnapshot.ts`](../utils/professionalSnapshot.ts) → `buildProfessionalSnapshotFromCandidate()`. Seeded on parse write; admin edits PATCH `professional_snapshot` (suppresses server auto-refresh while that field is sent). Admin **Reset** restores the snapshot to values from when the candidate was opened (discard edits in this session). Gemini propose API (`POST /api/admin/candidates/:id/propose-snapshot`) remains available but is not exposed in the builder chrome. DOCX renders `{#snapshot_lines}` from `professionalSnapshotToLines()` — only `included: true` rows, so unchecked lines do not leave empty bullets. Mismatch helpers: `computeSnapshotMismatches()`. Extra profile details: [`buildSupplementalBucket()`](../utils/supplementalBucket.ts) via admin non-modal right panel [`AdminExtraDetailsDrawer.vue`](../components/admin/AdminExtraDetailsDrawer.vue) (header entry only).
 
 ---
 

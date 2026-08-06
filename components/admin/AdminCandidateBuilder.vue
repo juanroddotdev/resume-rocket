@@ -209,6 +209,7 @@ function openEmployersJump() {
 
 function closeEmployersJump() {
   employersJumpOpen.value = false
+  void flushAutosave()
 }
 
 const sideDrawerOpen = computed(() => extraDetailsOpen.value || employersJumpOpen.value)
@@ -219,6 +220,16 @@ const formSlidForHelper = computed(() => sideDrawerOpen.value && Boolean(props.s
 watch(sideDrawerOpen, (open) => {
   emit('drawer-open', open)
 }, { immediate: true })
+
+watch(activeSection, (next, prev) => {
+  if (prev === 'employers' && next !== 'employers') {
+    void flushAutosave()
+  }
+})
+
+onBeforeUnmount(() => {
+  void flushAutosave()
+})
 
 async function onEmployerJumpSelect(index: number) {
   employersActiveIndex.value = index

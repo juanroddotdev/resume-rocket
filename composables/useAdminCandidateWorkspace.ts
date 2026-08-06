@@ -9,6 +9,7 @@ import {
   type AdminDraftResponse,
   type AdminSectionId,
 } from '~/utils/adminCandidateForm'
+import { createLatestWinsSaveQueue } from '~/utils/latestWinsSaveQueue'
 
 export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
   const supabase = useSupabaseClient()
@@ -21,6 +22,7 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
   const candidateStatus = ref<string>('draft')
   const resumeFilename = ref<string | null>(null)
   let saveTimer: ReturnType<typeof setTimeout> | null = null
+  const saveQueue = createLatestWinsSaveQueue<ReturnType<typeof candidateFormSnapshot>>()
 
   const candidateId = computed(() => selected.value?.id ?? null)
   const isEditable = computed(() => candidateStatus.value === 'draft')
@@ -88,16 +90,21 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
   async function patchCandidate(partial?: ReturnType<typeof candidateFormSnapshot>) {
     if (!candidateId.value || !isEditable.value) return
     saveStatus.value = 'saving'
-    try {
-      await $fetch(`/api/admin/candidates/${candidateId.value}`, {
-        method: 'PATCH',
-        headers: await authHeaders(),
-        body: partial ?? candidateFormSnapshot(form),
-      })
-      saveStatus.value = 'saved'
-    } catch {
-      saveStatus.value = 'error'
-    }
+    const id = candidateId.value
+    const body = partial ?? candidateFormSnapshot(form)
+    await saveQueue.enqueue(body, async (payload) => {
+      if (!candidateId.value || candidateId.value !== id || !isEditable.value) return
+      try {
+        await $fetch(`/api/admin/candidates/${id}`, {
+          method: 'PATCH',
+          headers: await authHeaders(),
+          body: payload,
+        })
+        saveStatus.value = 'saved'
+      } catch {
+        saveStatus.value = 'error'
+      }
+    })
   }
 
   function scheduleAutosave() {

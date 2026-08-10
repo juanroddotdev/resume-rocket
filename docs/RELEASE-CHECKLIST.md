@@ -86,7 +86,7 @@ See [`HOSPITAL-DATA.md`](HOSPITAL-DATA.md) for local vs prod rules.
 
 ## Security / config sanity
 
-- [ ] No secrets in client bundle (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY` server-only) · **Manual** (spot-check / review)
+- [ ] No secrets in client bundle (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY` server-only) · **Manual** (spot-check / review)
 - [ ] `.env` not committed; `data/` CSVs not committed · **Automated**-ish via git hygiene / PR review
 - [ ] Production `NUXT_PUBLIC_SITE_URL` matches deployed host (invite + email links) · **Manual** / **Optional** for prod deploys
 - [ ] `npm run build` succeeds · **Automated** (CI)

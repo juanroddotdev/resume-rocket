@@ -1,6 +1,6 @@
 ---
-description: Multimodal PDF resume parsing — Gemini vision for image/Canva PDFs
-globs: server/api/parse.post.ts,server/utils/extractText.ts,server/utils/gemini*.ts,server/utils/parse*.ts,scripts/test-pdf-vision.mjs
+description: Multimodal PDF resume parsing — AI vision for image/Canva PDFs
+globs: server/api/parse.post.ts,server/utils/extractText.ts,server/utils/gemini*.ts,server/utils/claude*.ts,server/utils/aiProvider.ts,server/utils/parse*.ts,scripts/test-pdf-vision.mjs
 alwaysApply: false
 ---
 
@@ -13,7 +13,7 @@ Assume incoming PDFs may be **flat or image-based** (Canva, colored templates, e
 ## Required pipeline
 
 1. **Try text extraction first** (`extractTextFromBuffer` / `pdf-parse` for PDF, `mammoth` for DOCX).
-2. **If PDF text is below `MIN_EXTRACTED_TEXT_CHARS` (40)** in `geminiShared.ts`, fall back to **Gemini document vision** via `parseResumeWithGeminiDocument` — do not fail with “no text extracted” when `GEMINI_API_KEY` is configured.
+2. **If PDF text is below `MIN_EXTRACTED_TEXT_CHARS` (40)** in `geminiShared.ts`, fall back to selected provider document vision via `parseResumeDocumentWithAi` — do not fail with “no text extracted” when the selected provider key is configured.
 3. Merge with `parseResumeHeuristics` and persist; return `document_scan: true` when vision was used.
 
 ## Gemini SDK (this repo)
@@ -37,28 +37,61 @@ await ai.models.generateContent({
 })
 ```
 
+## Claude SDK (this repo)
+
+Use **`@anthropic-ai/sdk`** (`Anthropic`) via `createClaudeClient()` in `claudeShared.ts` — server-only, never client.
+
+Pass raw PDF bytes as base64 in a `document` content block:
+
+```typescript
+const client = createClaudeClient()
+await client.messages.parse({
+  model: 'claude-sonnet-5',
+  max_tokens: CLAUDE_MAX_OUTPUT_TOKENS,
+  messages: [{
+    role: 'user',
+    content: [
+      {
+        type: 'document',
+        source: { type: 'base64', media_type: 'application/pdf', data: buffer.toString('base64') },
+      },
+      { type: 'text', text: prompt },
+    ],
+  }],
+  output_config: {
+    format: jsonSchemaOutputFormat(claudeResumeJsonSchema({ includeRawText: true })),
+  },
+})
+```
+
 ## Structured output
 
-- `responseMimeType: 'application/json'`
-- `responseJsonSchema` from `resumeJsonSchema()` in `geminiShared.ts` (uses `Type` from `@google/genai`)
+- Gemini: `responseMimeType: 'application/json'` + `responseJsonSchema` from `resumeJsonSchema()` in `geminiShared.ts` (uses `Type` from `@google/genai`)
+- Claude: `messages.parse()` + `jsonSchemaOutputFormat()` from `claudeResumeJsonSchema()` in `claudeShared.ts`
 - Vision path includes `raw_resume_text` for heuristics merge
 
 ## Models & degradation
 
-- Model fallback: `gemini-3.5-flash` → `gemini-2.5-flash` (`GEMINI_MODELS`).
-- Image PDF without Gemini key → user-friendly error + **Continue manually** (heuristics cannot help).
-- Text PDF without Gemini → heuristics still run.
+- Gemini model fallback: `gemini-3.5-flash` → `gemini-2.5-flash` (`GEMINI_MODELS`).
+- Claude model fallback: `claude-sonnet-5` → `claude-haiku-4-5` (`CLAUDE_MODELS`).
+- Image PDF without selected provider key → user-friendly error + **Continue manually** (heuristics cannot help).
+- Text PDF without selected provider key → heuristics still run.
 - Do not log full resume text or contact fields (see `phi-handling.mdc`).
 
 ## Dev verification
 
 ```bash
 node --env-file=.env scripts/test-pdf-vision.mjs path/to/resume.pdf
+node --env-file=.env scripts/test-claude-pdf-vision.mjs path/to/resume.pdf
 ```
 
 ## Reference files
 
-- Shared: `server/utils/geminiShared.ts`
-- Text path: `server/utils/geminiParse.ts`
-- Vision path: `server/utils/geminiDocumentParse.ts`
+- Provider selector: `server/utils/aiProvider.ts`
+- Gemini shared: `server/utils/geminiShared.ts`
+- Gemini text path: `server/utils/geminiParse.ts`
+- Gemini vision path: `server/utils/geminiDocumentParse.ts`
+- Claude shared: `server/utils/claudeShared.ts`
+- Claude text path: `server/utils/claudeParse.ts`
+- Claude vision path: `server/utils/claudeDocumentParse.ts`
 - Orchestration: `server/api/parse.post.ts`

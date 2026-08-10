@@ -84,12 +84,17 @@ export interface ParseAudit {
   capturedAt: string
 }
 
+export type AiProviderName = 'gemini' | 'claude'
+
 /** Server-only parse flags stored under candidates.parsed_resume.outcome — never returned to intake client. */
 export interface ParseOutcome {
   fields_found: number
   partial_parse: boolean
   document_scan: boolean
-  gemini_failed: boolean
+  ai_provider?: AiProviderName
+  ai_failed?: boolean
+  /** Legacy Gemini-specific flag retained for historical parsed_resume blobs. */
+  gemini_failed?: boolean
   parse_failed: boolean
 }
 

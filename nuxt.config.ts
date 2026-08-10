@@ -7,7 +7,9 @@ export default defineNuxtConfig({
     appManifest: false,
   },
   runtimeConfig: {
+    aiProvider: process.env.AI_PROVIDER || '',
     geminiApiKey: process.env.GEMINI_API_KEY || '',
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
     resendApiKey: process.env.RESEND_API_KEY || '',
     resendFromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',

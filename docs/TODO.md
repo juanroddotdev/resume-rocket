@@ -170,10 +170,10 @@ Lowest cost; run entirely in GitHub Actions today. One concern per PR.
 
 Hit real Nitro handlers against a **dedicated test Supabase project** (GitHub Actions secrets) or local `supabase start` in CI. No browser.
 
-- [ ] **Test env + CI secrets** — `SUPABASE_*`, service role, optional `GEMINI_API_KEY` gated job; document in `.env.example` as test-only
+- [ ] **Test env + CI secrets** — `SUPABASE_*`, service role, optional selected AI provider key (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`) gated job; document in `.env.example` as test-only
 - [ ] **Invite chain** — `POST /api/invites` (admin auth) → `GET /api/invites/validate` → create candidate → `PATCH` wizard payload → `POST /api/generate-docx` → assert 200 + DOCX content-type
 - [ ] **Invite gating** — candidate routes without `x-intake-token` → 401; wrong token → 403
-- [ ] **Parse integration (optional Gemini job)** — upload small fixture PDF with real key; separate workflow `workflow_dispatch` or nightly to avoid cost/flake on every PR
+- [ ] **Parse integration (optional AI provider job)** — upload small fixture PDF with real key; separate workflow `workflow_dispatch` or nightly to avoid cost/flake on every PR
 - [ ] **Hospital search smoke** — `GET /api/hospitals/search?q=…` returns rows when test DB seeded (minimal fixture hospitals or seed subset)
 
 **Maps to release checklist:** Happy path API portions; VMS docx-mapping rows; security invite scope.

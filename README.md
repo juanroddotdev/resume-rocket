@@ -1,12 +1,12 @@
 # Resume Rocket Platform
 
-Mobile-first healthcare resume enrichment MVP: invite-gated intake, Gemini parsing, hospital matching, and VMS-ready DOCX export.
+Mobile-first healthcare resume enrichment MVP: invite-gated intake, AI-assisted parsing, hospital matching, and VMS-ready DOCX export.
 
 ## Stack
 
 - **Nuxt 3** + Vue 3 + Tailwind CSS
 - **Supabase** (Postgres, Auth, Storage)
-- **Gemini** (structured resume parse; optional — heuristic fallback works without a key)
+- **Gemini or Claude** (structured resume parse; optional — heuristic fallback works without a key)
 - **Docxtemplater** (contract template fill)
 - **Resend** (submission confirmation email)
 
@@ -16,7 +16,7 @@ Mobile-first healthcare resume enrichment MVP: invite-gated intake, Gemini parsi
 cd ~/resume-rocket
 npm install
 cp .env.example .env
-# Fill in Supabase, Gemini, and Resend keys
+# Fill in Supabase, AI provider, and Resend keys
 npm run dev
 ```
 
@@ -75,5 +75,7 @@ After editing the Word template, run `node scripts/inventory-template-tags.mjs` 
 Inventory contract tags: `node scripts/inventory-template-tags.mjs`  
 Normalize JSONB smoke test: `node scripts/test-normalize-candidate.mjs`  
 Gemini parse map smoke test: `node scripts/test-gemini-parse-map.mjs`  
+Claude parse map smoke test: `node scripts/test-claude-parse-map.mjs`  
+Claude PDF vision smoke test: `node --env-file=.env scripts/test-claude-pdf-vision.mjs path/to/resume.pdf`  
 Smoke-test mapping: `node scripts/test-docx-mapping.mjs`  
 Run all automated tests: `npm run test` (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml))

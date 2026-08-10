@@ -5,7 +5,8 @@ export interface ParseOutcomeLogInput {
   parseFailed: boolean
   partialParse: boolean
   documentScan: boolean
-  geminiFailed: boolean
+  aiProvider?: string
+  aiFailed: boolean
   fieldsFound: number
   parseErrorKind?: string
 }
@@ -14,14 +15,19 @@ export interface ParseOutcomeLogInput {
 export function classifyParseError(message: string | null | undefined): string | undefined {
   if (!message?.trim()) return undefined
   const m = message.toLowerCase()
-  if (m.includes('gemini_api_key') || m.includes('visual scanning') || m.includes('image-based')) {
+  if (
+    m.includes('gemini_api_key')
+    || m.includes('anthropic_api_key')
+    || m.includes('visual scanning')
+    || m.includes('image-based')
+  ) {
     return 'vision_required'
   }
   if (m.includes('no text extracted')) return 'no_text'
   if (m.includes('ai parser is busy') || m.includes('ai scanner is busy') || m.includes('high demand')) {
-    return 'gemini_capacity'
+    return 'ai_capacity'
   }
-  if (m.includes('ai parse') || m.includes('gemini')) return 'gemini_error'
+  if (m.includes('ai parse') || m.includes('gemini') || m.includes('claude')) return 'ai_error'
   if (m.includes('only pdf and docx')) return 'unsupported_mime'
   if (m.includes('10mb')) return 'file_too_large'
   return 'other'
@@ -37,7 +43,8 @@ export function logParseOutcome(input: ParseOutcomeLogInput) {
     parse_failed: input.parseFailed,
     partial_parse: input.partialParse,
     document_scan: input.documentScan,
-    geminiFailed: input.geminiFailed,
+    ai_provider: input.aiProvider,
+    ai_failed: input.aiFailed,
     fields_found: input.fieldsFound,
   }
   if (input.parseErrorKind) payload.parse_error_kind = input.parseErrorKind

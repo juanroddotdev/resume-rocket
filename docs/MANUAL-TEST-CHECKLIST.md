@@ -13,7 +13,7 @@ Copy-paste QA for intake and admin UX. Run **after CI is green** (`npm run test`
 ## Prerequisites
 
 - [ ] App running (`npm run dev` locally or deployed Render URL)
-- [ ] `.env` has Supabase keys; optional `GEMINI_API_KEY`, `RESEND_API_KEY`
+- [ ] `.env` has Supabase keys; optional selected AI provider key (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`), `RESEND_API_KEY`
 - [ ] Hospitals seeded per [`HOSPITAL-DATA.md`](HOSPITAL-DATA.md) (facility search + parse suggestions)
 - [ ] Test files ready:
   - [ ] Text PDF resume (normal parse)

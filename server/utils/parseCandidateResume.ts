@@ -56,34 +56,35 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
   const storagePath = await uploadResumeFile(candidateId, buffer, filename, mime)
 
   let parseError: string | null = null
-  let geminiFailed = false
+  let aiFailed = false
   let documentVision = false
   let documentVisionAttempted = false
   let parsed: ParsedResume | null = null
   let parseAudit: ParseAudit | null = null
   let rawText = ''
+  const aiProvider = resolveAiProviderName(config)
 
   try {
     rawText = await extractTextFromBuffer(buffer, mime, filename)
-    const geminiReady = isGeminiConfigured(config.geminiApiKey)
+    const aiReady = isAiProviderConfigured(aiProvider, config)
 
     if (needsDocumentVision(rawText, mime, filename)) {
-      if (!geminiReady) {
+      if (!aiReady) {
         throw new Error(
-          'This resume looks image-based. Add GEMINI_API_KEY for visual scanning, or continue manually.',
+          `This resume looks image-based. Set ${aiProviderApiKeyName(aiProvider)} for visual scanning, or continue manually.`,
         )
       }
       documentVisionAttempted = true
       documentVision = true
       try {
-        const docResult = await parseResumeWithGeminiDocument(buffer, mime)
+        const docResult = await parseResumeDocumentWithAi(buffer, mime)
         parsed = docResult.resume
         parseAudit = docResult.audit
         rawText = docResult.resume.rawText || rawText
       } catch (e) {
-        geminiFailed = true
+        aiFailed = true
         documentVision = false
-        parseError = userFacingGeminiError(e, 'vision')
+        parseError = userFacingAiError(e, 'vision', aiProvider)
       }
     }
 
@@ -91,14 +92,14 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
       throw new Error(parseError || 'No text extracted from document')
     }
 
-    if (geminiReady && !documentVisionAttempted) {
+    if (aiReady && !documentVisionAttempted) {
       try {
-        const textResult = await parseResumeWithGemini(rawText)
+        const textResult = await parseResumeWithAi(rawText)
         parsed = textResult.resume
         parseAudit = textResult.audit
       } catch (e) {
-        geminiFailed = true
-        parseError = userFacingGeminiError(e, 'text')
+        aiFailed = true
+        parseError = userFacingAiError(e, 'text', aiProvider)
       }
     }
 
@@ -124,16 +125,18 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
 
   const parseOutcome: ParseOutcome = {
     fields_found: fieldsFound,
-    partial_parse: geminiFailed && hasFields,
+    partial_parse: aiFailed && hasFields,
     document_scan: documentVision,
-    gemini_failed: geminiFailed,
+    ai_provider: aiProvider,
+    ai_failed: aiFailed,
+    gemini_failed: aiProvider === 'gemini' ? aiFailed : false,
     parse_failed: parseFailed,
   }
 
   const updatePayload: Record<string, unknown> = {
     resume_storage_path: storagePath,
     resume_original_filename: filename,
-    parse_error: parseFailed ? parseError : geminiFailed ? parseError : null,
+    parse_error: parseFailed ? parseError : aiFailed ? parseError : null,
     parsed_resume: buildParsedResumeBlob(parsed?.rawText, parseAudit, parseOutcome),
   }
 
@@ -192,9 +195,10 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
     parseFailed,
     partialParse: parseOutcome.partial_parse,
     documentScan: parseOutcome.document_scan,
-    geminiFailed,
+    aiProvider,
+    aiFailed,
     fieldsFound,
-    parseErrorKind: classifyParseError(parseFailed || geminiFailed ? parseError : null),
+    parseErrorKind: classifyParseError(parseFailed || aiFailed ? parseError : null),
   })
 
   return {

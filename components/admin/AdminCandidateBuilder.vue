@@ -97,7 +97,7 @@ const parseFieldsFound = computed(() => parseMeta.value?.fields_found ?? 0)
 const parseHasWarning = computed(() =>
   Boolean(parseMeta.value?.document_scan || parseMeta.value?.partial_parse),
 )
-/** Happy-path prefill only — warnings keep a full canvas banner. */
+/** Happy-path prefill chip in the header meta row. Visual-scan pill hidden for now. */
 const parseSuccessChip = computed(() =>
   Boolean(parseFieldsFound.value > 0 && !parseHasWarning.value),
 )
@@ -398,14 +398,14 @@ watch(devFixtureRequest, (mode) => {
     <div v-else class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div class="shrink-0 bg-white">
       <div
-        class="flex flex-wrap items-start justify-between gap-3 px-4 py-3 sm:px-6"
+        class="flex flex-wrap items-start justify-between gap-3 px-4 pt-5 pb-4 sm:px-6"
       >
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-semibold text-slate-900">
             {{ displayName }}
             <span class="font-normal capitalize text-slate-500"> · {{ candidate.status }}</span>
           </p>
-          <div class="mt-0.5 flex min-w-0 items-center gap-x-2 overflow-x-auto whitespace-nowrap text-xs text-slate-500">
+          <div class="mt-2.5 flex min-w-0 items-center gap-x-2 overflow-x-auto whitespace-nowrap text-xs text-slate-500">
             <span
               v-if="resumeFilename"
               class="min-w-[7rem] max-w-[12rem] shrink truncate sm:max-w-[15rem]"
@@ -419,7 +419,7 @@ watch(devFixtureRequest, (mode) => {
               class="inline-flex shrink-0 items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-medium text-emerald-800"
               role="status"
             >
-              ✨ {{ parseFieldsFound }} field{{ parseFieldsFound === 1 ? '' : 's' }}
+              {{ parseFieldsFound }} field{{ parseFieldsFound === 1 ? '' : 's' }} prefilled
             </span>
             <span
               v-if="resumeFilename || (!resumeFilename && isEditable) || parseSuccessChip"
@@ -509,7 +509,7 @@ watch(devFixtureRequest, (mode) => {
         class="relative min-h-0 flex-1 overflow-y-auto bg-white"
       >
         <!-- Form body lives on the elevated surface; gutters come from the recessed canvas outside. -->
-        <div class="relative space-y-12 p-4 sm:p-6">
+        <div class="relative space-y-10 p-4 sm:p-6">
         <div
           v-if="devPrefilling"
           class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
@@ -527,12 +527,12 @@ watch(devFixtureRequest, (mode) => {
             </p>
             <ParseNoticeBanner
               :meta="parseMeta"
-              :show-fields-found="parseHasWarning"
+              omit-document-scan
             />
             <p v-if="!isEditable" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
               Submitted — upload is locked. Use <span class="font-medium">Download draft</span> above if needed.
             </p>
-            <h2 class="text-base font-semibold tracking-tight text-slate-900">Identity</h2>
+            <h2 class="text-sm font-medium tracking-tight text-slate-500">Identity</h2>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="block">
                 <span class="field-label">First name</span>
@@ -627,8 +627,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Professional snapshot -->
-          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
-            <h2 class="text-base font-semibold tracking-tight text-slate-900">Professional snapshot</h2>
+          <section id="admin-section-snapshot" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-8">
+            <h2 class="text-sm font-medium tracking-tight text-slate-500">Professional snapshot</h2>
             <AdminProfessionalSnapshot
               v-model="form.professional_snapshot"
               :specialties="form.specialties"
@@ -645,8 +645,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Employment -->
-          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
-            <h2 class="text-base font-semibold tracking-tight text-slate-900">Employment</h2>
+          <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-8">
+            <h2 class="text-sm font-medium tracking-tight text-slate-500">Employment</h2>
             <SpecialtyChipInput
               v-model="form.specialties"
               label="Specialties / units"
@@ -671,8 +671,8 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Credentials -->
-          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-10">
-            <h2 class="text-base font-semibold tracking-tight text-slate-900">Credentials & clinical</h2>
+          <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-8">
+            <h2 class="text-sm font-medium tracking-tight text-slate-500">Credentials & clinical</h2>
             <CredentialsChecklist
               v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
@@ -690,7 +690,7 @@ watch(devFixtureRequest, (mode) => {
           </section>
 
           <!-- Review -->
-          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100/80 pt-10">
+          <section id="admin-section-review" class="scroll-mt-4 border-t border-slate-100/80 pt-8">
             <IntakeReviewPanel
               :missing="missingFields"
               :advisories="employerLinkAdvisories"

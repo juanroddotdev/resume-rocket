@@ -19,22 +19,22 @@ const emit = defineEmits<{
     role="tablist"
     aria-label="Builder sections"
   >
-    <div class="flex items-center gap-1 overflow-x-auto px-4 py-2 sm:px-6">
+    <div class="flex items-center gap-1 overflow-x-auto px-4 pt-3 pb-3.5 sm:px-6">
     <template v-for="(section, index) in sections" :key="section.id">
       <span
         v-if="index > 0"
-        class="hidden shrink-0 text-slate-300 sm:inline"
+        class="hidden shrink-0 px-0.5 text-slate-300 sm:inline"
         aria-hidden="true"
       >
-        →
+        ·
       </span>
       <button
         type="button"
         role="tab"
-        class="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition"
+        class="flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-sm transition"
         :class="activeSection === section.id
           ? 'bg-brand-50 font-medium text-brand-800 ring-1 ring-brand-200'
-          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'"
         :aria-selected="activeSection === section.id"
         :disabled="disabled"
         @click="emit('select', section.id)"

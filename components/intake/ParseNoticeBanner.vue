@@ -4,12 +4,18 @@ import type { ParseMeta } from '~/types/parse'
 const props = defineProps<{
   meta: ParseMeta | null
   showFieldsFound?: boolean
+  /** When true, skip the visual-scan banner (caller shows a compact indicator). */
+  omitDocumentScan?: boolean
 }>()
 
-const hasDocumentScan = computed(() => Boolean(props.meta?.document_scan))
+const hasDocumentScan = computed(() => Boolean(props.meta?.document_scan) && !props.omitDocumentScan)
 const hasPartialParse = computed(() => Boolean(props.meta?.partial_parse))
 const fieldsFound = computed(() => props.meta?.fields_found ?? 0)
-const visible = computed(() => hasDocumentScan.value || hasPartialParse.value || (props.showFieldsFound && fieldsFound.value > 0))
+const visible = computed(() =>
+  hasDocumentScan.value
+  || hasPartialParse.value
+  || (props.showFieldsFound && fieldsFound.value > 0),
+)
 </script>
 
 <template>

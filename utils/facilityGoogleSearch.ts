@@ -5,18 +5,26 @@ type FacilityGoogleSearchOptions = {
   searchQuery?: string
 }
 
-/** Soft `term?` prompts for facility research (shared by URL builder + UI copy). */
+/**
+ * Soft `term?` prompts for facility metrics research (no EMR — use EMR search).
+ * Keep metric keywords short / unquoted so Google does not AND rare exact phrases.
+ */
 export const FACILITY_GOOGLE_SEARCH_PROMPTS = [
   'trauma level?',
-  'total beds?',
-  'teaching hospital?',
+  'beds?',
+  'teaching?',
   'Magnet?',
-  'EMR?',
-  'charting system?',
 ] as const
 
-/** Focused EMR / charting follow-up when the broad search skips those items. */
-export const FACILITY_GOOGLE_EMR_PROMPTS = ['EMR?', 'charting system?'] as const
+/** Focused EMR / charting follow-up; brand names nudge tech-stack / job-post hits. */
+export const FACILITY_GOOGLE_EMR_PROMPTS = [
+  'EMR?',
+  'EHR?',
+  'charting system?',
+  'Epic',
+  'Cerner',
+  'Meditech',
+] as const
 
 /** Readable labels for UI (trailing `?` stripped). */
 export const FACILITY_GOOGLE_SEARCH_LABELS = FACILITY_GOOGLE_SEARCH_PROMPTS.map((p) =>
@@ -25,19 +33,31 @@ export const FACILITY_GOOGLE_SEARCH_LABELS = FACILITY_GOOGLE_SEARCH_PROMPTS.map(
 
 type EmployerLocation = Pick<EmployerEntry, 'name' | 'city' | 'state'>
 
+function stripWrappingQuotes(value: string): string {
+  return value.replace(/^"+|"+$/g, '').trim()
+}
+
+/**
+ * Name + city/state for the query. When both are present as separate segments,
+ * wrap each in quotes for disambiguation — do not quote metric prompts.
+ */
 function facilityNameAndLocation(
   employer: EmployerLocation,
   options?: FacilityGoogleSearchOptions,
 ): string[] {
   const typed = options?.searchQuery?.trim()
-  const name = typed || employer.name?.trim()
+  const name = stripWrappingQuotes(typed || employer.name?.trim() || '')
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const locationAlreadyInName = Boolean(
     location && name && name.toLowerCase().includes(location.toLowerCase()),
   )
-  return [name, location && !locationAlreadyInName ? location : null].filter(
+  const parts = [name, location && !locationAlreadyInName ? location : null].filter(
     (part): part is string => Boolean(part),
   )
+  if (parts.length >= 2) {
+    return parts.map((part) => `"${stripWrappingQuotes(part)}"`)
+  }
+  return parts
 }
 
 function googleSearchUrl(parts: Array<string | null | undefined>): string {
@@ -46,10 +66,10 @@ function googleSearchUrl(parts: Array<string | null | undefined>): string {
 }
 
 /**
- * Prefilled Google query for researching an unlinked facility (no PHI beyond card fields).
+ * Prefilled Google query for researching unlinked facility stats (no PHI beyond card fields).
  *
- * Use `term?` prompts (not many exact-phrase quotes). Quoting trauma/beds/teaching/EMR
- * together ANDs rare phrases and often returns zero hits — client prefers the ? form.
+ * Quote name + city/state when both exist; leave metric prompts as soft `term?` keywords.
+ * EMR / charting belong on {@link facilityGoogleEmrSearchUrl}.
  */
 export function facilityGoogleSearchUrl(
   employer: EmployerLocation,
@@ -61,7 +81,7 @@ export function facilityGoogleSearchUrl(
   ])
 }
 
-/** Focused Google query for EMR / charting when the broad verify search omits them. */
+/** Focused Google query for EMR / charting when the broad verify search omits those. */
 export function facilityGoogleEmrSearchUrl(
   employer: EmployerLocation,
   options?: FacilityGoogleSearchOptions,

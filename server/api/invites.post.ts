@@ -1,14 +1,18 @@
 import { randomBytes } from 'node:crypto'
 import { inviteCreateSchema } from '~/server/utils/schemas'
+import { getAppSettings } from '~/server/utils/adminSettings'
 
 export default defineEventHandler(async (event) => {
   const user = await requireAdminSession(event)
   const body = inviteCreateSchema.parse(await readBody(event))
+  const settings = await getAppSettings()
   const supabase = useSupabaseAdmin()
 
   const token = randomBytes(32).toString('hex')
   const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + body.expires_in_days)
+  expiresAt.setDate(
+    expiresAt.getDate() + (body.expires_in_days ?? settings.default_invite_expiration_days),
+  )
 
   const namedLabel = [body.candidate_first_name, body.candidate_last_name].filter(Boolean).join(' ').trim()
   const label = body.label?.trim() || namedLabel || null

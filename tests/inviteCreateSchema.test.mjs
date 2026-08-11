@@ -7,9 +7,10 @@ import { inviteCreateSchema } from '../utils/inviteCreateSchema.ts'
 
 describe('inviteCreateSchema', () => {
   it('allows invites without names (upload/scratch drafts)', () => {
-    const parsed = inviteCreateSchema.parse({ expires_in_days: 7 })
+    const parsed = inviteCreateSchema.parse({})
     assert.equal(parsed.candidate_first_name, undefined)
     assert.equal(parsed.candidate_last_name, undefined)
+    assert.equal(parsed.expires_in_days, undefined)
   })
 
   it('treats empty names as undefined', () => {

@@ -63,6 +63,14 @@ describe('facilityGoogleSearchUrl', () => {
     )
     assert.equal(url.match(/Austin, TX/g)?.length, 1)
   })
+
+  it('supports an admin-configured facility template', () => {
+    const url = facilityGoogleSearchUrl(
+      { name: 'Metro General', city: 'Austin', state: 'TX' },
+      { template: 'https://www.google.com/search?q={facilityName}+{city}+{state}+trauma' },
+    )
+    assert.equal(url, 'https://www.google.com/search?q=Metro%20General+Austin+TX+trauma')
+  })
 })
 
 describe('facilityGoogleEmrSearchUrl', () => {

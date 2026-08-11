@@ -4,7 +4,6 @@ import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
 import { linkEmployerFromHospital, unlinkEmployerFacility } from '~/utils/employerLink'
 import { EMPLOYMENT_TYPE_OPTIONS, normalizeEmploymentType } from '~/utils/employmentType'
 import {
-  FACILITY_GOOGLE_SEARCH_LABELS,
   facilityGoogleEmrSearchUrl,
   facilityGoogleSearchUrl,
 } from '~/utils/facilityGoogleSearch'
@@ -266,8 +265,6 @@ function onEmploymentTypeChange(event: Event) {
   }
   patchField('type', next)
 }
-
-const googleSearchPromptsSummary = FACILITY_GOOGLE_SEARCH_LABELS.join(', ')
 
 function openFacilityGoogleSearch() {
   if (!import.meta.client) return
@@ -534,7 +531,7 @@ function onTraumaLevelChange(event: Event) {
                   class="text-[11px] leading-snug"
                   :class="missingFacilityStats ? 'text-amber-900/80' : 'text-brand-900/70'"
                 >
-                  Searches for: {{ googleSearchPromptsSummary }}. Google may not list every item.
+                  Search facility specs (beds, trauma, Magnet) or check EMR software separately.
                 </p>
                 <button
                   type="button"

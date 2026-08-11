@@ -16,28 +16,29 @@ describe('facilityGoogleSearchUrl', () => {
     })
     const decoded = decodeURIComponent(url)
     assert.match(url, /^https:\/\/www\.google\.com\/search\?q=/)
-    assert.match(decoded, /Metro General/)
-    assert.match(decoded, /Austin, TX/)
+    assert.match(decoded, /"Metro General"/)
+    assert.match(decoded, /"Austin, TX"/)
     for (const prompt of FACILITY_GOOGLE_SEARCH_PROMPTS) {
       assert.match(decoded, new RegExp(prompt.replace(/[?*+^${}()|[\]\\]/g, '\\$&')))
     }
+    assert.doesNotMatch(decoded, /EMR/)
+    assert.doesNotMatch(decoded, /charting system/)
     assert.doesNotMatch(decoded, /"trauma level"/)
   })
 
   it('exposes readable labels without trailing question marks', () => {
     assert.deepEqual(FACILITY_GOOGLE_SEARCH_LABELS, [
       'trauma level',
-      'total beds',
-      'teaching hospital',
+      'beds',
+      'teaching',
       'Magnet',
-      'EMR',
-      'charting system',
     ])
   })
 
   it('omits empty location segments', () => {
     const url = decodeURIComponent(facilityGoogleSearchUrl({ name: 'Regional Medical' }))
     assert.match(url, /Regional Medical/)
+    assert.doesNotMatch(url, /"/)
     assert.doesNotMatch(url, /undefined/)
   })
 
@@ -48,9 +49,9 @@ describe('facilityGoogleSearchUrl', () => {
         { searchQuery: 'Trinity Health Grand Rapids' },
       ),
     )
-    assert.match(url, /Trinity Health Grand Rapids/)
+    assert.match(url, /"Trinity Health Grand Rapids"/)
     assert.doesNotMatch(url, /Metro General/)
-    assert.match(url, /Austin, TX/)
+    assert.match(url, /"Austin, TX"/)
     assert.match(url, /trauma level\?/)
   })
 
@@ -62,6 +63,7 @@ describe('facilityGoogleSearchUrl', () => {
       ),
     )
     assert.equal(url.match(/Austin, TX/g)?.length, 1)
+    assert.doesNotMatch(url, /"/)
   })
 })
 
@@ -74,13 +76,17 @@ describe('facilityGoogleEmrSearchUrl', () => {
         state: 'TX',
       }),
     )
-    assert.match(decoded, /Metro General/)
-    assert.match(decoded, /Austin, TX/)
+    assert.match(decoded, /"Metro General"/)
+    assert.match(decoded, /"Austin, TX"/)
     assert.match(decoded, /\bEMR\?/)
+    assert.match(decoded, /\bEHR\?/)
     assert.match(decoded, /charting system\?/)
+    assert.match(decoded, /\bEpic\b/)
+    assert.match(decoded, /\bCerner\b/)
+    assert.match(decoded, /\bMeditech\b/)
     assert.doesNotMatch(decoded, /trauma level/)
-    assert.doesNotMatch(decoded, /total beds/)
-    assert.doesNotMatch(decoded, /teaching hospital/)
+    assert.doesNotMatch(decoded, /\bbeds\?/)
+    assert.doesNotMatch(decoded, /teaching/)
     assert.doesNotMatch(decoded, /Magnet/)
   })
 })

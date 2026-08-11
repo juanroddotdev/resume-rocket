@@ -260,13 +260,18 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
       method: 'DELETE',
       headers,
     })
+    candidates.value = candidates.value.filter(c => c.id !== candidate.id)
     if (selectedCandidate.value?.id === candidate.id) {
       selectedCandidate.value = null
     }
-    await loadCandidates()
   } catch (error: unknown) {
-    const err = error as { data?: { statusMessage?: string }; message?: string }
-    deleteError.value = err.data?.statusMessage || err.message || 'Could not delete draft.'
+    const err = error as { data?: { statusMessage?: string; message?: string }; message?: string; statusCode?: number }
+    const detail = err.data?.statusMessage || err.data?.message || err.message || ''
+    if (!err.statusCode && /failed to fetch|no response/i.test(detail)) {
+      deleteError.value = 'Delete failed — server did not respond. Try again; if it keeps happening, refresh the page.'
+    } else {
+      deleteError.value = detail || 'Could not delete draft.'
+    }
   }
 }
 </script>

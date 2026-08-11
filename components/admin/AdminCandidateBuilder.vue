@@ -229,6 +229,9 @@ watch(activeSection, (next, prev) => {
 })
 
 onBeforeUnmount(() => {
+  // #178 race: packet upload remounts the builder (reloadKey) while draft is
+  // still loading — flushing the empty form wiped parse-filled DB fields.
+  if (skipAutosave.value || loading.value) return
   void flushAutosave()
 })
 

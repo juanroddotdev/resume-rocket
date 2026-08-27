@@ -1,6 +1,5 @@
 import { parseCandidateResumeFile } from '~/server/utils/parseCandidateResume'
-
-const MAX_BYTES = 10 * 1024 * 1024
+import { getAppSettings, uploadTooLargeMessage } from '~/server/utils/adminSettings'
 
 export default defineEventHandler(async (event) => {
   const form = await readMultipartFormData(event)
@@ -18,10 +17,11 @@ export default defineEventHandler(async (event) => {
 
   const mime = filePart.type || 'application/octet-stream'
   const buffer = Buffer.from(filePart.data)
-  if (buffer.length > MAX_BYTES) {
+  const settings = await getAppSettings()
+  if (buffer.length > settings.max_upload_bytes) {
     throw createError({
       statusCode: 413,
-      statusMessage: 'File must be 10MB or smaller',
+      statusMessage: uploadTooLargeMessage(settings),
     })
   }
 

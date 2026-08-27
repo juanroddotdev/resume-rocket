@@ -29,7 +29,31 @@ describe('parseOutcomeFromBlob', () => {
       fields_found: 12,
       partial_parse: true,
       document_scan: false,
+      ai_failed: true,
       gemini_failed: true,
+      parse_failed: false,
+    })
+  })
+
+  it('reads provider-neutral Claude outcomes from parsed_resume JSONB', () => {
+    const outcome = parseOutcomeFromBlob({
+      outcome: {
+        fields_found: 8,
+        partial_parse: true,
+        document_scan: true,
+        ai_provider: 'claude',
+        ai_failed: true,
+        parse_failed: false,
+      },
+    })
+
+    assert.deepEqual(outcome, {
+      fields_found: 8,
+      partial_parse: true,
+      document_scan: true,
+      ai_provider: 'claude',
+      ai_failed: true,
+      gemini_failed: false,
       parse_failed: false,
     })
   })

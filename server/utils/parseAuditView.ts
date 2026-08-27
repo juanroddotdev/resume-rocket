@@ -111,10 +111,18 @@ export function parseOutcomeFromBlob(parsedResume: unknown): ParseOutcome | null
   if (!outcome || typeof outcome !== 'object') return null
   const o = outcome as Record<string, unknown>
   if (typeof o.fields_found !== 'number') return null
+  const aiProvider = o.ai_provider === 'claude' || o.ai_provider === 'gemini'
+    ? o.ai_provider
+    : undefined
+  const aiFailed = typeof o.ai_failed === 'boolean'
+    ? o.ai_failed
+    : Boolean(o.gemini_failed)
   return {
     fields_found: o.fields_found,
     partial_parse: Boolean(o.partial_parse),
     document_scan: Boolean(o.document_scan),
+    ...(aiProvider ? { ai_provider: aiProvider } : {}),
+    ai_failed: aiFailed,
     gemini_failed: Boolean(o.gemini_failed),
     parse_failed: Boolean(o.parse_failed),
   }

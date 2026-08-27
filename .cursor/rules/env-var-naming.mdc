@@ -11,7 +11,7 @@ Canonical names (see `.env.example`):
 - `NUXT_PUBLIC_SUPABASE_URL`, `NUXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NUXT_PUBLIC_SITE_URL`
-- `GEMINI_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+- `AI_PROVIDER`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
 
 `nuxt.config.ts` `supabase` block must map legacy aliases (`SUPABASE_URL`, `SUPABASE_KEY`, etc.) for `@nuxtjs/supabase` and `requireAdmin.ts`.
 

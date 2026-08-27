@@ -1,7 +1,4 @@
-import { isGeminiConfigured } from '~/server/utils/geminiShared'
-import { proposeProfessionalSnapshotWithGemini } from '~/server/utils/geminiSnapshotPropose'
 import { loadResumeTextForSnapshotPropose } from '~/server/utils/resumeTextForCandidate'
-import { userFacingGeminiError } from '~/server/utils/geminiErrors'
 import { assertAdminOwnsCandidate } from '~/server/utils/adminCandidateOwnership'
 
 export default defineEventHandler(async (event) => {
@@ -15,10 +12,11 @@ export default defineEventHandler(async (event) => {
   await assertAdminOwnsCandidate(user, id)
 
   const config = useRuntimeConfig()
-  if (!isGeminiConfigured(config.geminiApiKey)) {
+  const aiProvider = resolveAiProviderName(config)
+  if (!isAiProviderConfigured(aiProvider, config)) {
     throw createError({
       statusCode: 503,
-      statusMessage: 'Gemini is not configured. Set GEMINI_API_KEY to regenerate Snapshot from resume.',
+      statusMessage: `${aiProviderDisplayName(aiProvider)} is not configured. Set ${aiProviderApiKeyName(aiProvider)} to regenerate Snapshot from resume.`,
     })
   }
 
@@ -40,16 +38,17 @@ export default defineEventHandler(async (event) => {
   })
 
   try {
-    const proposals = await proposeProfessionalSnapshotWithGemini(text)
+    const proposals = await proposeProfessionalSnapshotWithAi(text)
     return {
       proposals,
       text_source: source,
       proposal_count: Object.keys(proposals).length,
+      ai_provider: aiProvider,
     }
   } catch (e) {
     throw createError({
       statusCode: 502,
-      statusMessage: userFacingGeminiError(e, 'text'),
+      statusMessage: userFacingAiError(e, 'text', aiProvider),
     })
   }
 })

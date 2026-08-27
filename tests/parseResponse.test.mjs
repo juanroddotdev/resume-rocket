@@ -28,11 +28,11 @@ function assertParseResponseContract(payload) {
   assert.ok(Array.isArray(payload.detected_credentials))
 }
 
-/** Mirrors parseCandidateResume outcome flags (pure contract, no Gemini). */
-function outcomeFlags({ geminiFailed, hasFields, documentVision }) {
+/** Mirrors parseCandidateResume outcome flags (pure contract, no live AI call). */
+function outcomeFlags({ aiFailed, hasFields, documentVision }) {
   return {
     parse_failed: !hasFields,
-    partial_parse: geminiFailed && hasFields,
+    partial_parse: aiFailed && hasFields,
     document_scan: documentVision,
   }
 }
@@ -82,8 +82,8 @@ describe('parse response contract', () => {
     })
   })
 
-  it('matches partial_parse when Gemini failed but heuristics found fields', () => {
-    const flags = outcomeFlags({ geminiFailed: true, hasFields: true, documentVision: false })
+  it('matches partial_parse when AI failed but heuristics found fields', () => {
+    const flags = outcomeFlags({ aiFailed: true, hasFields: true, documentVision: false })
     const payload = {
       candidateId: '00000000-0000-4000-8000-000000000003',
       ...flags,
@@ -100,7 +100,7 @@ describe('parse response contract', () => {
   })
 
   it('matches document_scan success shape', () => {
-    const flags = outcomeFlags({ geminiFailed: false, hasFields: true, documentVision: true })
+    const flags = outcomeFlags({ aiFailed: false, hasFields: true, documentVision: true })
     const payload = {
       candidateId: '00000000-0000-4000-8000-000000000004',
       ...flags,
@@ -116,7 +116,7 @@ describe('parse response contract', () => {
   })
 
   it('never sets partial_parse when parse_failed is true', () => {
-    const flags = outcomeFlags({ geminiFailed: true, hasFields: false, documentVision: false })
+    const flags = outcomeFlags({ aiFailed: true, hasFields: false, documentVision: false })
     assert.equal(flags.parse_failed, true)
     assert.equal(flags.partial_parse, false)
   })
@@ -237,7 +237,7 @@ describe('outcome flags + hasParsedFields', () => {
   it('credentials alone count as parsed content for partial_parse path', () => {
     assert.equal(hasParsedFields({ detectedCredentials: ['BLS'] }), true)
     const flags = outcomeFlags({
-      geminiFailed: true,
+      aiFailed: true,
       hasFields: hasParsedFields({ detectedCredentials: ['BLS'] }),
       documentVision: false,
     })
@@ -248,7 +248,7 @@ describe('outcome flags + hasParsedFields', () => {
   it('empty object is total failure', () => {
     assert.equal(hasParsedFields({}), false)
     const flags = outcomeFlags({
-      geminiFailed: false,
+      aiFailed: false,
       hasFields: false,
       documentVision: true,
     })

@@ -489,7 +489,9 @@ export function useCandidateForm() {
     }
     if (data.education?.length) form.value.education = [...data.education]
     if (data.suggested_employers?.length) {
-      form.value.employers = mapParsedEmployers(data.suggested_employers)
+      form.value.employers = mapParsedEmployers(data.suggested_employers, {
+        primarySpecialty: form.value.specialties[0],
+      })
     }
     if (data.credentials && Object.keys(data.credentials).length) {
       form.value.credentials = normalizeStoredCredentials(data.credentials)

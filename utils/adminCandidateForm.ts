@@ -273,7 +273,9 @@ export function applyParseResultToForm(
   }
   if (data.education?.length) form.education = [...data.education]
   if (data.suggested_employers?.length) {
-    form.employers = mapParsedEmployers(data.suggested_employers)
+    form.employers = mapParsedEmployers(data.suggested_employers, {
+      primarySpecialty: form.specialties[0],
+    })
   }
   if (data.credentials && Object.keys(data.credentials).length) {
     form.credentials = normalizeStoredCredentials(data.credentials)

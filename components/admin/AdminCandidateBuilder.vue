@@ -37,6 +37,7 @@ const {
   scheduleAutosave,
   onParsed,
   flushAutosave,
+  syncSnapshotFromFeeds,
   downloadDraftDocx,
   markSubmitted,
   scrollToSection,
@@ -350,6 +351,22 @@ watch(form, () => {
   if (skipAutosave.value || !isEditable.value) return
   scheduleAutosave()
 }, { deep: true })
+
+watch(
+  () => ({
+    employers: form.employers,
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience,
+    average_patient_ratios: form.average_patient_ratios,
+    specialized_medical_equipment: form.specialized_medical_equipment,
+    emr_system: form.emr_system,
+  }),
+  () => {
+    if (skipAutosave.value || !isEditable.value) return
+    syncSnapshotFromFeeds()
+  },
+  { deep: true },
+)
 
 watch(loading, (isLoading) => {
   if (!isLoading) {

@@ -4,7 +4,7 @@ import { isCandidatePatchLocked } from '~/utils/candidatePatchLock'
 import { isAllowedStatusPatch } from '~/utils/candidateStatusPatch'
 import { candidatePatchSchema } from '~/server/utils/schemas'
 import { normalizeCandidateRow } from '~/server/utils/normalizeCandidate'
-import { buildProfessionalSnapshotFromCandidate } from '~/utils/professionalSnapshot'
+import { mergeDerivedSnapshotIntoStored, normalizeProfessionalSnapshot } from '~/utils/professionalSnapshot'
 
 type CandidatePatchBody = z.infer<typeof candidatePatchSchema>
 
@@ -52,20 +52,25 @@ export async function patchCandidateRow(candidateId: string, body: CandidatePatc
     Object.assign(patch, legacyScalarsFromLicenses(patch.licenses as never))
   }
 
-  // Phase 2: refresh derived snapshot when feed fields change (before admin manual edits).
-  if (body.professional_snapshot === undefined && patchTouchesSnapshotFeeds(body) && existing) {
+  // Refresh derived snapshot when feed fields change; merge preserves pinned/manual lines.
+  if (patchTouchesSnapshotFeeds(body) && existing) {
     const normalized = normalizeCandidateRow({
       ...existing,
       ...patch,
     } as Record<string, unknown>)
-    patch.professional_snapshot = buildProfessionalSnapshotFromCandidate({
+    const candidateInput = {
       specialties: normalized.specialties as string[] | null,
       years_nursing_experience: normalized.years_nursing_experience as string | null,
       average_patient_ratios: normalized.average_patient_ratios as string | null,
       specialized_medical_equipment: normalized.specialized_medical_equipment as string | null,
       emr_system: normalized.emr_system as string | null,
       employers: normalized.employers,
-    })
+    }
+    const stored =
+      body.professional_snapshot !== undefined
+        ? body.professional_snapshot
+        : normalizeProfessionalSnapshot(existing.professional_snapshot)
+    patch.professional_snapshot = mergeDerivedSnapshotIntoStored(stored, candidateInput)
   }
 
   const { data, error } = await supabase

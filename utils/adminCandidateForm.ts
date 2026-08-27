@@ -15,6 +15,7 @@ import { legacyScalarsFromLicenses, resolveCandidateLicenses } from './licenseRo
 import type { ProfessionalSnapshot } from './professionalSnapshot.ts'
 import {
   buildProfessionalSnapshotFromCandidate,
+  mergeDerivedSnapshotIntoStored,
   normalizeProfessionalSnapshot,
   resolveProfessionalSnapshotForEdit,
 } from './professionalSnapshot.ts'
@@ -81,6 +82,32 @@ function stripEmployerSuggestions(employers: EmployerEntry[]): EmployerEntry[] {
   return employers.map(({ hospitalSuggestions: _s, ...rest }) => rest)
 }
 
+function snapshotFeedInput(form: ReturnType<typeof defaultCandidateForm>) {
+  const employers = employersForPatch(form.employers)
+  const emrUnion = employerEmrProficienciesUnion(employers)
+  return {
+    specialties: form.specialties,
+    years_nursing_experience: form.years_nursing_experience,
+    average_patient_ratios: form.average_patient_ratios,
+    specialized_medical_equipment: form.specialized_medical_equipment,
+    emr_system: emrUnion || form.emr_system,
+    employers,
+  }
+}
+
+export function syncSnapshotFromFeeds(
+  form: ReturnType<typeof defaultCandidateForm>,
+  options?: { includePinned?: boolean },
+): ProfessionalSnapshot {
+  const merged = mergeDerivedSnapshotIntoStored(
+    form.professional_snapshot,
+    snapshotFeedInput(form),
+    options,
+  )
+  form.professional_snapshot = merged
+  return merged
+}
+
 export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateForm>): CandidateDraftInput {
   const employers = employersForPatch(form.employers)
   const emrUnion = employerEmrProficienciesUnion(employers)
@@ -112,7 +139,9 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     average_patient_ratios: form.average_patient_ratios || undefined,
     specialized_medical_equipment: form.specialized_medical_equipment || undefined,
     education: form.education.length ? form.education : undefined,
-    professional_snapshot: normalizeProfessionalSnapshot(form.professional_snapshot),
+    professional_snapshot: normalizeProfessionalSnapshot(
+      mergeDerivedSnapshotIntoStored(form.professional_snapshot, snapshotFeedInput(form)),
+    ),
   }
 }
 

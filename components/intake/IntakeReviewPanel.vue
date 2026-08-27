@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<{
   previewReloadToken?: number | string
   previewLoading?: boolean
   previewSaveError?: string | null
+  previewStale?: boolean
   active?: boolean
   /** When false, preview opens externally (e.g. slide-over) via the preview event. */
   presentPreview?: boolean
@@ -123,7 +124,15 @@ function onBackToEdit() {
           :disabled="submitting || previewLoading || !canPreview"
           @click="onPreviewClick"
         >
-          {{ previewLoading ? 'Saving…' : 'Preview packet' }}
+          <span class="inline-flex items-center justify-center gap-1.5">
+            {{ previewLoading ? 'Saving…' : 'Preview packet' }}
+            <span
+              v-if="previewStale && !previewLoading"
+              class="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
+            >
+              Updated
+            </span>
+          </span>
         </button>
       </div>
     </template>

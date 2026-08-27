@@ -55,6 +55,18 @@ const redownloadError = ref<string | null>(null)
 const previewSaving = ref(false)
 const previewSaveError = ref<string | null>(null)
 const previewReloadToken = ref(0)
+const employmentPacketSync = useEmploymentPacketSync({
+  saveStatus,
+  mode: 'intake',
+  isActive: computed(() => currentStep.value === 2),
+  onPreviewRefresh: () => {
+    if (currentStep.value === 4) previewReloadToken.value += 1
+  },
+})
+const employmentSyncNotice = employmentPacketSync.syncNotice
+const employmentPreviewStale = employmentPacketSync.previewStale
+const markEmploymentFeedsChanged = employmentPacketSync.markEmploymentFeedsChanged
+const acknowledgeEmploymentPreviewFresh = employmentPacketSync.acknowledgePreviewFresh
 const draftRestoredBanner = ref(false)
 const hospitalAutocompleteRef = ref<{ openEmployerField: (fieldId: string) => boolean } | null>(null)
 const educationRepeaterRef = ref<{ openEducationField: (fieldId: string) => boolean } | null>(null)
@@ -275,6 +287,18 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => ({
+    employers: form.value.employers,
+    specialties: form.value.specialties,
+  }),
+  () => {
+    if (currentStep.value !== 2) return
+    markEmploymentFeedsChanged()
+  },
+  { deep: true },
+)
+
 async function onParsed(data: Record<string, unknown>) {
   if (!candidateId.value && data.candidateId) {
     candidateId.value = String(data.candidateId)
@@ -439,6 +463,7 @@ async function onReviewPreview() {
   try {
     await reconcileCandidateId()
     await flushAutosave()
+    acknowledgeEmploymentPreviewFresh()
   } catch {
     previewSaveError.value = 'Could not save your latest answers.'
   } finally {
@@ -703,6 +728,14 @@ async function onReviewPreview() {
       <section v-else-if="currentStep === 2" class="space-y-4">
         <h1 class="text-xl font-bold">Employment</h1>
         <ParseNoticeBanner :meta="parseMeta" />
+        <EmploymentPacketSyncNotice :message="employmentSyncNotice" />
+        <p
+          v-if="saveStatus === 'saving'"
+          class="text-xs text-slate-500"
+          role="status"
+        >
+          Saving employment…
+        </p>
         <SpecialtyChipInput
           v-model="form.specialties"
           label="Specialties / units"
@@ -803,6 +836,7 @@ async function onReviewPreview() {
           :preview-reload-token="previewReloadToken"
           :preview-loading="previewSaving"
           :preview-save-error="previewSaveError"
+          :preview-stale="employmentPreviewStale"
           :active="currentStep === 4"
           @back="goToStep(3)"
           @preview="onReviewPreview"

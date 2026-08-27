@@ -66,6 +66,17 @@ const previewSaveError = ref<string | null>(null)
 const previewReloadToken = ref(0)
 const previewAuthHeaders = ref<Record<string, string>>({})
 const previewOpen = ref(false)
+const employmentPacketSync = useEmploymentPacketSync({
+  saveStatus,
+  mode: 'admin',
+  onPreviewRefresh: () => {
+    if (previewOpen.value) previewReloadToken.value += 1
+  },
+})
+const employmentSyncNotice = employmentPacketSync.syncNotice
+const employmentPreviewStale = employmentPacketSync.previewStale
+const markEmploymentFeedsChanged = employmentPacketSync.markEmploymentFeedsChanged
+const acknowledgeEmploymentPreviewFresh = employmentPacketSync.acknowledgePreviewFresh
 const devPrefilling = ref(false)
 const markConfirmOpen = ref(false)
 const skipAutosave = ref(true)
@@ -186,6 +197,7 @@ async function preparePreview() {
 
 async function openPreview() {
   previewOpen.value = true
+  acknowledgeEmploymentPreviewFresh()
   emit('preview-open', true)
   await preparePreview()
 }
@@ -364,6 +376,7 @@ watch(
   () => {
     if (skipAutosave.value || !isEditable.value) return
     syncSnapshotFromFeeds()
+    markEmploymentFeedsChanged()
   },
   { deep: true },
 )
@@ -479,7 +492,16 @@ watch(devFixtureRequest, (mode) => {
               :disabled="previewSaving || devPrefilling"
               @click="openPreview"
             >
-              {{ previewSaving && previewOpen ? 'Preparing…' : 'Preview packet' }}
+              <span class="inline-flex items-center gap-1.5">
+                {{ previewSaving && previewOpen ? 'Preparing…' : 'Preview packet' }}
+                <span
+                  v-if="employmentPreviewStale && !previewOpen"
+                  class="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900"
+                  title="Employment changed since last preview"
+                >
+                  Updated
+                </span>
+              </span>
             </button>
             <button
               type="button"
@@ -663,7 +685,17 @@ watch(devFixtureRequest, (mode) => {
 
           <!-- Employment -->
           <section id="admin-section-employment" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-8">
-            <h2 class="text-sm font-medium tracking-tight text-slate-500">Employment</h2>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 class="text-sm font-medium tracking-tight text-slate-500">Employment</h2>
+              <p
+                v-if="saveStatus === 'saving' && activeSection === 'employment'"
+                class="text-xs text-slate-500"
+                role="status"
+              >
+                Saving employment…
+              </p>
+            </div>
+            <EmploymentPacketSyncNotice :message="employmentSyncNotice" />
             <SpecialtyChipInput
               v-model="form.specialties"
               label="Specialties / units"

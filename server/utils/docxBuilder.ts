@@ -25,6 +25,7 @@ import {
   professionalSnapshotToLines,
   resolveProfessionalSnapshotForDocx,
 } from '../../utils/professionalSnapshot.ts'
+import { formatEmployerRoleForDocx } from '../../utils/roleFormatting.ts'
 
 interface DocxEmployer extends EmployerEntry {}
 
@@ -129,17 +130,6 @@ function facilityTypesTraumaLevels(_employers: DocxEmployer[]): string {
   return ''
 }
 
-function roleDetailsForDocx(role: string | undefined, unitSpecialty: string): string {
-  const roleText = (role || '').trim()
-  const unitText = unitSpecialty.trim()
-  if (!roleText) return ''
-  if (!unitText) return roleText
-  if (roleText.toLowerCase() === unitText.toLowerCase()) return ''
-  if (roleText.toLowerCase().includes(unitText.toLowerCase())) return ''
-  if (unitText.toLowerCase().includes(roleText.toLowerCase())) return ''
-  return roleText
-}
-
 function resolveCandidateLocation(candidate: DocxCandidate) {
   const homeCity = candidate.home_city?.trim() || ''
   const homeState = candidate.home_state?.trim().toUpperCase() || ''
@@ -177,20 +167,20 @@ function mapEmployerToExperience(
 ) {
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const dates = [employer.startDate, employer.endDate].filter(Boolean)
-  const unitSpecialty = employer.role?.trim() || primarySpecialty
+  const formattedRole = formatEmployerRoleForDocx(employer, primarySpecialty)
   const metrics = employerMetricsLineFields(employer, { legacyEmrSystem })
 
   const metricsLine = formatEmployerMetricsLine(employer, { legacyEmrSystem })
 
   return {
-    experience_unit_specialty: unitSpecialty,
+    experience_unit_specialty: formattedRole.unitSpecialty,
     experience_facility_type: '',
     experience_hospital_name: docxText(employer.name),
     experience_facility_location: location,
     experience_employment_dates:
       dates.length === 2 ? `${dates[0]} – ${dates[1]}` : dates.join(' – '),
     experience_employment_type: formatEmploymentTypeForDocx(employer),
-    experience_role_details: roleDetailsForDocx(employer.role, unitSpecialty),
+    experience_role_details: formattedRole.roleDetails,
     /** Joined labeled metrics (omits empties — avoids orphan ` • ` in DOCX). */
     experience_metrics_line: metricsLine,
     /** 0–1 row loop so the metrics paragraph is omitted when the line is empty. */

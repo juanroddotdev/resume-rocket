@@ -133,7 +133,8 @@ const SNAPSHOT_HIGHLIGHT_EXCLUDE = new Set([
 export function notableAchievementsFromEmployers(employers: EmployerEntry[]): string {
   const highlights = employers.flatMap(e => e.highlights || [])
   const filtered = highlights.filter((raw) => {
-    const item = raw.trim()
+    if (raw == null) return false
+    const item = String(raw).trim()
     if (!item) return false
     return !SNAPSHOT_HIGHLIGHT_EXCLUDE.has(item.toLowerCase())
   })

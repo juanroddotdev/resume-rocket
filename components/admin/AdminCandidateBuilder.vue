@@ -675,6 +675,7 @@ watch(devFixtureRequest, (mode) => {
               ref="hospitalAutocompleteRef"
               :employers="form.employers"
               :legacy-emr-system="form.emr_system"
+              :primary-specialty="form.specialties[0]"
               deck-mode="multi"
               :sticky-chrome-offset-px="0"
               :persist-immediate="flushAutosave"

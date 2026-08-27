@@ -1,13 +1,17 @@
 import type { EmployerEntry } from '~/types/candidate'
 import type { HospitalRow, HospitalSuggestion } from '~/types/hospital'
 import { inferClinicalFlagsFromHighlights } from './employerClinicalFlags.ts'
+import { formatEmployerEntryRole } from './roleFormatting.ts'
 
 type ParsedEmployerFromApi = EmployerEntry & {
   employer_hospital_suggestions?: HospitalSuggestion[]
 }
 
 /** Map parse API employer rows to wizard entries with client-only suggestions. */
-export function mapParsedEmployers(employers: ParsedEmployerFromApi[]): EmployerEntry[] {
+export function mapParsedEmployers(
+  employers: ParsedEmployerFromApi[],
+  options?: { primarySpecialty?: string | null },
+): EmployerEntry[] {
   return employers.map((employer) => {
     const { employer_hospital_suggestions, hospitalSuggestions, ...rest } = employer
     const suggestions = employer_hospital_suggestions?.length
@@ -16,7 +20,7 @@ export function mapParsedEmployers(employers: ParsedEmployerFromApi[]): Employer
 
     const inferred = inferClinicalFlagsFromHighlights(rest.highlights)
 
-    return {
+    const entry: EmployerEntry = {
       ...rest,
       ...(rest.chargeNurseExperience == null && inferred.chargeNurseExperience != null
         ? { chargeNurseExperience: inferred.chargeNurseExperience }
@@ -26,6 +30,8 @@ export function mapParsedEmployers(employers: ParsedEmployerFromApi[]): Employer
         : {}),
       ...(suggestions?.length ? { hospitalSuggestions: suggestions } : {}),
     }
+
+    return formatEmployerEntryRole(entry, options?.primarySpecialty)
   })
 }
 

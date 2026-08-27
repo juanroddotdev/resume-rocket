@@ -11,6 +11,7 @@ import { triStateBoolFromSelect, triStateBoolValue } from '~/utils/employerClini
 import { arrayToLines, linesToArray } from '~/utils/employerLineList'
 import { TRAUMA_LEVEL_OPTIONS, normalizeTraumaLevel } from '~/utils/traumaLevel'
 import { formatEmployerMetricsLine } from '~/utils/employerMetricsLine'
+import { normalizeEmployerRole } from '~/utils/roleFormatting'
 
 const props = defineProps<{
   employer: EmployerEntry
@@ -25,6 +26,8 @@ const props = defineProps<{
   legacyEmrSystem?: string
   /** Sticky header offset in px (accounts for layout chrome + employer jump list). */
   stickyTopOffsetPx?: number
+  /** Candidate primary specialty — used for travel role presets. */
+  primarySpecialty?: string
 }>()
 
 const isPanel = computed(() => props.layout === 'panel')
@@ -263,7 +266,31 @@ function onEmploymentTypeChange(event: Event) {
   if (canonical !== 'Travel') {
     next.travelDetail = undefined
   }
+  if (canonical === 'Travel') {
+    const role = props.employer.role?.trim()
+    if (!role && props.primarySpecialty?.trim()) {
+      next.role = `Travel RN — ${props.primarySpecialty.trim()}`
+    } else if (role) {
+      const formatted = normalizeEmployerRole(role, {
+        employmentType: value,
+        primarySpecialty: props.primarySpecialty,
+      })
+      if (formatted !== role) next.role = formatted
+    }
+  }
   patchField('type', next)
+}
+
+function onRoleBlur() {
+  const role = props.employer.role?.trim()
+  if (!role) return
+  const formatted = normalizeEmployerRole(role, {
+    employmentType: props.employer.employmentType,
+    primarySpecialty: props.primarySpecialty,
+  })
+  if (formatted && formatted !== role) {
+    patchField('role', { role: formatted })
+  }
 }
 
 function openFacilityGoogleSearch() {
@@ -599,6 +626,7 @@ function onTraumaLevelChange(event: Event) {
               placeholder="e.g. ICU Staff RN"
               :class="fieldClasses(employerFieldId('role'))"
               @input="patchField('role', { role: ($event.target as HTMLInputElement).value })"
+              @blur="onRoleBlur"
             >
           </label>
 

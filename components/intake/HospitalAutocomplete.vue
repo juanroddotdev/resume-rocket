@@ -16,6 +16,8 @@ const props = defineProps<{
   /** Show a "View employers" control that opens the jump drawer (intake). Admin wires its own link. */
   showEmployersJumpLink?: boolean
   disabled?: boolean
+  /** Candidate primary specialty for travel role presets. */
+  primarySpecialty?: string
 }>()
 
 const emit = defineEmits<{
@@ -291,6 +293,7 @@ defineExpose({
         :persist-immediate="persistImmediate"
         :legacy-emr-system="legacyEmrSystem"
         :sticky-top-offset-px="cardStickyTopPx"
+        :primary-specialty="primarySpecialty"
         @update="patchEmployer(index, $event)"
         @toggle="openCard(index)"
       />

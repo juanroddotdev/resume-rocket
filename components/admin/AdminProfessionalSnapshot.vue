@@ -9,9 +9,12 @@ import type {
 import {
   PROFESSIONAL_SNAPSHOT_LABELS,
   SNAPSHOT_EXPERIENCE_FLAG_KEYS,
+  buildProfessionalSnapshotFromCandidate,
   computeSnapshotMismatches,
   ensureProfessionalSnapshotLines,
   formatExperienceFlagValue,
+  isSnapshotLinePinned,
+  mergeDerivedSnapshotIntoStored,
   parseExperienceFlagValue,
 } from '~/utils/professionalSnapshot'
 
@@ -26,6 +29,7 @@ const SHORT_TEXT_KEYS = [
 /** Longer free-text — full width under the grid. */
 const FULL_WIDTH_TEXT_KEYS = [
   'snapshot_equipment_skills',
+  'snapshot_notable_achievements',
 ] as const satisfies readonly ProfessionalSnapshotKey[]
 
 const model = defineModel<ProfessionalSnapshot>({ default: () => ({}) })
@@ -122,6 +126,21 @@ watch(
   { immediate: true },
 )
 
+function snapshotCandidateInput() {
+  return {
+    specialties: props.specialties,
+    years_nursing_experience: props.yearsNursingExperience,
+    average_patient_ratios: props.averagePatientRatios,
+    specialized_medical_equipment: props.specializedMedicalEquipment,
+    emr_system: props.emrSystem,
+    employers: props.employers,
+  }
+}
+
+function pinLine(line: ProfessionalSnapshotLine): ProfessionalSnapshotLine {
+  return { ...line, source: 'manual', pinned: true }
+}
+
 function patchLine(key: ProfessionalSnapshotKey, patch: Partial<ProfessionalSnapshotLine>) {
   const next = ensureProfessionalSnapshotLines(model.value)
   const current = next[key]
@@ -132,12 +151,15 @@ function patchLine(key: ProfessionalSnapshotKey, patch: Partial<ProfessionalSnap
       : patch.value !== undefined
         ? Boolean(value.trim()) || current.included
         : current.included
-  next[key] = {
-    ...current,
-    ...patch,
-    value,
-    included,
-  }
+  const pinOnValueEdit = patch.value !== undefined && patch.pinned === undefined
+  next[key] = pinOnValueEdit
+    ? pinLine({ ...current, ...patch, value, included })
+    : {
+      ...current,
+      ...patch,
+      value,
+      included,
+    }
   model.value = { ...next }
 }
 
@@ -145,11 +167,11 @@ function onValueInput(key: ProfessionalSnapshotKey, event: Event) {
   const value = (event.target as HTMLInputElement).value
   const next = ensureProfessionalSnapshotLines(model.value)
   const current = next[key]
-  next[key] = {
+  next[key] = pinLine({
     ...current,
     value,
     included: current.included || Boolean(value.trim()),
-  }
+  })
   model.value = { ...next }
 }
 
@@ -163,6 +185,8 @@ function setFlagAnswer(key: ProfessionalSnapshotKey, answer: SnapshotExperienceA
   patchLine(key, {
     value,
     included: Boolean(value.trim()) || lines.value[key]?.included,
+    pinned: true,
+    source: 'manual',
   })
 }
 
@@ -173,6 +197,8 @@ function setFlagDetail(key: ProfessionalSnapshotKey, detail: string) {
   patchLine(key, {
     value,
     included: Boolean(value.trim()) || lines.value[key]?.included,
+    pinned: true,
+    source: 'manual',
   })
 }
 
@@ -185,7 +211,7 @@ function toggleIncluded(key: ProfessionalSnapshotKey) {
   patchLine(key, { included: !lines.value[key].included })
 }
 
-/** Show provenance only for AI / supplemental — not redundant “Source: wizard”. */
+/** Show provenance for AI / supplemental / auto-sync — not redundant “Source: wizard”. */
 function lineEvidence(key: ProfessionalSnapshotKey): string | null {
   const line = lines.value[key]
   const snippet = line.sourceSnippet?.trim()
@@ -193,7 +219,33 @@ function lineEvidence(key: ProfessionalSnapshotKey): string | null {
   const source = line.source?.trim()
   if (source === 'gemini') return 'From resume'
   if (source === 'supplemental') return 'From extra details'
+  if (isSnapshotLinePinned(line)) return 'Pinned — employment changes will not overwrite'
+  if (source === 'wizard' && line.value.trim()) return 'Auto-synced from employment'
   return null
+}
+
+function resetLineToDerived(key: ProfessionalSnapshotKey) {
+  if (props.disabled) return
+  const derived = buildProfessionalSnapshotFromCandidate(snapshotCandidateInput())
+  const derivedLine = derived[key]
+  patchLine(key, {
+    value: derivedLine?.value ?? '',
+    included: Boolean(derivedLine?.value?.trim()),
+    source: 'wizard',
+    pinned: false,
+  })
+}
+
+function syncAllFromEmployment(includePinned = false) {
+  if (props.disabled) return
+  if (includePinned && !confirm('Overwrite pinned snapshot lines with values from Employment?')) {
+    return
+  }
+  model.value = mergeDerivedSnapshotIntoStored(
+    model.value,
+    snapshotCandidateInput(),
+    { includePinned },
+  )
 }
 
 function hasMismatchJump(key: ProfessionalSnapshotKey): boolean {
@@ -203,6 +255,10 @@ function hasMismatchJump(key: ProfessionalSnapshotKey): boolean {
     || key === 'snapshot_teaching_facility_experience'
     || key === 'snapshot_travel_experience'
     || key === 'snapshot_specialty'
+    || key === 'snapshot_equipment_skills'
+    || key === 'snapshot_patient_ratios_managed'
+    || key === 'snapshot_notable_achievements'
+    || key === 'snapshot_emr_systems'
   )
 }
 
@@ -229,16 +285,27 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           </p>
         </details>
       </div>
-      <button
-        v-if="isDirty"
-        type="button"
-        class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-        :disabled="disabled"
-        title="Restore snapshot to values from when this candidate was opened"
-        @click="resetToBaseline"
-      >
-        Reset
-      </button>
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          :disabled="disabled"
+          title="Refresh auto-synced lines from Employment data"
+          @click="syncAllFromEmployment(false)"
+        >
+          Sync from employment
+        </button>
+        <button
+          v-if="isDirty"
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          :disabled="disabled"
+          title="Restore snapshot to values from when this candidate was opened"
+          @click="resetToBaseline"
+        >
+          Reset
+        </button>
+      </div>
     </div>
 
     <!-- Short free-text: 2-column grid -->
@@ -310,6 +377,14 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           role="status"
         >
           {{ mismatchByKey[key] }}
+          <button
+            type="button"
+            class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
+            @click="resetLineToDerived(key)"
+          >
+            Reset line
+          </button>
           <button
             v-if="hasMismatchJump(key)"
             type="button"
@@ -391,6 +466,23 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         role="status"
       >
         {{ mismatchByKey[key] }}
+        <button
+          type="button"
+          class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+          :disabled="disabled"
+          @click="resetLineToDerived(key)"
+        >
+          Reset line
+        </button>
+        <button
+          v-if="hasMismatchJump(key)"
+          type="button"
+          class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+          :disabled="disabled"
+          @click="emit('go-to-employment')"
+        >
+          Go to Employment
+        </button>
       </p>
     </div>
 
@@ -507,6 +599,14 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           role="status"
         >
           {{ mismatchByKey[key] }}
+          <button
+            type="button"
+            class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
+            @click="resetLineToDerived(key)"
+          >
+            Reset line
+          </button>
           <button
             v-if="hasMismatchJump(key)"
             type="button"

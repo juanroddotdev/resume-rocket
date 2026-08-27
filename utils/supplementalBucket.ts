@@ -115,6 +115,7 @@ export function buildSupplementalBucket(
       id: `employer-${index}-highlights`,
       label: `${prefix}: highlights`,
       value: (employer.highlights || []).filter(Boolean).join('; '),
+      applyTargetKey: 'snapshot_notable_achievements',
     })
     pushItem(items, {
       id: `employer-${index}-floated`,

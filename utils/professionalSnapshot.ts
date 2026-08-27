@@ -1,9 +1,13 @@
 import type { EmployerEntry } from '../types/candidate'
+import {
+  CHARGE_NURSE_HIGHLIGHT_LABEL,
+  PRECEPTOR_HIGHLIGHT_LABEL,
+} from '../utils/employerClinicalFlags.ts'
 import { normalizeEmploymentType } from '../utils/employmentType.ts'
 import { employerEmrProficienciesUnion } from '../utils/emrSystem.ts'
 import { normalizeTraumaLevel } from '../utils/traumaLevel.ts'
 
-/** The 12 contract `snapshot_*` DOCX tags. */
+/** Contract `snapshot_*` DOCX tags (employment-derived + admin-approved). */
 export const PROFESSIONAL_SNAPSHOT_KEYS = [
   'snapshot_specialty',
   'snapshot_years_experience',
@@ -17,6 +21,7 @@ export const PROFESSIONAL_SNAPSHOT_KEYS = [
   'snapshot_emr_systems',
   'snapshot_patient_ratios_managed',
   'snapshot_equipment_skills',
+  'snapshot_notable_achievements',
 ] as const
 
 export type ProfessionalSnapshotKey = (typeof PROFESSIONAL_SNAPSHOT_KEYS)[number]
@@ -26,6 +31,8 @@ export interface ProfessionalSnapshotLine {
   included: boolean
   source?: string
   sourceSnippet?: string
+  /** When true, employment auto-sync must not overwrite this line until reset. */
+  pinned?: boolean
 }
 
 export type ProfessionalSnapshot = Partial<
@@ -117,17 +124,29 @@ function equipmentSkills(
   return uniqueJoin([...fromSpecialized, ...fromJobs])
 }
 
+const SNAPSHOT_HIGHLIGHT_EXCLUDE = new Set([
+  CHARGE_NURSE_HIGHLIGHT_LABEL.toLowerCase(),
+  PRECEPTOR_HIGHLIGHT_LABEL.toLowerCase(),
+])
+
+/** Union employer highlights for the Notable Achievements snapshot line. */
+export function notableAchievementsFromEmployers(employers: EmployerEntry[]): string {
+  const highlights = employers.flatMap(e => e.highlights || [])
+  const filtered = highlights.filter((raw) => {
+    const item = raw.trim()
+    if (!item) return false
+    return !SNAPSHOT_HIGHLIGHT_EXCLUDE.has(item.toLowerCase())
+  })
+  return uniqueJoin(filtered, '; ')
+}
+
 function patientRatios(
-  average: string | null | undefined,
+  _average: string | null | undefined,
   employers: EmployerEntry[],
 ): string {
   const scopes = employers
     .map(e => e.avgDailyPatients?.trim() || e.patientScope?.trim() || '')
     .filter(Boolean)
-  if (average?.trim()) {
-    if (!scopes.length) return average.trim()
-    return `${average.trim()}; ${uniqueJoin(scopes, '; ')}`
-  }
   return uniqueJoin(scopes, '; ')
 }
 
@@ -162,6 +181,7 @@ export function buildProfessionalSnapshotFromCandidate(
     snapshot_equipment_skills: line(
       equipmentSkills(candidate.specialized_medical_equipment, employers),
     ),
+    snapshot_notable_achievements: line(notableAchievementsFromEmployers(employers)),
   }
 }
 
@@ -184,10 +204,61 @@ export function normalizeProfessionalSnapshot(raw: unknown): ProfessionalSnapsho
     if (typeof row.sourceSnippet === 'string' && row.sourceSnippet.trim()) {
       lineOut.sourceSnippet = row.sourceSnippet.trim()
     }
+    if (row.pinned === true) {
+      lineOut.pinned = true
+    }
     out[key] = lineOut
   }
 
   return out
+}
+
+export function isSnapshotLinePinned(line: ProfessionalSnapshotLine | undefined): boolean {
+  if (!line) return false
+  if (line.pinned === true) return true
+  return line.source === 'manual'
+}
+
+export interface MergeDerivedSnapshotOptions {
+  /** When true, overwrite pinned/manual lines too (global sync). */
+  includePinned?: boolean
+}
+
+/**
+ * Merge employment-derived snapshot lines into stored snapshot.
+ * Unpinned lines update from feeds; pinned/manual lines are preserved unless includePinned.
+ */
+export function mergeDerivedSnapshotIntoStored(
+  stored: ProfessionalSnapshot | null | undefined,
+  candidate: SnapshotCandidateInput,
+  options: MergeDerivedSnapshotOptions = {},
+): ProfessionalSnapshot {
+  const derived = buildProfessionalSnapshotFromCandidate(candidate)
+  const current = ensureProfessionalSnapshotLines(stored)
+  const next: ProfessionalSnapshot = { ...current }
+
+  for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
+    const storedLine = current[key]
+    if (isSnapshotLinePinned(storedLine) && !options.includePinned) {
+      continue
+    }
+
+    const derivedLine = derived[key]
+    const derivedValue = derivedLine?.value ?? ''
+    const trimmedDerived = derivedValue.trim()
+
+    next[key] = {
+      value: derivedValue,
+      included: trimmedDerived
+        ? storedLine.included === false && storedLine.value.trim()
+          ? false
+          : true
+        : false,
+      source: 'wizard',
+    }
+  }
+
+  return next
 }
 
 export function professionalSnapshotHasValues(snapshot: ProfessionalSnapshot | null | undefined): boolean {
@@ -235,6 +306,7 @@ export const PROFESSIONAL_SNAPSHOT_DOCX_LABELS: Record<ProfessionalSnapshotKey, 
   snapshot_emr_systems: 'EMR Systems',
   snapshot_patient_ratios_managed: 'Patient Ratios Managed',
   snapshot_equipment_skills: 'Equipment/Skills',
+  snapshot_notable_achievements: 'Notable Achievements',
 }
 
 /**
@@ -269,6 +341,7 @@ export const PROFESSIONAL_SNAPSHOT_LABELS: Record<ProfessionalSnapshotKey, strin
   snapshot_emr_systems: 'EMR systems',
   snapshot_patient_ratios_managed: 'Patient ratios managed',
   snapshot_equipment_skills: 'Equipment / skills',
+  snapshot_notable_achievements: 'Notable achievements',
 }
 
 /** Experience-presence lines edited as Yes/No + optional detail. */
@@ -332,7 +405,7 @@ export function formatExperienceFlagValue(
 }
 
 /**
- * Ensure all 12 lines exist for admin editor binding.
+ * Ensure all snapshot lines exist for admin editor binding.
  * Does not trim values — trimming mid-keystroke eats Space in controlled inputs.
  * Use normalizeProfessionalSnapshot (or PATCH) to trim on save/export.
  */
@@ -360,6 +433,9 @@ export function ensureProfessionalSnapshotLines(
     }
     if (typeof entry.sourceSnippet === 'string' && entry.sourceSnippet.trim()) {
       lineOut.sourceSnippet = entry.sourceSnippet.trim()
+    }
+    if (entry.pinned === true) {
+      lineOut.pinned = true
     }
     out[key] = lineOut
   }
@@ -433,6 +509,29 @@ export function computeSnapshotMismatches(
       })
     }
   }
+
+  const derived = buildProfessionalSnapshotFromCandidate(candidate)
+
+  function warnDerivedDrift(
+    key: ProfessionalSnapshotKey,
+    employmentLabel: string,
+  ) {
+    const storedVal = lines[key].value.trim()
+    const derivedVal = derived[key]?.value?.trim() ?? ''
+    if (!derivedVal || storedVal === derivedVal) return
+    if (!lines[key].included && !isSnapshotLinePinned(lines[key])) return
+    warnings.push({
+      key,
+      message: isSnapshotLinePinned(lines[key])
+        ? `Pinned line differs from Employment (${employmentLabel}: “${derivedVal}”). Reset line to sync.`
+        : `Does not match Employment (${employmentLabel}: “${derivedVal}”).`,
+    })
+  }
+
+  warnDerivedDrift('snapshot_equipment_skills', 'equipment')
+  warnDerivedDrift('snapshot_patient_ratios_managed', 'patient ratios')
+  warnDerivedDrift('snapshot_notable_achievements', 'highlights')
+  warnDerivedDrift('snapshot_emr_systems', 'EMR')
 
   return warnings
 }

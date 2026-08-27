@@ -9,7 +9,10 @@ import {
   ensureProfessionalSnapshotLines,
   formatExperienceFlagValue,
   isSnapshotExperienceFlag,
+  isSnapshotLinePinned,
+  mergeDerivedSnapshotIntoStored,
   normalizeProfessionalSnapshot,
+  notableAchievementsFromEmployers,
   parseExperienceFlagValue,
   professionalSnapshotToLines,
   professionalSnapshotToTemplateData,
@@ -107,7 +110,7 @@ describe('buildProfessionalSnapshotFromCandidate', () => {
     assert.match(snapshot.snapshot_float_experience?.value || '', /ER/)
     assert.match(snapshot.snapshot_emr_systems?.value || '', /Epic/)
     assert.match(snapshot.snapshot_equipment_skills?.value || '', /ECMO/)
-    assert.match(snapshot.snapshot_patient_ratios_managed?.value || '', /1:4 ICU/)
+    assert.match(snapshot.snapshot_patient_ratios_managed?.value || '', /2-3/)
   })
 
   it('leaves magnet empty and omits excluded lines from template map', () => {
@@ -119,6 +122,71 @@ describe('buildProfessionalSnapshotFromCandidate', () => {
     assert.equal(mapped.snapshot_specialty, 'OR')
     assert.equal(mapped.snapshot_magnet_facility_experience, '')
     assert.equal(mapped.snapshot_travel_experience, '')
+  })
+
+  it('aggregates notable achievements from employer highlights', () => {
+    const snapshot = buildProfessionalSnapshotFromCandidate({
+      employers: [
+        {
+          name: 'Kaiser',
+          highlights: ['Daisy Award Winner', 'Charge nurse experience'],
+        },
+        {
+          name: 'UCLA',
+          highlights: ['Daisy Award Winner', 'Unit council chair'],
+        },
+      ],
+    })
+    assert.equal(
+      snapshot.snapshot_notable_achievements?.value,
+      'Daisy Award Winner; Unit council chair',
+    )
+    assert.equal(notableAchievementsFromEmployers([
+      { highlights: ['Preceptor experience'] },
+    ]), '')
+  })
+
+  it('derives patient ratios from per-employer fields only', () => {
+    const snapshot = buildProfessionalSnapshotFromCandidate({
+      average_patient_ratios: '1:4, 1:5, 1:9',
+      employers: [{ avgDailyPatients: '1:10' }],
+    })
+    assert.equal(snapshot.snapshot_patient_ratios_managed?.value, '1:10')
+  })
+})
+
+describe('mergeDerivedSnapshotIntoStored', () => {
+  it('updates unpinned lines from employment feeds', () => {
+    const merged = mergeDerivedSnapshotIntoStored(
+      {
+        snapshot_equipment_skills: { value: 'Old skill', included: true, source: 'wizard' },
+        snapshot_specialty: { value: 'PICU', included: true, source: 'manual', pinned: true },
+      },
+      {
+        specialties: ['ICU'],
+        employers: [{ equipmentProcedures: ['IVs'] }],
+      },
+    )
+    assert.equal(merged.snapshot_equipment_skills?.value, 'IVs')
+    assert.equal(merged.snapshot_specialty?.value, 'PICU')
+  })
+
+  it('overwrites pinned lines when includePinned is set', () => {
+    const merged = mergeDerivedSnapshotIntoStored(
+      {
+        snapshot_specialty: { value: 'PICU', included: true, source: 'manual', pinned: true },
+      },
+      { specialties: ['ICU'], employers: [] },
+      { includePinned: true },
+    )
+    assert.equal(merged.snapshot_specialty?.value, 'ICU')
+    assert.equal(merged.snapshot_specialty?.source, 'wizard')
+  })
+
+  it('detects pinned manual lines', () => {
+    assert.equal(isSnapshotLinePinned({ value: 'x', included: true, source: 'manual' }), true)
+    assert.equal(isSnapshotLinePinned({ value: 'x', included: true, pinned: true }), true)
+    assert.equal(isSnapshotLinePinned({ value: 'x', included: true, source: 'wizard' }), false)
   })
 })
 

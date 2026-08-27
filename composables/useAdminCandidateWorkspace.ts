@@ -6,6 +6,7 @@ import {
   applyParseResultToForm,
   candidateFormSnapshot,
   defaultCandidateForm,
+  syncSnapshotFromFeeds,
   type AdminDraftResponse,
   type AdminSectionId,
 } from '~/utils/adminCandidateForm'
@@ -210,6 +211,7 @@ export function useAdminCandidateWorkspace(selected: Ref<CandidateRow | null>) {
     intakeUrl,
     scheduleAutosave,
     flushAutosave,
+    syncSnapshotFromFeeds: () => syncSnapshotFromFeeds(form),
     onParsed,
     downloadDraftDocx,
     markSubmitted,

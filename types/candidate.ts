@@ -24,7 +24,7 @@ export interface CandidateRow {
   compact_license_status: string | null
   average_patient_ratios: string | null
   specialized_medical_equipment: string | null
-  /** Approved Professional Snapshot lines for DOCX (12 snapshot_* keys). */
+  /** Approved Professional Snapshot lines for DOCX (snapshot_* keys). */
   professional_snapshot?: ProfessionalSnapshot | null
   home_address: string | null
   home_city: string | null

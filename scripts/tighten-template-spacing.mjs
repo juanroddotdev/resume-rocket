@@ -26,7 +26,7 @@ doc = doc.replace(
 )
 
 // 2. Add before-spacing on the experience entry's first content paragraph
-//    The first content paragraph after {#professional_experiences} is "RN - {experience_unit_specialty}"
+//    The first content paragraph after {#professional_experiences} is "{experience_unit_specialty}"
 //    We target that specific paragraph's spacing to add w:before="300"
 doc = doc.replace(
   /(\{#professional_experiences\}<\/w:t><\/w:r><\/w:p>)/,
@@ -35,9 +35,9 @@ doc = doc.replace(
   }
 )
 
-// Find the paragraph containing "RN - {experience_unit_specialty}" and add before spacing
+// Find the paragraph containing "{experience_unit_specialty}" and add before spacing
 // This paragraph's spacing should be: after=60, before=300 (gap above each entry)
-const specialtyTag = 'RN - {experience_unit_specialty}'
+const specialtyTag = '{experience_unit_specialty}'
 const specialtyIdx = doc.indexOf(specialtyTag)
 if (specialtyIdx > -1) {
   // Find the <w:spacing> in the same <w:p> that contains this text

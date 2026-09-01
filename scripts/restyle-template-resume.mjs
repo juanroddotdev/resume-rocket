@@ -170,7 +170,7 @@ const bodyParas = [
   }, { sectionRule: true, before: 280, after: 120, line: 276 }),
   textPara('{#professional_experiences}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
   para(
-    run('RN - {experience_unit_specialty}', { sz: 22, bold: true })
+    run('{experience_unit_specialty}', { sz: 22, bold: true })
     + tabRun({ sz: 22, color: COLOR_MUTED })
     + run('{experience_employment_dates}', { sz: 22, color: COLOR_MUTED }),
     {

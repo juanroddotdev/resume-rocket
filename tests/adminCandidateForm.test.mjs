@@ -21,6 +21,7 @@ describe('candidateFormSnapshot', () => {
   it('maps admin form state to PATCH payload', () => {
     const form = defaultCandidateForm()
     form.first_name = 'Jane'
+    form.specialties = ['ICU']
     form.employers = [{ name: 'Metro Hospital' }]
     form.professional_snapshot = {
       snapshot_specialty: { value: 'ICU', included: true },
@@ -30,6 +31,7 @@ describe('candidateFormSnapshot', () => {
     assert.equal(snapshot.employers?.[0]?.name, 'Metro Hospital')
     assert.equal(snapshot.professional_snapshot?.snapshot_specialty?.value, 'ICU')
     assert.equal(snapshot.professional_snapshot?.snapshot_specialty?.included, true)
+    assert.equal(snapshot.include_rn_experience_prefix, false)
   })
 })
 

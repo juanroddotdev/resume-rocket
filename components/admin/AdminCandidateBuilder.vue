@@ -372,6 +372,7 @@ watch(
     average_patient_ratios: form.average_patient_ratios,
     specialized_medical_equipment: form.specialized_medical_equipment,
     emr_system: form.emr_system,
+    include_rn_experience_prefix: form.include_rn_experience_prefix,
   }),
   () => {
     if (skipAutosave.value || !isEditable.value) return
@@ -695,6 +696,21 @@ watch(devFixtureRequest, (mode) => {
                 Saving employment…
               </p>
             </div>
+            <label class="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                id="admin-include-rn-experience-prefix"
+                v-model="form.include_rn_experience_prefix"
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-700 focus:ring-brand-600"
+                :disabled="!isEditable"
+              >
+              <span>
+                Prefix job titles with RN
+                <span class="mt-0.5 block text-xs text-slate-500">
+                  Off by default. Employment type (Travel, Staff, PRN) always prints on the packet.
+                </span>
+              </span>
+            </label>
             <EmploymentPacketSyncNotice :message="employmentSyncNotice" />
             <SpecialtyChipInput
               v-model="form.specialties"

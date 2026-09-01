@@ -56,6 +56,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(data.professional_experiences.length)
     assert.equal(data.BLS_certification_expiration_date, '06/2026')
     assert.equal(data.professional_experiences[0].experience_employment_type, 'Staff')
+    assert.equal(data.professional_experiences[0].experience_unit_specialty, 'Staff — ICU RN')
     assert.equal(data.professional_experiences[0].experience_patient_acuity_level, 'High')
   })
 
@@ -217,7 +218,7 @@ describe('mapCandidateToTemplateData', () => {
 
     const exp = data.professional_experiences[0]
     assert.equal(exp.experience_trauma_level, 'Trauma III')
-    assert.equal(exp.experience_is_teaching_facility, 'Teaching No')
+    assert.equal(exp.experience_is_teaching_facility, '')
     assert.equal(data.facility_types_trauma_levels, '')
   })
 

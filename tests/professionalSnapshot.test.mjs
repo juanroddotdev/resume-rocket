@@ -338,4 +338,22 @@ describe('professionalSnapshotToLines', () => {
       ['Specialty: ICU', 'Equipment/Skills: ECMO'],
     )
   })
+
+  it('omits flag lines answered No even when included', () => {
+    const lines = professionalSnapshotToLines({
+      snapshot_specialty: { value: 'ICU', included: true },
+      snapshot_teaching_facility_experience: { value: 'No', included: true },
+      snapshot_trauma_experience: { value: 'Yes — Level I', included: true },
+    })
+    assert.deepEqual(
+      lines.map(l => l.snapshot_line),
+      ['Specialty: ICU', 'Trauma Experience: Yes — Level I'],
+    )
+    assert.equal(
+      professionalSnapshotToTemplateData({
+        snapshot_teaching_facility_experience: { value: 'No', included: true },
+      }).snapshot_teaching_facility_experience,
+      '',
+    )
+  })
 })

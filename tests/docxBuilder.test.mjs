@@ -314,6 +314,7 @@ describe('mapCandidateToTemplateData', () => {
         snapshot_years_experience: { value: '', included: true },
         snapshot_emr_systems: { value: 'Epic', included: false },
         snapshot_travel_experience: { value: 'Yes', included: true },
+        snapshot_teaching_facility_experience: { value: 'No', included: true },
       },
     })
 
@@ -322,6 +323,7 @@ describe('mapCandidateToTemplateData', () => {
     assert.ok(lines.some(line => line.startsWith('Travel Experience: Yes')))
     assert.equal(lines.some(line => line.includes('Years of Experience')), false)
     assert.equal(lines.some(line => line.includes('EMR Systems')), false)
+    assert.equal(lines.some(line => line.includes('Teaching Facility Experience')), false)
   })
 
   it('uses home state for candidate_state, not license state (S6-H1)', () => {

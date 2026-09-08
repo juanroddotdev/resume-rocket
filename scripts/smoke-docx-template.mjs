@@ -63,6 +63,7 @@ const REQUIRED_SNIPPETS = [
   'Staff — ICU',
   'Travel — Med-Surg',
   'Mayo Clinic',
+  'Charge nurse 18 months',
   'General Hospital',
   'Rochester, MN',
   'Austin, TX',

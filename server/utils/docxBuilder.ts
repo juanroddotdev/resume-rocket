@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { CredentialsMap, EducationEntry, EmployerEntry, LicenseEntry } from '../../types/candidate'
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
-import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
+import { experienceHighlightBulletsForDocx } from '../../utils/employerClinicalFlags.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
 import { employerEmrProficienciesUnion, legacyGlobalEmrFallback } from '../../utils/emrSystem.ts'
 import {
@@ -200,7 +200,7 @@ function mapEmployerToExperience(
     experience_equipment_procedures_list: docxStringList(employer.equipmentProcedures),
     experience_average_daily_patients: employer.avgDailyPatients || '',
     experience_patient_acuity_level: docxText(employer.patientAcuity),
-    experience_highlights: docxStringList(experienceHighlightsForDocx(employer)),
+    experience_highlights: docxStringList(experienceHighlightBulletsForDocx(employer)),
   }
 }
 

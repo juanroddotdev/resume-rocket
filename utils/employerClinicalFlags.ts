@@ -31,6 +31,20 @@ export function experienceHighlightsForDocx(
   return items
 }
 
+/** Packet bullets under job metrics — user highlights only (charge/preceptor stay on the metrics line). */
+export function experienceHighlightBulletsForDocx(
+  employer: Pick<EmployerEntry, 'highlights'>,
+): string[] {
+  const skip = new Set([
+    CHARGE_NURSE_HIGHLIGHT_LABEL.toLowerCase(),
+    PRECEPTOR_HIGHLIGHT_LABEL.toLowerCase(),
+  ])
+  return (employer.highlights || [])
+    .filter((item): item is string => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(item => item.length > 0 && !skip.has(item.toLowerCase()))
+}
+
 /** Honor explicit Gemini booleans before highlight inference. */
 export function resolveClinicalFlagFromParse(
   explicit: boolean | undefined,

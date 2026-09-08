@@ -103,7 +103,7 @@ export function employerMetricsLineFields(
 /**
  * Ordered segments matching the Professional Experience metrics line.
  * Empty slots kept for index alignment with DOCX tags.
- * Charge/preceptor append when Yes so per-job packets show them (highlights loop is template-removed).
+ * Charge/preceptor append when Yes so the live stamp still shows them.
  */
 export function employerMetricsLineParts(
   employer: EmployerMetricsLineInput,

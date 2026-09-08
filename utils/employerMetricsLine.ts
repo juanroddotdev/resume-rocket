@@ -30,22 +30,18 @@ export type EmployerMetricsLineFields = {
   patientScope: string
 }
 
-/** Labeled teaching segment for metrics line / DOCX (`Teaching Yes`). */
+/** Labeled teaching segment for metrics line / DOCX. Only Yes prints. */
 export function teachingFacilityLabelForMetrics(
   teachingStatus: boolean | undefined,
 ): string {
-  if (teachingStatus === true) return 'Teaching Yes'
-  if (teachingStatus === false) return 'Teaching No'
-  return ''
+  return teachingStatus === true ? 'Teaching Yes' : ''
 }
 
-/** Labeled Magnet segment for metrics line / DOCX (`Magnet Yes`). */
+/** Labeled Magnet segment for metrics line / DOCX. Only Yes prints. */
 export function magnetFacilityLabelForMetrics(
   magnetStatus: boolean | undefined,
 ): string {
-  if (magnetStatus === true) return 'Magnet Yes'
-  if (magnetStatus === false) return 'Magnet No'
-  return ''
+  return magnetStatus === true ? 'Magnet Yes' : ''
 }
 
 function labeledUnitBeds(raw: string | null | undefined): string {

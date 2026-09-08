@@ -26,6 +26,8 @@ export interface CandidateRow {
   specialized_medical_equipment: string | null
   /** Approved Professional Snapshot lines for DOCX (snapshot_* keys). */
   professional_snapshot?: ProfessionalSnapshot | null
+  /** Packet option: prefix experience headings with RN. Default false. */
+  include_rn_experience_prefix?: boolean | null
   home_address: string | null
   home_city: string | null
   home_state: string | null
@@ -142,6 +144,7 @@ export interface CandidateDraftInput {
   average_patient_ratios?: string
   specialized_medical_equipment?: string
   professional_snapshot?: ProfessionalSnapshot
+  include_rn_experience_prefix?: boolean
   home_address?: string
   home_city?: string
   home_state?: string

@@ -59,6 +59,8 @@ const REQUIRED_SNIPPETS = [
   'University of California',
   '06/2016',
   'PROFESSIONAL EXPERIENCE',
+  'Staff — ICU',
+  'Travel — Med-Surg',
   'Mayo Clinic',
   'General Hospital',
   'Rochester, MN',

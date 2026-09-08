@@ -26,6 +26,7 @@ export const CANDIDATE_DRAFT_SELECT = [
   'average_patient_ratios',
   'specialized_medical_equipment',
   'professional_snapshot',
+  'include_rn_experience_prefix',
   'home_address',
   'home_city',
   'home_state',
@@ -70,6 +71,7 @@ export function buildCandidateDraftResponse(row: Record<string, unknown>) {
     professional_snapshot: row.professional_snapshot
       ? normalizeProfessionalSnapshot(row.professional_snapshot)
       : null,
+    include_rn_experience_prefix: row.include_rn_experience_prefix === true,
     home_address: row.home_address,
     home_city: row.home_city,
     home_state: row.home_state,

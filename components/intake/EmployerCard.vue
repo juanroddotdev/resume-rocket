@@ -266,18 +266,6 @@ function onEmploymentTypeChange(event: Event) {
   if (canonical !== 'Travel') {
     next.travelDetail = undefined
   }
-  if (canonical === 'Travel') {
-    const role = props.employer.role?.trim()
-    if (!role && props.primarySpecialty?.trim()) {
-      next.role = `Travel RN — ${props.primarySpecialty.trim()}`
-    } else if (role) {
-      const formatted = normalizeEmployerRole(role, {
-        employmentType: value,
-        primarySpecialty: props.primarySpecialty,
-      })
-      if (formatted !== role) next.role = formatted
-    }
-  }
   patchField('type', next)
 }
 

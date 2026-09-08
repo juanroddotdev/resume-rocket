@@ -8,6 +8,17 @@ const NURSE_TITLE_ABBREVIATIONS: Array<[RegExp, string]> = [
   [/\bnurse\s+practitioner\b/gi, 'NP'],
 ]
 
+const CREDENTIAL_TOKEN = 'RN|LPN|LVN|NP'
+const LEADING_TYPE_RE = new RegExp(
+  `^(travel|staff|prn|per[\\s-]*diem)(?:\\s+(?:${CREDENTIAL_TOKEN}))?\\b[\\s,—–-]*`,
+  'i',
+)
+const LEADING_CREDENTIAL_RE = new RegExp(
+  `^(${CREDENTIAL_TOKEN})\\b(?:[\\s,—–-]+|$)`,
+  'i',
+)
+const HAS_CREDENTIAL_RE = new RegExp(`\\b(${CREDENTIAL_TOKEN})\\b`, 'i')
+
 export interface FormattedEmployerRole {
   /** Primary experience heading (`experience_unit_specialty`). */
   unitSpecialty: string
@@ -15,6 +26,11 @@ export interface FormattedEmployerRole {
   roleDetails: string
   /** Normalized role string for storage / form display. */
   displayRole: string
+}
+
+export interface FormatEmployerRoleOptions {
+  /** When true, prefix the heading with RN if the role body has no credential. Default false. */
+  includeRnPrefix?: boolean
 }
 
 function collapseWhitespace(value: string): string {
@@ -37,7 +53,7 @@ function normalizeSpecialtyPhrase(value: string): string {
   return collapseWhitespace(
     value
       .replace(/\s*\/\s*/g, '/')
-      .replace(/\s*,\s*/g, ', '),
+      .replace(/\s*,\s+/g, ', '),
   )
 }
 
@@ -79,27 +95,58 @@ function isRedundantRoleDetail(unitSpecialty: string, roleDetails: string): bool
   return false
 }
 
-function buildTravelUnitLine(title: string, specialty: string): string {
-  const abbreviated = abbreviateNurseTitles(stripLeadingTravel(title))
-  const hasCredential = /\b(RN|LPN|LVN|NP)\b/i.test(abbreviated)
-  const travelTitle = hasCredential
-    ? `Travel ${abbreviated.replace(/^travel\s+/i, '').trim()}`
-    : abbreviated
-      ? `Travel RN — ${abbreviated}`
-      : 'Travel RN'
-
-  if (!specialty) return collapseWhitespace(travelTitle)
-  if (containsPhrase(travelTitle, specialty)) return collapseWhitespace(travelTitle)
-  return collapseWhitespace(`${travelTitle} — ${specialty}`)
+function compactRoleBody(rawRole: string): string {
+  const abbreviated = abbreviateNurseTitles(rawRole)
+  if (!abbreviated) return ''
+  const { title, specialty } = splitRoleAndSpecialty(abbreviated)
+  if (!title && !specialty) return abbreviated
+  if (!specialty) return title
+  if (containsPhrase(title, specialty)) return title
+  return collapseWhitespace(`${title} — ${specialty}`)
 }
 
-function buildStaffUnitLine(title: string, specialty: string, fallback: string): string {
-  const abbreviated = abbreviateNurseTitles(title)
-  if (!abbreviated && !specialty) return fallback
-  if (!abbreviated) return specialty
-  if (!specialty) return abbreviated
-  if (containsPhrase(abbreviated, specialty)) return abbreviated
-  return collapseWhitespace(`${abbreviated} — ${specialty}`)
+function stripLeadingTypeAndCredential(value: string): string {
+  let text = collapseWhitespace(value)
+  text = collapseWhitespace(text.replace(LEADING_TYPE_RE, ''))
+  text = collapseWhitespace(text.replace(LEADING_CREDENTIAL_RE, ''))
+  return text
+}
+
+function roleHasCredential(value: string): boolean {
+  return HAS_CREDENTIAL_RE.test(value)
+}
+
+function typeDetailSuffix(employer: Pick<EmployerEntry, 'employmentType' | 'prnSchedule' | 'travelDetail'>): string {
+  const type = normalizeEmploymentType(employer.employmentType)
+  if (type === 'PRN') {
+    const schedule = employer.prnSchedule?.trim()
+    return schedule ? ` (${schedule})` : ''
+  }
+  if (type === 'Travel') {
+    const detail = employer.travelDetail?.trim()
+    return detail ? ` (${detail})` : ''
+  }
+  return ''
+}
+
+function formatTypeSegment(
+  employer: Pick<EmployerEntry, 'employmentType' | 'prnSchedule' | 'travelDetail'>,
+  withCredential: boolean,
+): string {
+  const type = normalizeEmploymentType(employer.employmentType)
+  const credential = withCredential ? ' RN' : ''
+  if (!type) return withCredential ? 'RN' : ''
+  return `${type}${credential}${typeDetailSuffix(employer)}`
+}
+
+function joinHeading(prefix: string, body: string): string {
+  if (prefix && body) {
+    if (containsPhrase(body, prefix) || body.toLowerCase().startsWith(prefix.toLowerCase())) {
+      return body
+    }
+    return collapseWhitespace(`${prefix} — ${body}`)
+  }
+  return prefix || body
 }
 
 /** Normalize a free-text employer role for storage (parse + light UI cleanup). */
@@ -119,36 +166,30 @@ export function normalizeEmployerRole(
 
 /** Format employer role for DOCX headings and optional form display. */
 export function formatEmployerRoleForDocx(
-  employer: Pick<EmployerEntry, 'role' | 'employmentType'>,
+  employer: Pick<EmployerEntry, 'role' | 'employmentType' | 'prnSchedule' | 'travelDetail'>,
   primarySpecialty: string,
+  options?: FormatEmployerRoleOptions,
 ): FormattedEmployerRole {
+  const includeRnPrefix = options?.includeRnPrefix === true
   const rawRole = employer.role?.trim() || ''
   const fallback = primarySpecialty.trim()
-  const isTravel =
-    normalizeEmploymentType(employer.employmentType) === 'Travel'
-    || /\btravel\b/i.test(rawRole)
+  const displayRole = rawRole ? compactRoleBody(rawRole) : ''
 
-  if (!rawRole) {
-    const unitSpecialty = fallback
-    return {
-      unitSpecialty,
-      roleDetails: '',
-      displayRole: unitSpecialty,
-    }
+  let body = displayRole ? stripLeadingTypeAndCredential(displayRole) : ''
+  if (!rawRole && fallback) {
+    body = stripLeadingTypeAndCredential(compactRoleBody(fallback) || fallback)
   }
 
-  const { title, specialty } = splitRoleAndSpecialty(rawRole)
-  const unitSpecialty = isTravel
-    ? buildTravelUnitLine(title, specialty)
-    : buildStaffUnitLine(title, specialty, fallback || abbreviateNurseTitles(rawRole))
+  const typeSegment = formatTypeSegment(employer, includeRnPrefix && !roleHasCredential(body))
+  const unitSpecialty = joinHeading(typeSegment, body)
 
-  const abbreviatedTitle = abbreviateNurseTitles(stripLeadingTravel(title))
-  const roleDetails = roleDetailsForDocx(abbreviatedTitle || rawRole, unitSpecialty, specialty)
+  const abbreviatedTitle = abbreviateNurseTitles(stripLeadingTravel(splitRoleAndSpecialty(rawRole).title || rawRole))
+  const roleDetails = roleDetailsForDocx(abbreviatedTitle || rawRole, unitSpecialty, splitRoleAndSpecialty(rawRole).specialty)
 
   return {
     unitSpecialty,
     roleDetails,
-    displayRole: unitSpecialty,
+    displayRole,
   }
 }
 
@@ -163,6 +204,7 @@ export function roleDetailsForDocx(
   const roleText = abbreviateNurseTitles((role || '').trim())
   const unitText = unitSpecialty.trim()
   if (!roleText) return ''
+  if (/^(RN|LPN|LVN|NP)$/i.test(roleText)) return ''
   if (!unitText) return roleText
   if (roleText.toLowerCase() === unitText.toLowerCase()) return ''
   if (containsPhrase(unitText, roleText)) return ''

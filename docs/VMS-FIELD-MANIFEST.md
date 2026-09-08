@@ -117,7 +117,7 @@ City/state on `education[]` are collected in the wizard and from parse when stat
 
 ## Professional experience (`{#professional_experiences}...{/professional_experiences}`)
 
-Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and scope remain; employment type, role details, acuity, highlights, and float/equipment loops are **template-removed** (still collected — see below).
+Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and scope remain; role details, acuity, highlights, and float/equipment loops are **template-removed** (still collected — see below). Employment type prefixes `{experience_unit_specialty}` (optional RN via `include_rn_experience_prefix`, default off).
 
 | Template tag | DB / JSON path | Parse (Gemini) | Wizard step | Required | Status |
 |--------------|----------------|----------------|-------------|----------|--------|
@@ -125,7 +125,7 @@ Slimmer than pre–July 2026 template. Per-job EMR, trauma, teaching, beds, and 
 | `experience_facility_location` | `employers[].city`, `state` | Partial | 2 — Employment | Yes | Live |
 | `experience_facility_type` | Derived trauma label (stub — empty in output) | — | — | No | Derived |
 | `experience_employment_dates` | `employers[].startDate`, `endDate` | Yes | 2 | Yes | Live |
-| `experience_unit_specialty` | `employers[].role` / specialties | Yes | 2 | Yes | Live |
+| `experience_unit_specialty` | Composed: `employers[].employmentType` + `employers[].role` (else first specialty). Optional RN prefix when `include_rn_experience_prefix` is true. | Yes | 2 | Yes | Live |
 | `experience_metrics_line` | Joined labeled unit beds / hospital beds / trauma / teaching / EMR / scope (empties omitted) | — | 2 — Employment | No | Live |
 
 Former per-slot metrics tags (`experience_unit_bed_count`, `experience_hospital_total_beds`, `experience_trauma_level`, `experience_is_teaching_facility`, `experience_emr_system`, `experience_patient_scope`) still map in `docxBuilder` for supplemental use but the contract prints **one** `{experience_metrics_line}` so blank slots cannot leave orphan ` • ` separators.
@@ -152,9 +152,9 @@ These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do
 | `specialized_medical_equipment` | `candidates.specialized_medical_equipment` | Yes | Feeds `snapshot_equipment_skills` |
 | `facility_types_trauma_levels` | Derived from `employers[].traumaLevel` | Yes | Trauma per employer + snapshot |
 | `emr_software_proficiencies` | Union of `employers[].emrSystem` | Yes | Feeds `snapshot_emr_systems` |
-| `experience_unit_specialty` | `employers[].role` → else `specialties[0]` | Yes | Supplemental |
+| `experience_unit_specialty` | `employers[].role` → else `specialties[0]` | Yes | Live heading (type prefix); listed here for historical supplemental note |
 | `experience_role_details` | `employers[].role` | Yes | Supplemental |
-| `experience_employment_type` | `employers[].employmentType` | Yes | Supplemental |
+| `experience_employment_type` | `employers[].employmentType` | Yes | Still mapped; type also prefixes `experience_unit_specialty` |
 | `experience_average_daily_patients` | `employers[].avgDailyPatients` | Yes | Supplemental |
 | `experience_patient_acuity_level` | `employers[].patientAcuity` | Yes | Supplemental |
 | `{#experience_floated_units_list}{.}{/experience_floated_units_list}` | `employers[].floatedUnits[]` | Yes | Feeds `snapshot_float_experience` |

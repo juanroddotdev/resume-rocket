@@ -50,6 +50,8 @@ export interface DocxCandidate {
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
   professional_snapshot?: ProfessionalSnapshot | null
+  /** When true, prefix job headings with RN if the role has no credential. Default false. */
+  include_rn_experience_prefix?: boolean | null
 }
 
 /** Coerce template scalars so docxtemplater never renders the literal "undefined". */
@@ -164,10 +166,11 @@ function mapEmployerToExperience(
   employer: DocxEmployer,
   primarySpecialty: string,
   legacyEmrSystem: string,
+  includeRnPrefix: boolean,
 ) {
   const location = [employer.city, employer.state].filter(Boolean).join(', ')
   const dates = [employer.startDate, employer.endDate].filter(Boolean)
-  const formattedRole = formatEmployerRoleForDocx(employer, primarySpecialty)
+  const formattedRole = formatEmployerRoleForDocx(employer, primarySpecialty, { includeRnPrefix })
   const metrics = employerMetricsLineFields(employer, { legacyEmrSystem })
 
   const metricsLine = formatEmployerMetricsLine(employer, { legacyEmrSystem })
@@ -281,7 +284,12 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     ...mapProfessionalSnapshot(candidate),
 
     professional_experiences: employers.map(e =>
-      mapEmployerToExperience(e, primarySpecialty, candidate.emr_system || ''),
+      mapEmployerToExperience(
+        e,
+        primarySpecialty,
+        candidate.emr_system || '',
+        candidate.include_rn_experience_prefix === true,
+      ),
     ),
   })
 }

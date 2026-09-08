@@ -75,6 +75,7 @@ export function defaultCandidateForm() {
     specialized_medical_equipment: '',
     education: [] as EducationEntry[],
     professional_snapshot: {} as ProfessionalSnapshot,
+    include_rn_experience_prefix: false,
   }
 }
 
@@ -142,6 +143,7 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     professional_snapshot: normalizeProfessionalSnapshot(
       mergeDerivedSnapshotIntoStored(form.professional_snapshot, snapshotFeedInput(form)),
     ),
+    include_rn_experience_prefix: Boolean(form.include_rn_experience_prefix),
   }
 }
 
@@ -166,6 +168,7 @@ export type AdminDraftResponse = {
   average_patient_ratios?: string | null
   specialized_medical_equipment?: string | null
   professional_snapshot?: ProfessionalSnapshot | null
+  include_rn_experience_prefix?: boolean | null
   home_address?: string | null
   home_city?: string | null
   home_state?: string | null
@@ -215,6 +218,7 @@ export function applyAdminDraftToForm(
       employers,
       professional_snapshot: row.professional_snapshot,
     }),
+    include_rn_experience_prefix: row.include_rn_experience_prefix === true,
   })
 }
 

@@ -30,7 +30,7 @@ describe('formatEmployerMetricsLine', () => {
     )
   })
 
-  it('omits empty slots and maps teaching/Magnet No', () => {
+  it('omits empty slots and teaching/Magnet No', () => {
     assert.equal(
       formatEmployerMetricsLine({
         unitBedCount: '24',
@@ -39,7 +39,7 @@ describe('formatEmployerMetricsLine', () => {
         magnetStatus: false,
         emrSystem: 'Cerner',
       }),
-      '24 unit beds • Trauma II • Teaching No • Magnet No • EMR Cerner',
+      '24 unit beds • Trauma II • EMR Cerner',
     )
   })
 

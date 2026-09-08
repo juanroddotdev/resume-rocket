@@ -59,6 +59,7 @@ export default defineEventHandler(async (event) => {
       professional_snapshot: candidate.professional_snapshot as
         | import('../../utils/professionalSnapshot').ProfessionalSnapshot
         | null,
+      include_rn_experience_prefix: candidate.include_rn_experience_prefix === true,
     })
   } catch (error) {
     console.error('[generate-docx] build failed', error instanceof Error ? error.name : 'unknown')

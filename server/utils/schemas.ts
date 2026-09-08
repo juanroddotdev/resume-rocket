@@ -110,6 +110,7 @@ export const candidatePatchSchema = z.object({
     .record(z.unknown())
     .optional()
     .transform(s => (s !== undefined ? normalizeProfessionalSnapshot(s) : undefined)),
+  include_rn_experience_prefix: z.boolean().optional(),
   home_address: z.string().optional(),
   home_city: z.string().optional(),
   home_state: z.string().optional(),

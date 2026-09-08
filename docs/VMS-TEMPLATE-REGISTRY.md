@@ -54,11 +54,11 @@ All contract tags are mapped from intake data collected in the wizard (Steps 2â€
 | `experience_hospital_name` | Employer `name` |
 | `experience_facility_location` | Employer `city`, `state` |
 | `experience_facility_type` | Derived trauma label |
-| `experience_unit_specialty` | Employer `role`, else first specialty |
+| `experience_unit_specialty` | Employer `role` + employment type (optional RN prefix) |
 | `experience_employment_dates` | `startDate` / `endDate` |
 | `experience_metrics_line` | Labeled join of unit/hospital beds, trauma, teaching, EMR, scope (empties omitted) |
 
-Builder still maps the former slot tags (`experience_unit_bed_count`, `experience_hospital_total_beds`, `experience_trauma_level`, `experience_is_teaching_facility`, `experience_emr_system`, `experience_patient_scope`, employment type, role details, acuity, float/equipment/highlights loops) for supplemental / snapshot use; they are not in the July 2026 contract metrics row.
+Builder still maps the former slot tags (`experience_unit_bed_count`, `experience_hospital_total_beds`, `experience_trauma_level`, `experience_is_teaching_facility`, `experience_emr_system`, `experience_patient_scope`, role details, acuity, float/equipment/highlights loops) for supplemental / snapshot use; they are not in the July 2026 contract metrics row. Employment type prefixes `{experience_unit_specialty}`.
 
 Certifications **NIHSS**, **TNCC**, **CCRN** appear in `core_life_support_certifications` when checked, but have no separate expiration tags in the template (only BLS/ACLS/PALS).
 

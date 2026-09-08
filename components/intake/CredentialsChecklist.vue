@@ -167,6 +167,9 @@ function validateExpiry(cert: string) {
           <option value="No">No</option>
           <option value="N/A">N/A</option>
         </select>
+        <p class="mt-1 text-xs text-slate-500">
+          Prints on the first RN license when Yes.
+        </p>
       </label>
       <LicenseRepeater
         :model-value="licenses"

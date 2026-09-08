@@ -15,7 +15,6 @@ import { formatEducationGraduationForDocx } from '../../utils/educationGraduatio
 import { formatEducationSchoolForDocx } from '../../utils/educationLocation.ts'
 import {
   activeLicensesListForDocx,
-  formatLicenseRowForDocx,
   resolveCandidateLicenses,
 } from '../../utils/licenseRows.ts'
 import { orderedActiveCertificationKeys } from '../../utils/certificationOptions.ts'
@@ -121,8 +120,9 @@ function activeLicensesList(
   licenses: LicenseEntry[],
   licenseState?: string | null,
   licenseNumber?: string | null,
+  compactStatus?: string | null,
 ): string[] {
-  const fromRows = activeLicensesListForDocx(licenses)
+  const fromRows = activeLicensesListForDocx(licenses, compactStatus)
   if (fromRows.length) return fromRows
   const formatted = formatLicenseStateAndExpiry(licenseState, licenseNumber)
   return formatted ? [formatted] : []
@@ -212,12 +212,13 @@ function mapCertificationsForDocx(credentials: CredentialsMap | null | undefined
   }))
 }
 
-function mapLicensesForDocx(licenses: LicenseEntry[]) {
-  return licenses
-    .map(row => ({
-      rn_license_state_and_expiry: formatLicenseRowForDocx(row),
-    }))
-    .filter(row => row.rn_license_state_and_expiry.length > 0)
+function mapLicensesForDocx(
+  licenses: LicenseEntry[],
+  compactStatus?: string | null,
+) {
+  return activeLicensesListForDocx(licenses, compactStatus).map(text => ({
+    rn_license_state_and_expiry: text,
+  }))
 }
 
 /** Professional Snapshot — only included lines (no empty bullet placeholders). */
@@ -260,7 +261,12 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     candidate_home_address: candidate.home_address || '',
     candidate_city: homeCity,
     candidate_state: homeState,
-    active_licenses_list: activeLicensesList(licenses, candidate.license_state, candidate.license_number),
+    active_licenses_list: activeLicensesList(
+      licenses,
+      candidate.license_state,
+      candidate.license_number,
+      candidate.compact_license_status,
+    ),
 
     total_years_nursing_experience: candidate.years_nursing_experience || '',
     primary_specialty_unit: primarySpecialty,
@@ -273,7 +279,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     core_life_support_certifications: activeCerts.join(', '),
     certifications_list: mapCertificationsForDocx(credentials),
 
-    licenses_list: mapLicensesForDocx(licenses),
+    licenses_list: mapLicensesForDocx(licenses, candidate.compact_license_status),
 
     compact_license_status: candidate.compact_license_status || '',
     BLS_certification_expiration_date: certExpiry(credentials, 'BLS'),

@@ -184,6 +184,24 @@ describe('mapCandidateToTemplateData', () => {
     ])
   })
 
+  it('appends Compact to the primary license when compact status is Yes', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      compact_license_status: 'Yes',
+      licenses: [
+        { state: 'TX', number: 'RN-1', expiry: '06/2027' },
+        { state: 'CA', number: 'RN-2' },
+      ],
+    })
+
+    assert.deepEqual(data.licenses_list, [
+      { rn_license_state_and_expiry: 'TX · RN-1 · 06/2027 · Compact' },
+      { rn_license_state_and_expiry: 'CA · RN-2' },
+    ])
+    assert.equal(data.licenses_list[1].rn_license_state_and_expiry.includes('Compact'), false)
+  })
+
   it('appends PRN schedule to employment type in DOCX', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

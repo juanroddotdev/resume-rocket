@@ -8,8 +8,6 @@ import {
 } from '~/utils/credentialExpiry'
 import { orderedActiveCertificationKeys } from '~/utils/certificationOptions'
 
-const compactLicenseStatus = defineModel<string>('compactLicenseStatus', { default: '' })
-
 const props = defineProps<{
   credentials: CredentialsMap
   licenses: import('~/types/candidate').LicenseEntry[]
@@ -154,23 +152,6 @@ function validateExpiry(cert: string) {
 
     <div class="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
       <p class="text-sm font-medium text-slate-800">RN license</p>
-      <label class="block">
-        <span class="field-label-compact">Compact license status</span>
-        <select
-          id="intake-field-compact_license_status"
-          v-model="compactLicenseStatus"
-          :class="fieldClasses('compact_license_status')"
-          @change="clearParseHighlight('compact_license_status')"
-        >
-          <option value="">Select…</option>
-          <option value="Yes">Yes — compact/multistate</option>
-          <option value="No">No</option>
-          <option value="N/A">N/A</option>
-        </select>
-        <p class="mt-1 text-xs text-slate-500">
-          Prints on the first RN license when Yes.
-        </p>
-      </label>
       <LicenseRepeater
         :model-value="licenses"
         @update:model-value="emit('update:licenses', $event)"

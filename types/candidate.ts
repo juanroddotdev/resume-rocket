@@ -76,6 +76,8 @@ export interface LicenseEntry {
   number?: string
   /** MM/YYYY when known */
   expiry?: string
+  /** Compact/multistate for this license: Yes / No / N/A */
+  compact?: string
 }
 
 import type { HospitalSuggestion } from '~/types/hospital'

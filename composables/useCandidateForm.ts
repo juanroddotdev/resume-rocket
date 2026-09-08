@@ -16,7 +16,12 @@ import type { ParseMeta } from '~/types/parse'
 import { displayCredentialExpiry } from '~/utils/credentialExpiry'
 import { resolveCanonicalCert } from '~/utils/certificationOptions'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from '~/utils/emrSystem'
-import { legacyScalarsFromLicenses, resolveCandidateLicenses } from '~/utils/licenseRows'
+import {
+  backfillLicenseCompact,
+  compactStatusFromLicenses,
+  legacyScalarsFromLicenses,
+  resolveCandidateLicenses,
+} from '~/utils/licenseRows'
 
 const LEGACY_STORAGE_KEY = 'resume-rocket-draft'
 export type ServerDraftResponse = {
@@ -119,7 +124,8 @@ function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput
     credentials: form.credentials,
     specialties: form.specialties,
     years_nursing_experience: form.years_nursing_experience || undefined,
-    compact_license_status: form.compact_license_status || undefined,
+    compact_license_status:
+      compactStatusFromLicenses(licenses) || form.compact_license_status || undefined,
     average_patient_ratios: form.average_patient_ratios || undefined,
     specialized_medical_equipment: form.specialized_medical_equipment || undefined,
     education: form.education.length ? form.education : undefined,
@@ -306,11 +312,14 @@ export function useCandidateForm() {
       stripEmployerSuggestions(row.employers ?? []),
       row.emr_system,
     )
-    const licenses = resolveCandidateLicenses({
-      licenses: row.licenses,
-      license_state: row.license_state,
-      license_number: row.license_number,
-    })
+    const licenses = backfillLicenseCompact(
+      resolveCandidateLicenses({
+        licenses: row.licenses,
+        license_state: row.license_state,
+        license_number: row.license_number,
+      }),
+      row.compact_license_status,
+    )
     const legacyScalars = legacyScalarsFromLicenses(licenses)
     form.value = {
       ...defaultForm(),
@@ -464,11 +473,14 @@ export function useCandidateForm() {
     if (data.home_city) form.value.home_city = data.home_city
     if (data.home_state) form.value.home_state = data.home_state
     if (data.license_number || data.license_state || data.licenses?.length) {
-      form.value.licenses = resolveCandidateLicenses({
-        licenses: data.licenses,
-        license_state: data.license_state,
-        license_number: data.license_number,
-      })
+      form.value.licenses = backfillLicenseCompact(
+        resolveCandidateLicenses({
+          licenses: data.licenses,
+          license_state: data.license_state,
+          license_number: data.license_number,
+        }),
+        data.compact_license_status || form.value.compact_license_status,
+      )
       const legacyScalars = legacyScalarsFromLicenses(form.value.licenses)
       if (legacyScalars.license_number) form.value.license_number = legacyScalars.license_number
       if (legacyScalars.license_state) form.value.license_state = legacyScalars.license_state

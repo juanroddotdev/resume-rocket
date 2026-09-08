@@ -743,7 +743,6 @@ watch(devFixtureRequest, (mode) => {
           <section id="admin-section-credentials" class="scroll-mt-4 space-y-4 border-t border-slate-100/80 pt-8">
             <h2 class="text-sm font-medium tracking-tight text-slate-500">Credentials & clinical</h2>
             <CredentialsChecklist
-              v-model:compact-license-status="form.compact_license_status"
               :credentials="form.credentials"
               :licenses="form.licenses"
               :disabled="!isEditable"

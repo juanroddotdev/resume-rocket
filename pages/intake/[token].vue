@@ -789,7 +789,6 @@ async function onReviewPreview() {
         <h1 class="text-xl font-bold">Credentials & education</h1>
         <ParseNoticeBanner :meta="parseMeta" />
         <CredentialsChecklist
-          v-model:compact-license-status="form.compact_license_status"
           :credentials="form.credentials"
           :licenses="form.licenses"
           @update:credentials="form.credentials = $event"

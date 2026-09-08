@@ -74,13 +74,29 @@ const mismatches = computed(() =>
   }),
 )
 
-const mismatchByKey = computed(() => {
+const contradictionByKey = computed(() => {
   const map = {} as Partial<Record<ProfessionalSnapshotKey, string>>
   for (const warning of mismatches.value) {
-    map[warning.key] = warning.message
+    if (warning.kind === 'contradiction') map[warning.key] = warning.message
   }
   return map
 })
+
+const jobsDriftCount = computed(() =>
+  mismatches.value.filter(warning => warning.kind === 'jobs-drift').length,
+)
+
+const jobsDriftKeys = computed(() => {
+  const keys = new Set<ProfessionalSnapshotKey>()
+  for (const warning of mismatches.value) {
+    if (warning.kind === 'jobs-drift') keys.add(warning.key)
+  }
+  return keys
+})
+
+function hasJobsDrift(key: ProfessionalSnapshotKey): boolean {
+  return jobsDriftKeys.value.has(key)
+}
 
 function fingerprint(snapshot: ProfessionalSnapshot | null | undefined): string {
   return JSON.stringify(ensureProfessionalSnapshotLines(snapshot))
@@ -219,8 +235,11 @@ function lineEvidence(key: ProfessionalSnapshotKey): string | null {
   const source = line.source?.trim()
   if (source === 'gemini') return 'From resume'
   if (source === 'supplemental') return 'From extra details'
-  if (isSnapshotLinePinned(line)) return 'Pinned — employment changes will not overwrite'
-  if (source === 'wizard' && line.value.trim()) return 'Auto-synced from employment'
+  if (isSnapshotLinePinned(line)) return 'Custom wording — jobs will not overwrite this.'
+  if (source === 'wizard' && line.value.trim()) {
+    return hasJobsDrift(key) ? 'Doesn’t match jobs.' : 'Auto-synced from employment'
+  }
+  if (hasJobsDrift(key)) return 'Doesn’t match jobs.'
   return null
 }
 
@@ -238,7 +257,7 @@ function resetLineToDerived(key: ProfessionalSnapshotKey) {
 
 function syncAllFromEmployment(includePinned = false) {
   if (props.disabled) return
-  if (includePinned && !confirm('Overwrite pinned snapshot lines with values from Employment?')) {
+  if (includePinned && !confirm('Overwrite custom snapshot lines with values from jobs?')) {
     return
   }
   model.value = mergeDerivedSnapshotIntoStored(
@@ -248,17 +267,13 @@ function syncAllFromEmployment(includePinned = false) {
   )
 }
 
-function hasMismatchJump(key: ProfessionalSnapshotKey): boolean {
+function hasEmploymentJump(key: ProfessionalSnapshotKey): boolean {
   return (
     key === 'snapshot_charge_nurse_experience'
     || key === 'snapshot_preceptor_experience'
     || key === 'snapshot_teaching_facility_experience'
     || key === 'snapshot_travel_experience'
     || key === 'snapshot_specialty'
-    || key === 'snapshot_equipment_skills'
-    || key === 'snapshot_patient_ratios_managed'
-    || key === 'snapshot_notable_achievements'
-    || key === 'snapshot_emr_systems'
   )
 }
 
@@ -307,6 +322,14 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         </button>
       </div>
     </div>
+
+    <p
+      v-if="jobsDriftCount"
+      class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+      role="status"
+    >
+      {{ jobsDriftCount }} custom {{ jobsDriftCount === 1 ? 'line doesn’t' : 'lines don’t' }} match jobs.
+    </p>
 
     <!-- Short free-text: 2-column grid -->
     <div class="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
@@ -366,27 +389,36 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
           @input="onValueInput(key, $event)"
         >
         <p
-          v-if="lineEvidence(key)"
-          class="mt-1 text-[11px] italic text-slate-400"
+          v-if="lineEvidence(key) || hasJobsDrift(key)"
+          class="mt-1 flex flex-wrap items-baseline gap-x-2 text-[11px] italic text-slate-400"
         >
-          {{ lineEvidence(key) }}
+          <span v-if="lineEvidence(key)">{{ lineEvidence(key) }}</span>
+          <button
+            v-if="hasJobsDrift(key)"
+            type="button"
+            class="not-italic font-medium text-slate-600 underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
+            @click="resetLineToDerived(key)"
+          >
+            Use jobs list
+          </button>
         </p>
         <p
-          v-if="mismatchByKey[key]"
+          v-if="contradictionByKey[key]"
           class="mt-1.5 text-sm text-amber-800"
           role="status"
         >
-          {{ mismatchByKey[key] }}
+          {{ contradictionByKey[key] }}
           <button
             type="button"
             class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
             :disabled="disabled"
             @click="resetLineToDerived(key)"
           >
-            Reset line
+            Use jobs list
           </button>
           <button
-            v-if="hasMismatchJump(key)"
+            v-if="hasEmploymentJump(key)"
             type="button"
             class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
             :disabled="disabled"
@@ -455,27 +487,36 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         @input="onValueInput(key, $event)"
       >
       <p
-        v-if="lineEvidence(key)"
-        class="mt-1 text-[11px] italic text-slate-400"
+        v-if="lineEvidence(key) || hasJobsDrift(key)"
+        class="mt-1 flex flex-wrap items-baseline gap-x-2 text-[11px] italic text-slate-400"
       >
-        {{ lineEvidence(key) }}
+        <span v-if="lineEvidence(key)">{{ lineEvidence(key) }}</span>
+        <button
+          v-if="hasJobsDrift(key)"
+          type="button"
+          class="not-italic font-medium text-slate-600 underline hover:no-underline disabled:opacity-50"
+          :disabled="disabled"
+          @click="resetLineToDerived(key)"
+        >
+          Use jobs list
+        </button>
       </p>
       <p
-        v-if="mismatchByKey[key]"
+        v-if="contradictionByKey[key]"
         class="mt-1.5 text-sm text-amber-800"
         role="status"
       >
-        {{ mismatchByKey[key] }}
+        {{ contradictionByKey[key] }}
         <button
           type="button"
           class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
           :disabled="disabled"
           @click="resetLineToDerived(key)"
         >
-          Reset line
+          Use jobs list
         </button>
         <button
-          v-if="hasMismatchJump(key)"
+          v-if="hasEmploymentJump(key)"
           type="button"
           class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
           :disabled="disabled"
@@ -588,27 +629,36 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         >
 
         <p
-          v-if="lineEvidence(key)"
-          class="mt-1 text-[11px] italic text-slate-400"
+          v-if="lineEvidence(key) || hasJobsDrift(key)"
+          class="mt-1 flex flex-wrap items-baseline gap-x-2 text-[11px] italic text-slate-400"
         >
-          {{ lineEvidence(key) }}
+          <span v-if="lineEvidence(key)">{{ lineEvidence(key) }}</span>
+          <button
+            v-if="hasJobsDrift(key)"
+            type="button"
+            class="not-italic font-medium text-slate-600 underline hover:no-underline disabled:opacity-50"
+            :disabled="disabled"
+            @click="resetLineToDerived(key)"
+          >
+            Use jobs list
+          </button>
         </p>
         <p
-          v-if="mismatchByKey[key]"
+          v-if="contradictionByKey[key]"
           class="mt-1.5 text-sm text-amber-800"
           role="status"
         >
-          {{ mismatchByKey[key] }}
+          {{ contradictionByKey[key] }}
           <button
             type="button"
             class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
             :disabled="disabled"
             @click="resetLineToDerived(key)"
           >
-            Reset line
+            Use jobs list
           </button>
           <button
-            v-if="hasMismatchJump(key)"
+            v-if="hasEmploymentJump(key)"
             type="button"
             class="ml-1 font-medium underline hover:no-underline disabled:opacity-50"
             :disabled="disabled"
@@ -619,13 +669,5 @@ function textInputClass(key: ProfessionalSnapshotKey): string {
         </p>
       </li>
     </ul>
-
-    <p
-      v-if="mismatches.length"
-      class="text-sm text-amber-800"
-      role="status"
-    >
-      {{ mismatches.length }} snapshot {{ mismatches.length === 1 ? 'line does' : 'lines do' }} not match Employment data — review before download.
-    </p>
   </div>
 </template>

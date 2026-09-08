@@ -6,7 +6,7 @@ import type { CredentialsMap, EducationEntry, EmployerEntry, LicenseEntry } from
 import { normalizeCredentialExpiry } from '../../utils/credentialExpiry.ts'
 import { experienceHighlightsForDocx } from '../../utils/employerClinicalFlags.ts'
 import { normalizeEmploymentType } from '../../utils/employmentType.ts'
-import { employerEmrProficienciesUnion } from '../../utils/emrSystem.ts'
+import { employerEmrProficienciesUnion, legacyGlobalEmrFallback } from '../../utils/emrSystem.ts'
 import {
   employerMetricsLineFields,
   formatEmployerMetricsLine,
@@ -240,6 +240,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
   const employers = candidate.employers || []
   const emrUnion = employerEmrProficienciesUnion(employers)
   const emrProficiencies = emrUnion || candidate.emr_system || ''
+  const legacyEmrSystem = legacyGlobalEmrFallback(employers, candidate.emr_system)
   const licenses = resolveCandidateLicenses({
     licenses: candidate.licenses,
     license_state: candidate.license_state,
@@ -287,7 +288,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
       mapEmployerToExperience(
         e,
         primarySpecialty,
-        candidate.emr_system || '',
+        legacyEmrSystem,
         candidate.include_rn_experience_prefix === true,
       ),
     ),

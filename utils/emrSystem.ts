@@ -97,12 +97,31 @@ export function displayCandidateEmr(row: {
   return union || row.emr_system?.trim() || ''
 }
 
-/** Copy global emr_system onto employers missing per-card EMR (legacy drafts). */
+/** True when at least one employer has a per-card EMR. */
+export function anyEmployerHasEmr(
+  employers: { emrSystem?: string | null }[],
+): boolean {
+  return employers.some(employer => Boolean((employer.emrSystem || '').trim()))
+}
+
+/**
+ * Use candidates.emr_system as a per-job fallback only for legacy drafts
+ * where no employer has per-card EMR. Once any job has EMR, blank jobs stay blank.
+ */
+export function legacyGlobalEmrFallback(
+  employers: { emrSystem?: string | null }[],
+  globalEmr?: string | null,
+): string {
+  if (anyEmployerHasEmr(employers)) return ''
+  return (globalEmr || '').trim()
+}
+
+/** Copy global emr_system onto employers missing per-card EMR (legacy drafts only). */
 export function backfillEmployerEmrSystems<T extends { emrSystem?: string | null }>(
   employers: T[],
   globalEmr?: string | null,
 ): T[] {
-  const fallback = (globalEmr || '').trim()
+  const fallback = legacyGlobalEmrFallback(employers, globalEmr)
   if (!fallback) return employers
   return employers.map((employer) => {
     if ((employer.emrSystem || '').trim()) return employer

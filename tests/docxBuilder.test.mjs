@@ -144,6 +144,24 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_emr_system, 'EMR Epic')
   })
 
+  it('does not copy one job EMR onto another job with no EMR', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      emr_system: 'Epic',
+      specialties: ['ICU'],
+      employers: [
+        { name: 'Metro Hospital', role: 'ICU RN', emrSystem: 'Epic' },
+        { name: 'Regional Medical', role: 'ER RN' },
+      ],
+    })
+
+    assert.equal(data.professional_experiences[0].experience_emr_system, 'EMR Epic')
+    assert.equal(data.professional_experiences[1].experience_emr_system, '')
+    assert.equal(data.professional_experiences[1].experience_metrics_line.includes('EMR'), false)
+    assert.equal(data.emr_software_proficiencies, 'Epic')
+  })
+
   it('maps multi-license rows with expiry in licenses_list', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

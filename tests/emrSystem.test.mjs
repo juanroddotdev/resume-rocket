@@ -4,9 +4,11 @@ import { EMR_CHARTING_GROUP_LABELS, EMR_CHARTING_GROUPS } from '../utils/emrChar
 import {
   EMR_OTHER_OPTION,
   EMR_PRESET_OPTIONS,
+  backfillEmployerEmrSystems,
   commitEmrValue,
   emrSystemFromFields,
   isEmrComplete,
+  legacyGlobalEmrFallback,
   resolveEmrFields,
   resolveStoredEmrLabel,
 } from '../utils/emrSystem.ts'
@@ -104,5 +106,46 @@ describe('isEmrComplete', () => {
 
   it('accepts presets without custom text', () => {
     assert.equal(isEmrComplete('Epic', ''), true)
+  })
+})
+
+describe('legacyGlobalEmrFallback', () => {
+  it('returns global EMR when no employer has per-card EMR', () => {
+    assert.equal(
+      legacyGlobalEmrFallback([{ name: 'Metro' }], 'Epic'),
+      'Epic',
+    )
+  })
+
+  it('returns empty when any employer has per-card EMR', () => {
+    assert.equal(
+      legacyGlobalEmrFallback(
+        [{ emrSystem: 'Epic' }, { emrSystem: '' }],
+        'Epic',
+      ),
+      '',
+    )
+  })
+})
+
+describe('backfillEmployerEmrSystems', () => {
+  it('copies global EMR onto blank jobs only for legacy drafts', () => {
+    const filled = backfillEmployerEmrSystems(
+      [{ name: 'Metro', emrSystem: undefined }],
+      'Epic',
+    )
+    assert.equal(filled[0]?.emrSystem, 'Epic')
+  })
+
+  it('does not copy global EMR onto blank jobs when another job has EMR', () => {
+    const mixed = backfillEmployerEmrSystems(
+      [
+        { name: 'Metro', emrSystem: 'Epic' },
+        { name: 'Regional', emrSystem: undefined },
+      ],
+      'Epic',
+    )
+    assert.equal(mixed[0]?.emrSystem, 'Epic')
+    assert.equal(mixed[1]?.emrSystem, undefined)
   })
 })

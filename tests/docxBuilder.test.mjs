@@ -74,10 +74,7 @@ describe('mapCandidateToTemplateData', () => {
       }],
     })
 
-    assert.deepEqual(data.professional_experiences[0].experience_highlights, [
-      'Charge nurse experience',
-      'Preceptor experience',
-    ])
+    assert.deepEqual(data.professional_experiences[0].experience_highlights, [])
     assert.match(
       data.professional_experiences[0].experience_metrics_line,
       /Charge nurse experience/,
@@ -85,6 +82,34 @@ describe('mapCandidateToTemplateData', () => {
     assert.match(
       data.professional_experiences[0].experience_metrics_line,
       /Preceptor experience/,
+    )
+  })
+
+  it('prints user highlights on the job without duplicating charge/preceptor flags', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      employers: [
+        {
+          name: 'Metro Hospital',
+          role: 'ICU RN',
+          highlights: ['Led rapid response team', 'Charge nurse experience'],
+          chargeNurseExperience: true,
+        },
+        {
+          name: 'Regional Medical',
+          role: 'ER RN',
+        },
+      ],
+    })
+
+    assert.deepEqual(data.professional_experiences[0].experience_highlights, [
+      'Led rapid response team',
+    ])
+    assert.deepEqual(data.professional_experiences[1].experience_highlights, [])
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Charge nurse experience/,
     )
   })
 
@@ -427,6 +452,32 @@ describe('buildResumeDocx smoke', () => {
     assert.match(text, /24 unit beds • Trauma I • EMR Epic/)
     assert.equal(text.includes(' •  • '), false)
     assert.equal(text.includes('{experience_'), false)
+  })
+
+  it('renders per-job highlight bullets under the metrics line', async () => {
+    const { buildResumeDocx } = await import('../server/utils/docxBuilder.ts')
+    const PizZip = (await import('pizzip')).default
+    const buffer = await buildResumeDocx({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      specialties: ['ICU'],
+      employers: [{
+        name: 'Metro Hospital',
+        role: 'ICU RN',
+        city: 'Austin',
+        state: 'TX',
+        unitBedCount: '24',
+        emrSystem: 'Epic',
+        highlights: ['Led rapid response team'],
+        chargeNurseExperience: true,
+      }],
+    })
+    const zip = new PizZip(buffer)
+    const text = zip.file('word/document.xml').asText().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    assert.match(text, /Led rapid response team/)
+    assert.match(text, /Charge nurse experience/)
+    assert.equal(text.includes('{experience_highlights}'), false)
+    assert.equal(text.includes('{.}'), false)
   })
 
   it('generates a non-empty DOCX buffer', async () => {

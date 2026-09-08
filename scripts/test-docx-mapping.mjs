@@ -80,7 +80,7 @@ const checks = [
   ['experience_patient_acuity_level', exp0?.experience_patient_acuity_level, 'High acuity'],
   ['experience_average_daily_patients', exp0?.experience_average_daily_patients, '2-3'],
   ['experience_metrics_line', exp0?.experience_metrics_line?.includes('Patient ratio 2-3'), true],
-  ['experience_highlights', exp0?.experience_highlights?.length, 4],
+  ['experience_highlights', exp0?.experience_highlights?.length, 2],
   ['primary license compact', data.licenses_list[0]?.rn_license_state_and_expiry?.includes('Compact'), true],
   ['second license no compact', data.licenses_list[1]?.rn_license_state_and_expiry?.includes('Compact'), false],
 ]

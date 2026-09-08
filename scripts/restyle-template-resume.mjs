@@ -162,7 +162,7 @@ const bodyParas = [
   }, { after: 220, before: 0, line: 276 }),
   textPara('{/education}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
 
-  // PROFESSIONAL EXPERIENCE — title|dates, italic hospital, metrics
+  // PROFESSIONAL EXPERIENCE — title|dates, italic hospital, metrics, then highlight bullets
   textPara('PROFESSIONAL EXPERIENCE', {
     sz: 24,
     bold: true,
@@ -191,16 +191,19 @@ const bodyParas = [
   textPara('{experience_metrics_line}', {
     sz: 20,
     color: COLOR_BODY,
-  }, { after: 120, before: 0, line: 276 }),
+  }, { after: 60, before: 0, line: 276 }),
   textPara('{/experience_metrics_rows}', { sz: 20 }, { after: 0, before: 0, line: 240 }),
-  // No metrics: hospital line is the last line, so it carries the inter-job gap.
+  // No metrics: hospital line then optional highlights.
   textPara('{^experience_metrics_rows}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
   textPara('{experience_hospital_name} | {experience_facility_location}', {
     sz: 21,
     italic: true,
     color: COLOR_MUTED,
-  }, { after: 120, before: 0, line: 276 }),
+  }, { after: 60, before: 0, line: 276 }),
   textPara('{/experience_metrics_rows}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
+  textPara('{#experience_highlights}', { sz: 20 }, { after: 0, before: 0, line: 240 }),
+  textPara('{.}', { sz: 20 }, { bullet: true, after: 60, before: 0, line: 276 }),
+  textPara('{/experience_highlights}', { sz: 20 }, { after: 0, before: 0, line: 240 }),
   textPara('{/professional_experiences}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
 ]
 

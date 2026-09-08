@@ -4,6 +4,7 @@ import {
   CHARGE_NURSE_HIGHLIGHT_LABEL,
   PRECEPTOR_HIGHLIGHT_LABEL,
   experienceHighlightsForDocx,
+  experienceHighlightBulletsForDocx,
   inferClinicalFlagsFromHighlights,
   resolveClinicalFlagFromParse,
   triStateBoolFromSelect,
@@ -36,6 +37,17 @@ describe('experienceHighlightsForDocx', () => {
       CHARGE_NURSE_HIGHLIGHT_LABEL,
       PRECEPTOR_HIGHLIGHT_LABEL,
     ])
+  })
+})
+
+describe('experienceHighlightBulletsForDocx', () => {
+  it('keeps user highlight lines and drops canonical charge/preceptor labels', () => {
+    assert.deepEqual(
+      experienceHighlightBulletsForDocx({
+        highlights: ['Led rapid response team', CHARGE_NURSE_HIGHLIGHT_LABEL, ''],
+      }),
+      ['Led rapid response team'],
+    )
   })
 })
 

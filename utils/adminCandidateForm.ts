@@ -11,7 +11,12 @@ import { employersForPatch, mapParsedEmployers } from './employerLink.ts'
 import { displayCredentialExpiry } from './credentialExpiry.ts'
 import { resolveCanonicalCert } from './certificationOptions.ts'
 import { backfillEmployerEmrSystems, employerEmrProficienciesUnion } from './emrSystem.ts'
-import { legacyScalarsFromLicenses, resolveCandidateLicenses } from './licenseRows.ts'
+import {
+  backfillLicenseCompact,
+  compactStatusFromLicenses,
+  legacyScalarsFromLicenses,
+  resolveCandidateLicenses,
+} from './licenseRows.ts'
 import type { ProfessionalSnapshot } from './professionalSnapshot.ts'
 import {
   buildProfessionalSnapshotFromCandidate,
@@ -136,7 +141,8 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     credentials: form.credentials,
     specialties: form.specialties,
     years_nursing_experience: form.years_nursing_experience || undefined,
-    compact_license_status: form.compact_license_status || undefined,
+    compact_license_status:
+      compactStatusFromLicenses(licenses) || form.compact_license_status || undefined,
     average_patient_ratios: form.average_patient_ratios || undefined,
     specialized_medical_equipment: form.specialized_medical_equipment || undefined,
     education: form.education.length ? form.education : undefined,
@@ -182,11 +188,14 @@ export function applyAdminDraftToForm(
   row: AdminDraftResponse,
 ) {
   const employers = backfillEmployerEmrSystems(stripEmployerSuggestions(row.employers ?? []), row.emr_system)
-  const licenses = resolveCandidateLicenses({
-    licenses: row.licenses,
-    license_state: row.license_state,
-    license_number: row.license_number,
-  })
+  const licenses = backfillLicenseCompact(
+    resolveCandidateLicenses({
+      licenses: row.licenses,
+      license_state: row.license_state,
+      license_number: row.license_number,
+    }),
+    row.compact_license_status,
+  )
   const legacyScalars = legacyScalarsFromLicenses(licenses)
   Object.assign(form, {
     ...defaultCandidateForm(),
@@ -255,16 +264,19 @@ export function applyParseResultToForm(
   if (data.home_city) form.home_city = data.home_city
   if (data.home_state) form.home_state = data.home_state
   if (data.license_number || data.license_state) {
-    form.licenses = resolveCandidateLicenses({
-      licenses: data.licenses,
-      license_state: data.license_state,
-      license_number: data.license_number,
-    })
+    form.licenses = backfillLicenseCompact(
+      resolveCandidateLicenses({
+        licenses: data.licenses,
+        license_state: data.license_state,
+        license_number: data.license_number,
+      }),
+      data.compact_license_status,
+    )
     const legacyScalars = legacyScalarsFromLicenses(form.licenses)
     form.license_number = legacyScalars.license_number ?? data.license_number ?? form.license_number
     form.license_state = legacyScalars.license_state ?? data.license_state ?? form.license_state
   } else if (data.licenses?.length) {
-    form.licenses = [...data.licenses]
+    form.licenses = backfillLicenseCompact([...data.licenses], data.compact_license_status)
     Object.assign(form, legacyScalarsFromLicenses(form.licenses))
   }
   if (data.emr_system) form.emr_system = data.emr_system

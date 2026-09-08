@@ -32,6 +32,34 @@ describe('licenseRows', () => {
     assert.deepEqual(list, ['CA · RN-1 · 06/2027'])
   })
 
+  it('prints Compact on every license row answered Yes', () => {
+    const list = activeLicensesListForDocx(
+      [
+        { state: 'TX', number: 'RN-1', compact: 'Yes' },
+        { state: 'CA', number: 'RN-2', compact: 'Yes' },
+      ],
+      'Yes',
+    )
+    assert.deepEqual(list, [
+      'TX · RN-1 · Compact',
+      'CA · RN-2 · Compact',
+    ])
+  })
+
+  it('does not print Compact on a row answered No when another row is Yes', () => {
+    const list = activeLicensesListForDocx(
+      [
+        { state: 'TX', number: 'RN-1', compact: 'Yes' },
+        { state: 'CA', number: 'RN-2', compact: 'No' },
+      ],
+      'Yes',
+    )
+    assert.deepEqual(list, [
+      'TX · RN-1 · Compact',
+      'CA · RN-2',
+    ])
+  })
+
   it('appends Compact on the primary license when status is Yes', () => {
     const list = activeLicensesListForDocx(
       [

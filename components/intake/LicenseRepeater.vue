@@ -84,7 +84,7 @@ function validateExpiry(index: number) {
     </div>
 
     <p v-if="!modelValue.length" class="text-xs text-slate-500">
-      Add your RN license(s) — state, number, and optional expiration.
+      Add your RN license(s) — state, number, optional expiration, and compact status.
     </p>
     <button
       v-if="!modelValue.length"
@@ -145,6 +145,23 @@ function validateExpiry(index: number) {
           </p>
         </label>
       </div>
+      <label class="block" :for="`intake-field-${licenseFieldId(index, 'compact')}`">
+        <span class="field-label-compact">Compact / multistate</span>
+        <select
+          :id="`intake-field-${licenseFieldId(index, 'compact')}`"
+          :value="row.compact || ''"
+          :class="fieldClasses(licenseFieldId(index, 'compact'))"
+          @change="patchLicenseField(index, 'compact', { compact: ($event.target as HTMLSelectElement).value || undefined })"
+        >
+          <option value="">Select…</option>
+          <option value="Yes">Yes — compact/multistate</option>
+          <option value="No">No</option>
+          <option value="N/A">N/A</option>
+        </select>
+        <p class="mt-1 text-xs text-slate-500">
+          Prints Compact on this license when Yes.
+        </p>
+      </label>
     </div>
   </div>
 </template>

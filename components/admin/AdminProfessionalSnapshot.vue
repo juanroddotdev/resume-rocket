@@ -184,7 +184,7 @@ function setFlagAnswer(key: ProfessionalSnapshotKey, answer: SnapshotExperienceA
   const value = formatExperienceFlagValue(answer, answer === 'yes' ? detail : '')
   patchLine(key, {
     value,
-    included: Boolean(value.trim()) || lines.value[key]?.included,
+    included: answer === 'yes',
     pinned: true,
     source: 'manual',
   })

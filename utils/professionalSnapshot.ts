@@ -281,14 +281,27 @@ export function resolveProfessionalSnapshotForDocx(
   return buildProfessionalSnapshotFromCandidate(candidate)
 }
 
+/** Packet text for a snapshot line — empty when hidden, blank, or a flag answered No. */
+function snapshotValueForPacket(
+  key: ProfessionalSnapshotKey,
+  entry: ProfessionalSnapshotLine | undefined,
+): string {
+  if (!entry?.included) return ''
+  const value = entry.value.trim()
+  if (!value) return ''
+  if (isSnapshotExperienceFlag(key) && parseExperienceFlagValue(value).answer === 'no') {
+    return ''
+  }
+  return value
+}
+
 /** Flatten to template keys — empty string when not included. */
 export function professionalSnapshotToTemplateData(
   snapshot: ProfessionalSnapshot,
 ): Record<ProfessionalSnapshotKey, string> {
   const out = {} as Record<ProfessionalSnapshotKey, string>
   for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
-    const entry = snapshot[key]
-    out[key] = entry?.included && entry.value.trim() ? entry.value.trim() : ''
+    out[key] = snapshotValueForPacket(key, snapshot[key])
   }
   return out
 }
@@ -312,15 +325,14 @@ export const PROFESSIONAL_SNAPSHOT_DOCX_LABELS: Record<ProfessionalSnapshotKey, 
 
 /**
  * Included snapshot rows only — drives `{#snapshot_lines}` so unchecked lines
- * never leave empty bullet paragraphs in Word.
+ * never leave empty bullet paragraphs in Word. Flag keys answered No are omitted.
  */
 export function professionalSnapshotToLines(
   snapshot: ProfessionalSnapshot,
 ): Array<{ snapshot_line: string }> {
   const lines: Array<{ snapshot_line: string }> = []
   for (const key of PROFESSIONAL_SNAPSHOT_KEYS) {
-    const entry = snapshot[key]
-    const value = entry?.included && entry.value.trim() ? entry.value.trim() : ''
+    const value = snapshotValueForPacket(key, snapshot[key])
     if (!value) continue
     lines.push({
       snapshot_line: `${PROFESSIONAL_SNAPSHOT_DOCX_LABELS[key]}: ${value}`,

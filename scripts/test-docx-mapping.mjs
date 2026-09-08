@@ -78,6 +78,8 @@ const checks = [
   ['experience_employment_type', exp0?.experience_employment_type, 'Staff'],
   ['experience_patient_scope', exp0?.experience_patient_scope, 'Adult ICU — critical care'],
   ['experience_patient_acuity_level', exp0?.experience_patient_acuity_level, 'High acuity'],
+  ['experience_average_daily_patients', exp0?.experience_average_daily_patients, '2-3'],
+  ['experience_metrics_line', exp0?.experience_metrics_line?.includes('Patient ratio 2-3'), true],
   ['experience_highlights', exp0?.experience_highlights?.length, 4],
 ]
 

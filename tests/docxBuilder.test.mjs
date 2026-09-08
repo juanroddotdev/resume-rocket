@@ -256,6 +256,32 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.professional_experiences[0].experience_metrics_rows.length, 1)
   })
 
+  it('includes per-job patient ratio on the experience metrics line', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      employers: [
+        {
+          name: 'Metro Hospital',
+          role: 'ICU RN',
+          avgDailyPatients: '1:4',
+        },
+        {
+          name: 'Regional Medical',
+          role: 'ER RN',
+        },
+      ],
+    })
+
+    assert.match(
+      data.professional_experiences[0].experience_metrics_line,
+      /Patient ratio 1:4/,
+    )
+    assert.equal(data.professional_experiences[0].experience_average_daily_patients, '1:4')
+    assert.equal(data.professional_experiences[1].experience_metrics_line.includes('Patient ratio'), false)
+    assert.equal(data.professional_experiences[1].experience_average_daily_patients, '')
+  })
+
   it('omits experience_metrics_rows when the metrics line is empty', () => {
     const data = mapCandidateToTemplateData({
       first_name: 'Jane',

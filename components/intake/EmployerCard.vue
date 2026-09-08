@@ -137,7 +137,7 @@ const dateSummary = computed(() => {
   return `${start || '—'} – ${end || 'Present'}`
 })
 
-/** Live DOCX-style metrics stamp (unit beds • hospital beds • trauma • teaching • Magnet • EMR • scope). */
+/** Live DOCX-style metrics stamp (unit beds • patient ratio • hospital beds • trauma • teaching • Magnet • EMR • scope). */
 const metricsLine = computed(() =>
   formatEmployerMetricsLine(props.employer, {
     legacyEmrSystem: props.legacyEmrSystem,

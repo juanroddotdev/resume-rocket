@@ -10,6 +10,7 @@ export const EMPLOYER_METRICS_LINE_SEP = ' • '
 export type EmployerMetricsLineInput = Pick<
   EmployerEntry,
   | 'unitBedCount'
+  | 'avgDailyPatients'
   | 'beds'
   | 'traumaLevel'
   | 'teachingStatus'
@@ -22,6 +23,7 @@ export type EmployerMetricsLineInput = Pick<
 
 export type EmployerMetricsLineFields = {
   unitBedCount: string
+  patientRatio: string
   hospitalBeds: string
   traumaLevel: string
   teachingFacility: string
@@ -70,9 +72,16 @@ function labeledEmr(raw: string | null | undefined): string {
   return `EMR ${value}`
 }
 
+function labeledPatientRatio(raw: string | null | undefined): string {
+  const value = (raw || '').trim()
+  if (!value) return ''
+  if (/patient ratio/i.test(value) || /^ratio\b/i.test(value)) return value
+  return `Patient ratio ${value}`
+}
+
 /**
  * Labeled values for each DOCX metrics tag (same strings used in the live stamp).
- * Order: unit beds → hospital beds → trauma → teaching → Magnet → EMR → patient scope
+ * Order: unit beds → patient ratio → hospital beds → trauma → teaching → Magnet → EMR → patient scope
  */
 export function employerMetricsLineFields(
   employer: EmployerMetricsLineInput,
@@ -81,6 +90,7 @@ export function employerMetricsLineFields(
   const emrRaw = (employer.emrSystem || options?.legacyEmrSystem || '').trim()
   return {
     unitBedCount: labeledUnitBeds(employer.unitBedCount),
+    patientRatio: labeledPatientRatio(employer.avgDailyPatients),
     hospitalBeds: labeledHospitalBeds(employer.beds),
     traumaLevel: labeledTrauma(employer.traumaLevel),
     teachingFacility: teachingFacilityLabelForMetrics(employer.teachingStatus),
@@ -102,6 +112,7 @@ export function employerMetricsLineParts(
   const fields = employerMetricsLineFields(employer, options)
   return [
     fields.unitBedCount,
+    fields.patientRatio,
     fields.hospitalBeds,
     fields.traumaLevel,
     fields.teachingFacility,

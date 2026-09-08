@@ -17,9 +17,11 @@ describe('formatEmployerMetricsLine', () => {
         magnetStatus: true,
         emrSystem: 'Epic',
         patientScope: 'Adult ICU',
+        avgDailyPatients: '1:4',
       }),
       [
         '24 unit beds',
+        'Patient ratio 1:4',
         '500 hospital beds',
         'Trauma I',
         'Teaching Yes',
@@ -59,8 +61,9 @@ describe('formatEmployerMetricsLine', () => {
         unitBedCount: '24 unit beds',
         traumaLevel: 'Level I',
         emrSystem: 'EMR Epic',
+        avgDailyPatients: 'Patient ratio 1:2',
       }),
-      '24 unit beds • Level I • EMR Epic',
+      '24 unit beds • Patient ratio 1:2 • Level I • EMR Epic',
     )
   })
 
@@ -77,7 +80,7 @@ describe('employerMetricsLineParts', () => {
         teachingStatus: true,
         magnetStatus: true,
       }),
-      ['24 unit beds', '', '', 'Teaching Yes', 'Magnet Yes', '', '', '', ''],
+      ['24 unit beds', '', '', '', 'Teaching Yes', 'Magnet Yes', '', '', '', ''],
     )
   })
 

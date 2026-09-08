@@ -162,7 +162,8 @@ const bodyParas = [
   }, { after: 220, before: 0, line: 276 }),
   textPara('{/education}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
 
-  // PROFESSIONAL EXPERIENCE — title|dates, italic hospital, metrics, then highlight bullets
+  // PROFESSIONAL EXPERIENCE — title|dates, roman hospital, metrics, then highlight bullets.
+  // Title `before` is the inter-job gap (not metrics `after`, which sits above highlights).
   textPara('PROFESSIONAL EXPERIENCE', {
     sz: 24,
     bold: true,
@@ -176,16 +177,14 @@ const bodyParas = [
     {
       rightTab: true,
       after: 40,
-      before: 0,
+      before: 200,
       line: 276,
       runStyle: { sz: 22, bold: true },
     },
   ),
-  // With metrics: hospital (tight) then metrics line carries the inter-job gap.
   textPara('{#experience_metrics_rows}', { sz: 20 }, { after: 0, before: 0, line: 240 }),
   textPara('{experience_hospital_name} | {experience_facility_location}', {
     sz: 21,
-    italic: true,
     color: COLOR_MUTED,
   }, { after: 60, before: 0, line: 276 }),
   textPara('{experience_metrics_line}', {
@@ -197,7 +196,6 @@ const bodyParas = [
   textPara('{^experience_metrics_rows}', { sz: 21 }, { after: 0, before: 0, line: 240 }),
   textPara('{experience_hospital_name} | {experience_facility_location}', {
     sz: 21,
-    italic: true,
     color: COLOR_MUTED,
   }, { after: 60, before: 0, line: 276 }),
   textPara('{/experience_metrics_rows}', { sz: 21 }, { after: 0, before: 0, line: 240 }),

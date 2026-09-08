@@ -1,27 +1,32 @@
 import { callGeminiWithRetry } from '~/server/utils/geminiErrors'
 import {
   createGeminiClient,
-  GEMINI_MODELS,
+  geminiExtraInstructionBlock,
+  geminiModelOrder,
   GEMINI_VMS_FIELD_GUIDE,
   mapGeminiResumeJson,
   resumeJsonSchema,
   type GeminiParseMapResult,
+  type GeminiParseOptions,
   type GeminiResumeJson,
 } from '~/server/utils/geminiShared'
 
-export async function parseResumeWithGemini(rawText: string): Promise<GeminiParseMapResult> {
+export async function parseResumeWithGemini(
+  rawText: string,
+  options: GeminiParseOptions = {},
+): Promise<GeminiParseMapResult> {
   const ai = createGeminiClient()
   let lastError: unknown
 
   const prompt = `You are an expert ATS and VMS resume parser for healthcare nursing resumes.
 Extract structured fields from this resume text for a healthcare staffing VMS placement packet.
 
-${GEMINI_VMS_FIELD_GUIDE}
+${GEMINI_VMS_FIELD_GUIDE}${geminiExtraInstructionBlock(options.extraInstructions)}
 
 Resume text:
 ${rawText.slice(0, 12000)}`
 
-  for (const modelName of GEMINI_MODELS) {
+  for (const modelName of geminiModelOrder(options.preferredModel)) {
     try {
       const response = await callGeminiWithRetry(() =>
         ai.models.generateContent({

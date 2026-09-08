@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { parseStageProgress } from '~/utils/intakeProcessing'
+import type { AdminSettingsResponse } from '~/utils/adminSettings'
+import {
+  DEFAULT_APP_SETTINGS,
+  formatUploadSize,
+  isAllowedConfiguredUpload,
+  uploadAcceptAttribute,
+  uploadTypeLabel,
+} from '~/utils/adminSettings'
 
 const props = defineProps<{
   open: boolean
@@ -12,9 +20,6 @@ const emit = defineEmits<{
 }>()
 
 type PacketPath = 'link' | 'upload' | 'scratch'
-
-const ACCEPT = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-const MAX_BYTES = 10 * 1024 * 1024
 
 const PDF_STAGES = [
   'Uploading file…',
@@ -49,6 +54,18 @@ const path = ref<PacketPath | null>(null)
 
 const firstName = ref('')
 const lastName = ref('')
+const packetSettings = ref<Pick<AdminSettingsResponse, 'default_invite_expiration_days' | 'allowed_upload_mime_types' | 'max_upload_bytes'>>({
+  default_invite_expiration_days: DEFAULT_APP_SETTINGS.default_invite_expiration_days,
+  allowed_upload_mime_types: [...DEFAULT_APP_SETTINGS.allowed_upload_mime_types],
+  max_upload_bytes: DEFAULT_APP_SETTINGS.max_upload_bytes,
+})
+
+const acceptAttr = computed(() => uploadAcceptAttribute(packetSettings.value.allowed_upload_mime_types))
+const uploadTypeCopy = computed(() => uploadTypeLabel(packetSettings.value.allowed_upload_mime_types))
+const uploadSizeCopy = computed(() => formatUploadSize(packetSettings.value.max_upload_bytes))
+const expirationCopy = computed(() =>
+  `expires in ${packetSettings.value.default_invite_expiration_days} day${packetSettings.value.default_invite_expiration_days === 1 ? '' : 's'}`,
+)
 
 const reducedMotion = ref(false)
 const parseStage = ref('')
@@ -129,7 +146,9 @@ function goBackToChoose() {
 watch(
   () => props.open,
   (isOpen) => {
-    if (!isOpen) {
+    if (isOpen) {
+      void loadPacketSettings()
+    } else {
       stopStageRotation()
       error.value = null
       loading.value = false
@@ -176,6 +195,25 @@ async function authHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
+async function loadPacketSettings() {
+  try {
+    const settings = await $fetch<AdminSettingsResponse>('/api/admin/settings', {
+      headers: await authHeaders(),
+    })
+    packetSettings.value = {
+      default_invite_expiration_days: settings.default_invite_expiration_days,
+      allowed_upload_mime_types: settings.allowed_upload_mime_types,
+      max_upload_bytes: settings.max_upload_bytes,
+    }
+  } catch {
+    packetSettings.value = {
+      default_invite_expiration_days: DEFAULT_APP_SETTINGS.default_invite_expiration_days,
+      allowed_upload_mime_types: [...DEFAULT_APP_SETTINGS.allowed_upload_mime_types],
+      max_upload_bytes: DEFAULT_APP_SETTINGS.max_upload_bytes,
+    }
+  }
+}
+
 function validateIdentity(): boolean {
   const first = firstName.value.trim()
   const last = lastName.value.trim()
@@ -202,7 +240,6 @@ async function createInviteAndCandidate(options?: { requireNames?: boolean }) {
     method: 'POST',
     headers,
     body: {
-      expires_in_days: 7,
       ...(first ? { candidate_first_name: first } : {}),
       ...(last ? { candidate_last_name: last } : {}),
     },
@@ -223,22 +260,20 @@ async function createInviteAndCandidate(options?: { requireNames?: boolean }) {
 }
 
 function isAllowedResume(file: File) {
-  const name = file.name.toLowerCase()
-  const type = file.type
-  const okExt = name.endsWith('.pdf') || name.endsWith('.docx')
-  const okType = type === 'application/pdf'
-    || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    || type === ''
-  return okExt || okType
+  return isAllowedConfiguredUpload(
+    file.type || 'application/octet-stream',
+    file.name,
+    packetSettings.value.allowed_upload_mime_types,
+  )
 }
 
 async function createFromFile(file: File) {
   if (!isAllowedResume(file)) {
-    error.value = 'Use a PDF or Word (.docx) file.'
+    error.value = `Use an enabled resume file type: ${uploadTypeCopy.value}.`
     return
   }
-  if (file.size > MAX_BYTES) {
-    error.value = 'File must be 10MB or smaller.'
+  if (file.size > packetSettings.value.max_upload_bytes) {
+    error.value = `File must be ${uploadSizeCopy.value} or smaller.`
     return
   }
 
@@ -413,7 +448,7 @@ async function onScratchPath() {
           >
             <span class="block text-sm font-semibold text-brand-900">Send candidate link</span>
             <span class="mt-0.5 block text-xs text-slate-600">
-              Create a self-service upload link · expires in 7 days
+              Create a self-service upload link · {{ expirationCopy }}
             </span>
           </button>
 
@@ -499,14 +534,14 @@ async function onScratchPath() {
             >
               {{ loadingKind === 'link' ? 'Creating…' : 'Create & copy candidate link' }}
             </button>
-            <p class="mt-1.5 text-xs text-slate-500">Expires in 7 days</p>
+            <p class="mt-1.5 text-xs text-slate-500">{{ expirationCopy }}</p>
           </template>
 
           <template v-else-if="path === 'upload'">
             <input
               ref="fileInputRef"
               type="file"
-              :accept="ACCEPT"
+              :accept="acceptAttr"
               class="hidden"
               :disabled="loading"
               @change="onFileInput"
@@ -543,7 +578,7 @@ async function onScratchPath() {
               @keydown.space.prevent="chooseFile"
             >
               <p class="text-sm text-slate-700">Drop resume here or click to browse</p>
-              <p class="mt-1 text-xs text-slate-500">PDF or Word · Max 10MB</p>
+              <p class="mt-1 text-xs text-slate-500">{{ uploadTypeCopy }} · Max {{ uploadSizeCopy }}</p>
             </div>
           </template>
 

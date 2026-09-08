@@ -1,7 +1,7 @@
 import type { ParseAudit, ParseOutcome, ParsedResume } from '~/types/parse'
 import { buildProfessionalSnapshotFromCandidate } from '~/utils/professionalSnapshot'
-
-const MAX_BYTES = 10 * 1024 * 1024
+import { formatUploadSize, isAllowedConfiguredUpload } from '~/utils/adminSettings'
+import { getAppSettings } from '~/server/utils/adminSettings'
 
 function buildParsedResumeBlob(
   rawText: string | undefined,
@@ -25,18 +25,20 @@ export interface ParseResumeFileInput {
 
 export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
   const { candidateId, buffer, filename, mime, rateLimitKey } = input
+  const settings = await getAppSettings()
 
-  if (!isAllowedResumeMime(mime, filename)) {
+  if (!isAllowedResumeMime(mime, filename)
+    || !isAllowedConfiguredUpload(mime, filename, settings.allowed_upload_mime_types)) {
     throw createError({
       statusCode: 415,
-      statusMessage: 'Only PDF and DOCX files are supported',
+      statusMessage: 'This file type is not enabled for resume uploads',
     })
   }
 
-  if (buffer.length > MAX_BYTES) {
+  if (buffer.length > settings.max_upload_bytes) {
     throw createError({
       statusCode: 413,
-      statusMessage: 'File must be 10MB or smaller',
+      statusMessage: `File must be ${formatUploadSize(settings.max_upload_bytes)} or smaller`,
     })
   }
 
@@ -76,7 +78,10 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
       documentVisionAttempted = true
       documentVision = true
       try {
-        const docResult = await parseResumeWithGeminiDocument(buffer, mime)
+        const docResult = await parseResumeWithGeminiDocument(buffer, mime, {
+          preferredModel: settings.gemini_model,
+          extraInstructions: settings.gemini_extra_instructions,
+        })
         parsed = docResult.resume
         parseAudit = docResult.audit
         rawText = docResult.resume.rawText || rawText
@@ -93,7 +98,10 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
 
     if (geminiReady && !documentVisionAttempted) {
       try {
-        const textResult = await parseResumeWithGemini(rawText)
+        const textResult = await parseResumeWithGemini(rawText, {
+          preferredModel: settings.gemini_model,
+          extraInstructions: settings.gemini_extra_instructions,
+        })
         parsed = textResult.resume
         parseAudit = textResult.audit
       } catch (e) {

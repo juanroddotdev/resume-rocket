@@ -1,8 +1,11 @@
 import type { EmployerEntry } from '~/types/candidate'
+import { buildLookupTemplateUrl } from './adminSettings.ts'
 
 type FacilityGoogleSearchOptions = {
   /** Live link-strip query; preferred over employer.name when set. */
   searchQuery?: string
+  /** Optional admin-configured query template. */
+  template?: string
 }
 
 /**
@@ -75,6 +78,14 @@ export function facilityGoogleSearchUrl(
   employer: EmployerLocation,
   options?: FacilityGoogleSearchOptions,
 ): string {
+  if (options?.template?.trim()) {
+    return buildLookupTemplateUrl(options.template, {
+      facilityName: options.searchQuery?.trim() || employer.name,
+      city: employer.city,
+      state: employer.state,
+    })
+  }
+
   return googleSearchUrl([
     ...facilityNameAndLocation(employer, options),
     ...FACILITY_GOOGLE_SEARCH_PROMPTS,

@@ -459,9 +459,12 @@ function saysYes(value: string | undefined): boolean {
   return Boolean(value?.trim() && /^yes\b/i.test(value.trim()))
 }
 
+export type SnapshotMismatchKind = 'contradiction' | 'jobs-drift'
+
 export interface SnapshotMismatch {
   key: ProfessionalSnapshotKey
   message: string
+  kind: SnapshotMismatchKind
 }
 
 /** Soft warnings when included snapshot lines contradict wizard structured data. */
@@ -477,6 +480,7 @@ export function computeSnapshotMismatches(
     if (!employers.some(e => e.chargeNurseExperience === true)) {
       warnings.push({
         key: 'snapshot_charge_nurse_experience',
+        kind: 'contradiction',
         message: 'Snapshot says Yes, but no employer has charge nurse marked. Update Employment or edit this line.',
       })
     }
@@ -486,6 +490,7 @@ export function computeSnapshotMismatches(
     if (!employers.some(e => e.preceptorExperience === true)) {
       warnings.push({
         key: 'snapshot_preceptor_experience',
+        kind: 'contradiction',
         message: 'Snapshot says Yes, but no employer has preceptor marked. Update Employment or edit this line.',
       })
     }
@@ -498,6 +503,7 @@ export function computeSnapshotMismatches(
     if (!employers.some(e => e.teachingStatus === true)) {
       warnings.push({
         key: 'snapshot_teaching_facility_experience',
+        kind: 'contradiction',
         message: 'Snapshot says Yes, but no employer is marked as a teaching facility.',
       })
     }
@@ -507,6 +513,7 @@ export function computeSnapshotMismatches(
     if (!employers.some(e => normalizeEmploymentType(e.employmentType) === 'Travel')) {
       warnings.push({
         key: 'snapshot_travel_experience',
+        kind: 'contradiction',
         message: 'Snapshot says Yes, but no employer has employment type Travel.',
       })
     }
@@ -518,6 +525,7 @@ export function computeSnapshotMismatches(
     if (specialties.length && !specialties.includes(specialty.toLowerCase())) {
       warnings.push({
         key: 'snapshot_specialty',
+        kind: 'contradiction',
         message: `Specialty “${specialty}” is not in the specialties list on Employment.`,
       })
     }
@@ -525,26 +533,24 @@ export function computeSnapshotMismatches(
 
   const derived = buildProfessionalSnapshotFromCandidate(candidate)
 
-  function warnDerivedDrift(
-    key: ProfessionalSnapshotKey,
-    employmentLabel: string,
-  ) {
+  function warnDerivedDrift(key: ProfessionalSnapshotKey) {
     const storedVal = lines[key].value.trim()
     const derivedVal = derived[key]?.value?.trim() ?? ''
     if (!derivedVal || storedVal === derivedVal) return
     if (!lines[key].included && !isSnapshotLinePinned(lines[key])) return
     warnings.push({
       key,
+      kind: 'jobs-drift',
       message: isSnapshotLinePinned(lines[key])
-        ? `Pinned line differs from Employment (${employmentLabel}: “${derivedVal}”). Reset line to sync.`
-        : `Does not match Employment (${employmentLabel}: “${derivedVal}”).`,
+        ? 'Custom wording doesn’t match jobs.'
+        : 'Doesn’t match jobs.',
     })
   }
 
-  warnDerivedDrift('snapshot_equipment_skills', 'equipment')
-  warnDerivedDrift('snapshot_patient_ratios_managed', 'patient ratios')
-  warnDerivedDrift('snapshot_notable_achievements', 'highlights')
-  warnDerivedDrift('snapshot_emr_systems', 'EMR')
+  warnDerivedDrift('snapshot_equipment_skills')
+  warnDerivedDrift('snapshot_patient_ratios_managed')
+  warnDerivedDrift('snapshot_notable_achievements')
+  warnDerivedDrift('snapshot_emr_systems')
 
   return warnings
 }

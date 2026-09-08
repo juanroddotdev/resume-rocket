@@ -251,6 +251,7 @@ describe('computeSnapshotMismatches', () => {
     )
     assert.equal(warnings.length, 1)
     assert.equal(warnings[0]?.key, 'snapshot_charge_nurse_experience')
+    assert.equal(warnings[0]?.kind, 'contradiction')
   })
 
   it('is quiet when charge Yes matches an employer flag', () => {
@@ -263,6 +264,54 @@ describe('computeSnapshotMismatches', () => {
       },
     )
     assert.equal(warnings.length, 0)
+  })
+
+  it('flags custom equipment wording as jobs-drift without dumping the jobs list', () => {
+    const warnings = computeSnapshotMismatches(
+      {
+        snapshot_equipment_skills: {
+          value: 'EKG and recovery monitoring',
+          included: true,
+          pinned: true,
+          source: 'manual',
+        },
+      },
+      {
+        employers: [{
+          equipmentProcedures: [
+            'ECMO',
+            'CRRT',
+            'ventilators',
+            'IV initiation',
+            'fetal heart tracings',
+          ],
+        }],
+      },
+    )
+    const hit = warnings.find(w => w.key === 'snapshot_equipment_skills')
+    assert.equal(hit?.kind, 'jobs-drift')
+    assert.equal(hit?.message, 'Custom wording doesn’t match jobs.')
+    assert.equal(hit?.message.includes('ECMO'), false)
+    assert.equal(hit?.message.includes('Pinned'), false)
+  })
+
+  it('flags unpinned highlights drift without quoting employment text', () => {
+    const warnings = computeSnapshotMismatches(
+      {
+        snapshot_notable_achievements: {
+          value: 'Short summary',
+          included: true,
+          source: 'wizard',
+        },
+      },
+      {
+        employers: [{ highlights: ['Daisy Award Winner', 'Unit council chair'] }],
+      },
+    )
+    const hit = warnings.find(w => w.key === 'snapshot_notable_achievements')
+    assert.equal(hit?.kind, 'jobs-drift')
+    assert.equal(hit?.message, 'Doesn’t match jobs.')
+    assert.equal(hit?.message.includes('Daisy'), false)
   })
 })
 

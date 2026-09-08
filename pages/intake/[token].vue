@@ -2,7 +2,7 @@
 import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/utils/vmsGapReview'
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { hasIntakeDraftData, REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
-import { allEmployersEmrComplete } from '~/utils/emrSystem'
+import { allEmployersEmrComplete, legacyGlobalEmrFallback } from '~/utils/emrSystem'
 import {
   type FinalizePhase,
   FINALIZE_PHASE_PROGRESS,
@@ -151,6 +151,9 @@ const saveStatusShowSavedIdle = computed(
 )
 
 const employersEmrComplete = computed(() => allEmployersEmrComplete(form.value.employers))
+const legacyEmrFallback = computed(() =>
+  legacyGlobalEmrFallback(form.value.employers, form.value.emr_system),
+)
 
 const identityTouched = reactive({
   first_name: false,
@@ -745,7 +748,7 @@ async function onReviewPreview() {
         <HospitalAutocomplete
           ref="hospitalAutocompleteRef"
           :employers="form.employers"
-          :legacy-emr-system="form.emr_system"
+          :legacy-emr-system="legacyEmrFallback"
           :primary-specialty="form.specialties[0]"
           deck-mode="multi"
           :sticky-chrome-offset-px="56"

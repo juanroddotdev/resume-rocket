@@ -5,7 +5,7 @@ import { computeMissingTemplateFields, computeEmployerLinkAdvisories } from '~/u
 import { focusIntakeField } from '~/utils/focusIntakeField'
 import { REPLACE_RESUME_CONFIRM } from '~/utils/intakeDraft'
 import { ADMIN_SECTIONS, adminSectionForStep, type AdminSectionId } from '~/utils/adminCandidateForm'
-import { allEmployersEmrComplete } from '~/utils/emrSystem'
+import { allEmployersEmrComplete, legacyGlobalEmrFallback } from '~/utils/emrSystem'
 import { applySupplementalValueToSnapshot } from '~/utils/professionalSnapshot'
 import { buildSupplementalBucket } from '~/utils/supplementalBucket'
 import { displayResumeFilename } from '~/utils/displayResumeFilename'
@@ -87,6 +87,9 @@ const employersActiveIndex = ref(0)
 const missingFields = computed(() => computeMissingTemplateFields(form))
 const employerLinkAdvisories = computed(() => computeEmployerLinkAdvisories(form))
 const employersEmrComplete = computed(() => allEmployersEmrComplete(form.employers))
+const legacyEmrFallback = computed(() =>
+  legacyGlobalEmrFallback(form.employers, form.emr_system),
+)
 const hasResumeFile = computed(() =>
   Boolean(resumeFilename.value || props.candidate.resume_storage_path),
 )
@@ -722,7 +725,7 @@ watch(devFixtureRequest, (mode) => {
             <HospitalAutocomplete
               ref="hospitalAutocompleteRef"
               :employers="form.employers"
-              :legacy-emr-system="form.emr_system"
+              :legacy-emr-system="legacyEmrFallback"
               :primary-specialty="form.specialties[0]"
               deck-mode="multi"
               :sticky-chrome-offset-px="0"
@@ -823,7 +826,7 @@ watch(devFixtureRequest, (mode) => {
       :open="employersJumpOpen"
       :employers="form.employers"
       :active-index="employersActiveIndex"
-      :legacy-emr-system="form.emr_system"
+      :legacy-emr-system="legacyEmrFallback"
       :candidate-name="displayName"
       @close="closeEmployersJump"
       @select="onEmployerJumpSelect"

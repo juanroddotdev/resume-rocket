@@ -52,6 +52,7 @@ const REQUIRED_SNIPPETS = [
   'CERTIFICATIONS',
   'CA · RN-123456',
   'TX · RN-789012',
+  'Compact',
   'BLS',
   'ACLS',
   'EDUCATION',

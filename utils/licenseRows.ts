@@ -74,18 +74,37 @@ export function legacyScalarsFromLicenses(licenses: LicenseEntry[]): {
   }
 }
 
-/** DOCX formatting: CA · RN-12345 · 06/2027 */
-export function formatLicenseRowForDocx(row: LicenseEntry): string {
+/** Compact/multistate Yes — No and N/A stay off the packet. */
+export function isCompactLicenseYes(status?: string | null): boolean {
+  return (status || '').trim().toLowerCase() === 'yes'
+}
+
+/** DOCX formatting: CA · RN-12345 · 06/2027 · Compact */
+export function formatLicenseRowForDocx(
+  row: LicenseEntry,
+  options?: { compact?: boolean },
+): string {
   const parts: string[] = []
   if (row.state?.trim()) parts.push(row.state.trim().toUpperCase())
   if (row.number?.trim()) parts.push(row.number.trim())
   if (row.expiry?.trim()) parts.push(row.expiry.trim())
+  if (options?.compact) parts.push('Compact')
   return parts.join(' · ')
 }
 
-export function activeLicensesListForDocx(licenses: LicenseEntry[]): string[] {
+export function activeLicensesListForDocx(
+  licenses: LicenseEntry[],
+  compactStatus?: string | null,
+): string[] {
+  const primary = primaryLicense(licenses)
+  const markCompact =
+    isCompactLicenseYes(compactStatus)
+    && primary != null
+    && isLicenseRowComplete(primary)
   return licenses
-    .map(formatLicenseRowForDocx)
+    .map(row =>
+      formatLicenseRowForDocx(row, { compact: markCompact && row === primary }),
+    )
     .filter(Boolean)
 }
 

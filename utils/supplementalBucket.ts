@@ -1,7 +1,7 @@
 import type { EmployerEntry, LicenseEntry } from '../types/candidate'
 import { employerEmrProficienciesUnion } from './emrSystem.ts'
 import type { ProfessionalSnapshotKey } from './professionalSnapshot.ts'
-import { formatLicenseRowForDocx, resolveCandidateLicenses } from './licenseRows.ts'
+import { activeLicensesListForDocx, resolveCandidateLicenses } from './licenseRows.ts'
 
 export interface SupplementalBucketItem {
   id: string
@@ -90,7 +90,10 @@ export function buildSupplementalBucket(
     pushItem(items, {
       id: 'licenses_all',
       label: 'All licenses (formatted)',
-      value: licenses.map(formatLicenseRowForDocx).filter(Boolean).join('; '),
+      value: activeLicensesListForDocx(
+        licenses,
+        candidate.compact_license_status,
+      ).join('; '),
     })
   }
 

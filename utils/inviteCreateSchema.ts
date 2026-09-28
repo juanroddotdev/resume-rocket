@@ -16,6 +16,6 @@ export const inviteCreateSchema = z.object({
     (v) => (typeof v === 'string' && v.trim() === '' ? undefined : typeof v === 'string' ? v.trim() : v),
     z.string().email().optional(),
   ),
-  expires_in_days: z.number().min(1).max(30).default(7),
+  expires_in_days: z.number().min(1).max(30).optional(),
   label: z.string().optional(),
 })

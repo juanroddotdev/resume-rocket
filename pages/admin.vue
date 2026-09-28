@@ -4,7 +4,7 @@ import { downloadResumeDocxFromApi } from '~/utils/downloadResumeDocxClient'
 
 definePageMeta({ layout: 'admin', middleware: 'auth' })
 
-type AdminView = 'builder' | 'table'
+type AdminView = 'builder' | 'table' | 'settings'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
@@ -112,7 +112,7 @@ watch(devFixtureRequest, (mode) => {
 watch(
   () => route.query.view,
   (view) => {
-    adminView.value = view === 'table' ? 'table' : 'builder'
+    adminView.value = view === 'table' || view === 'settings' ? view : 'builder'
   },
   { immediate: true },
 )
@@ -120,7 +120,7 @@ watch(
 function setAdminView(view: AdminView) {
   adminView.value = view
   const query = { ...route.query }
-  if (view === 'table') query.view = 'table'
+  if (view === 'table' || view === 'settings') query.view = view
   else delete query.view
   router.replace({ query })
 }
@@ -471,16 +471,18 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
             <div class="flex h-11 shrink-0 items-center px-4">
               <div class="mx-auto flex w-full max-w-5xl items-center">
               <div
-                class="segmented-control relative w-full max-w-xs grid-cols-2"
+                class="segmented-control relative w-full max-w-md grid-cols-3"
                 role="tablist"
                 aria-label="Dashboard view"
               >
                 <span
                   aria-hidden="true"
-                  class="segmented-indicator w-[calc((100%-0.125rem)/2)]"
-                  :class="adminView === 'table'
-                    ? 'left-[calc(0.125rem+(100%-0.125rem)/2)]'
-                    : 'left-0'"
+                  class="segmented-indicator w-[calc((100%-0.25rem)/3)]"
+                  :class="{
+                    'left-0': adminView === 'builder',
+                    'left-[calc(0.125rem+(100%-0.25rem)/3)]': adminView === 'table',
+                    'left-[calc(0.25rem+2*((100%-0.25rem)/3))]': adminView === 'settings',
+                  }"
                 />
                 <button
                   type="button"
@@ -501,6 +503,16 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
                   @click="setAdminView('table')"
                 >
                   All candidates
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  class="segmented-tab relative z-10 px-2 py-1.5 text-xs sm:text-sm"
+                  :class="adminView === 'settings' ? 'segmented-tab-active' : ''"
+                  :aria-selected="adminView === 'settings'"
+                  @click="setAdminView('settings')"
+                >
+                  Settings
                 </button>
               </div>
               </div>
@@ -536,7 +548,7 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
                 </div>
               </div>
 
-              <div v-else key="table" class="h-full min-h-0 overflow-y-auto px-4 pb-4 pt-3">
+              <div v-else-if="adminView === 'table'" key="table" class="h-full min-h-0 overflow-y-auto px-4 pb-4 pt-3">
                 <CandidatesTable
                   :candidates="candidates"
                   :search="search"
@@ -548,6 +560,10 @@ async function deleteDraftCandidate(candidate: CandidateRow) {
                   @open-intake="openCandidateIntake"
                   @delete="deleteDraftCandidate"
                 />
+              </div>
+
+              <div v-else key="settings" class="flex h-full min-h-0 flex-col px-4 pb-4 pt-3">
+                <AdminSettingsPanel />
               </div>
             </Transition>
             </div>

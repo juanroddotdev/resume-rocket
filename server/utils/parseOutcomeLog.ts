@@ -23,7 +23,7 @@ export function classifyParseError(message: string | null | undefined): string |
   }
   if (m.includes('ai parse') || m.includes('gemini')) return 'gemini_error'
   if (m.includes('only pdf and docx')) return 'unsupported_mime'
-  if (m.includes('10mb')) return 'file_too_large'
+  if (m.includes('file must be') && m.includes('or smaller')) return 'file_too_large'
   return 'other'
 }
 

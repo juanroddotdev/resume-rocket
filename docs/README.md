@@ -36,6 +36,7 @@ After editing `server/assets/template.docx`: `node scripts/inventory-template-ta
 | --- | --- |
 | [INTAKE-DRAFT-RESUME-FLOW.md](./INTAKE-DRAFT-RESUME-FLOW.md) | Draft restore, autosave, invite expiry |
 | [INTAKE-DOWNLOAD-EMAIL-FLOW.md](./INTAKE-DOWNLOAD-EMAIL-FLOW.md) | Submit, DOCX download, Resend confirmation |
+| [ADMIN-SETTINGS-PLAN.md](./ADMIN-SETTINGS-PLAN.md) | Planned self-serve admin settings for integrations, packet defaults, branding, diagnostics |
 | [HOSPITAL-DATA.md](./HOSPITAL-DATA.md) | CMS/ArcGIS seed, local vs prod Supabase |
 | [HOSPITAL-NAME-COMBOBOX-PLAN.md](./HOSPITAL-NAME-COMBOBOX-PLAN.md) | Planned: name field = DB autocomplete; drop duplicate link search |
 

@@ -18,6 +18,12 @@ export const GEMINI_PLACEHOLDER_KEYS = new Set([
 ])
 
 export const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash'] as const
+export type GeminiModelName = (typeof GEMINI_MODELS)[number]
+
+export interface GeminiParseOptions {
+  preferredModel?: string
+  extraInstructions?: string
+}
 
 /** PDFs with fewer chars than this after pdf-parse use Gemini document vision. */
 export const MIN_EXTRACTED_TEXT_CHARS = 40
@@ -82,6 +88,25 @@ export function createGeminiClient() {
     throw new Error('Gemini is not configured')
   }
   return new GoogleGenAI({ apiKey: config.geminiApiKey })
+}
+
+export function geminiModelOrder(preferredModel?: string): GeminiModelName[] {
+  if (preferredModel && GEMINI_MODELS.includes(preferredModel as GeminiModelName)) {
+    return [
+      preferredModel as GeminiModelName,
+      ...GEMINI_MODELS.filter(model => model !== preferredModel),
+    ]
+  }
+  return [...GEMINI_MODELS]
+}
+
+export function geminiExtraInstructionBlock(extraInstructions?: string): string {
+  const trimmed = extraInstructions?.trim()
+  if (!trimmed) return ''
+  return `
+
+Additional recruiter instructions:
+${trimmed.slice(0, 2000)}`
 }
 
 export type GeminiCertificationJson = {

@@ -1,13 +1,15 @@
 import { callGeminiWithRetry } from '~/server/utils/geminiErrors'
 import {
   createGeminiClient,
-  GEMINI_MODELS,
+  geminiExtraInstructionBlock,
+  geminiModelOrder,
   GEMINI_VMS_FIELD_GUIDE,
   isGeminiConfigured,
   mapGeminiResumeJson,
   MIN_EXTRACTED_TEXT_CHARS,
   resumeJsonSchema,
   type GeminiParseMapResult,
+  type GeminiParseOptions,
   type GeminiResumeJson,
 } from '~/server/utils/geminiShared'
 
@@ -24,6 +26,7 @@ export function needsDocumentVision(
 export async function parseResumeWithGeminiDocument(
   buffer: Buffer,
   mime: string,
+  options: GeminiParseOptions = {},
 ): Promise<GeminiParseMapResult> {
   if (!isGeminiConfigured(useRuntimeConfig().geminiApiKey)) {
     throw new Error('Gemini is not configured')
@@ -36,11 +39,11 @@ Read the entire document visually and extract:
 1. raw_resume_text — plain text of all readable content (names, contact info, jobs, skills, licenses), in reading order.
 2. Structured VMS fields:
 
-${GEMINI_VMS_FIELD_GUIDE}`
+${GEMINI_VMS_FIELD_GUIDE}${geminiExtraInstructionBlock(options.extraInstructions)}`
 
   let lastError: unknown
 
-  for (const modelName of GEMINI_MODELS) {
+  for (const modelName of geminiModelOrder(options.preferredModel)) {
     try {
       const response = await callGeminiWithRetry(() =>
         ai.models.generateContent({

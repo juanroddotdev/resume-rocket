@@ -628,8 +628,8 @@ watch(devFixtureRequest, (mode) => {
                 >
               </label>
             </div>
-            <div class="grid gap-4 md:grid-cols-2">
-            <label class="block md:col-span-2">
+            <div class="grid gap-4 md:grid-cols-3">
+            <label class="block md:col-span-3">
               <span class="field-label">Home address</span>
               <input
                 id="intake-field-home_address"
@@ -664,6 +664,20 @@ watch(devFixtureRequest, (mode) => {
                 :class="fieldClasses('home_state')"
                 :disabled="!isEditable"
                 @input="clearParseHighlight('home_state')"
+              >
+            </label>
+            <label class="block">
+              <span class="field-label-compact">ZIP</span>
+              <input
+                id="intake-field-home_zip"
+                v-model="form.home_zip"
+                autocomplete="postal-code"
+                inputmode="numeric"
+                maxlength="10"
+                class="field"
+                :class="fieldClasses('home_zip')"
+                :disabled="!isEditable"
+                @input="clearParseHighlight('home_zip')"
               >
             </label>
             </div>

@@ -114,6 +114,7 @@ export const candidatePatchSchema = z.object({
   home_address: z.string().optional(),
   home_city: z.string().optional(),
   home_state: z.string().optional(),
+  home_zip: z.string().optional(),
   preferred_hospital_id: z.string().uuid().optional().nullable(),
   emr_system: z.string().optional(),
   status: z.literal('submitted').optional(),

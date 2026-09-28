@@ -47,6 +47,7 @@ export type ServerDraftResponse = {
   home_address?: string | null
   home_city?: string | null
   home_state?: string | null
+  home_zip?: string | null
 }
 
 function normalizeStoredCredentials(raw: unknown): CredentialsMap {
@@ -74,6 +75,7 @@ function defaultForm() {
     home_address: '',
     home_city: '',
     home_state: '',
+    home_zip: '',
     license_number: '',
     license_state: '',
     licenses: [] as LicenseEntry[],
@@ -116,6 +118,7 @@ function formSnapshot(form: ReturnType<typeof defaultForm>): CandidateDraftInput
     home_address: form.home_address || undefined,
     home_city: form.home_city || undefined,
     home_state: form.home_state || undefined,
+    home_zip: form.home_zip || undefined,
     license_number: legacyScalars.license_number ?? form.license_number,
     license_state: legacyScalars.license_state ?? form.license_state,
     licenses: licenses.length ? licenses : undefined,
@@ -330,6 +333,7 @@ export function useCandidateForm() {
       home_address: row.home_address ?? '',
       home_city: row.home_city ?? '',
       home_state: row.home_state ?? '',
+      home_zip: row.home_zip ?? '',
       license_number: legacyScalars.license_number ?? row.license_number ?? '',
       license_state: legacyScalars.license_state ?? row.license_state ?? '',
       licenses,
@@ -365,6 +369,7 @@ export function useCandidateForm() {
       home_address: isEmptyString(current.home_address) ? (row.home_address ?? '') : current.home_address,
       home_city: isEmptyString(current.home_city) ? (row.home_city ?? '') : current.home_city,
       home_state: isEmptyString(current.home_state) ? (row.home_state ?? '') : current.home_state,
+      home_zip: isEmptyString(current.home_zip) ? (row.home_zip ?? '') : current.home_zip,
       license_number: isEmptyString(current.license_number)
         ? (row.license_number ?? '')
         : current.license_number,
@@ -447,6 +452,7 @@ export function useCandidateForm() {
     home_address?: string
     home_city?: string
     home_state?: string
+    home_zip?: string
     license_number?: string
     license_state?: string
     licenses?: LicenseEntry[]
@@ -472,6 +478,7 @@ export function useCandidateForm() {
     if (data.home_address) form.value.home_address = data.home_address
     if (data.home_city) form.value.home_city = data.home_city
     if (data.home_state) form.value.home_state = data.home_state
+    if (data.home_zip) form.value.home_zip = data.home_zip
     if (data.license_number || data.license_state || data.licenses?.length) {
       form.value.licenses = backfillLicenseCompact(
         resolveCandidateLicenses({

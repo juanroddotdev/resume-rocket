@@ -134,11 +134,13 @@ describe('parsedResumeToApiFields', () => {
     const fields = parsedResumeToApiFields({
       firstName: 'Sam',
       homeState: 'TX',
+      homeZip: '78701',
       yearsNursingExperience: '5',
       employers: [{ name: 'City Hospital' }],
     })
     assert.equal(fields.first_name, 'Sam')
     assert.equal(fields.home_state, 'TX')
+    assert.equal(fields.home_zip, '78701')
     assert.equal(fields.years_nursing_experience, '5')
     assert.equal(fields.suggested_employers?.length, 1)
   })
@@ -165,8 +167,9 @@ describe('countParsedFields', () => {
       home_address: '123 Main St',
       home_city: 'Austin',
       home_state: 'TX',
+      home_zip: '78701',
     })
-    assert.equal(count, 3)
+    assert.equal(count, 4)
   })
 
   it('ignores empty strings and empty arrays', () => {

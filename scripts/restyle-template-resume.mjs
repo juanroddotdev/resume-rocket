@@ -103,7 +103,7 @@ const bodyParas = [
     sz: 20,
     color: COLOR_MUTED,
   }, { jc: 'left', after: 40, before: 0, line: 276 }),
-  textPara('{candidate_home_address}, {candidate_city}, {candidate_state}', {
+  textPara('{candidate_home_address}, {candidate_city}, {candidate_state} {candidate_zip}', {
     sz: 20,
     color: COLOR_MUTED,
   }, { jc: 'left', after: 360, before: 0, line: 276 }),

@@ -6,6 +6,7 @@ export interface ParsedResume {
   homeAddress?: string
   homeCity?: string
   homeState?: string
+  homeZip?: string
   licenseNumber?: string
   licenseState?: string
   licenses?: Array<{

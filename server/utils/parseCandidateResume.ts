@@ -146,6 +146,7 @@ export async function parseCandidateResumeFile(input: ParseResumeFileInput) {
       home_address: parsed.homeAddress,
       home_city: parsed.homeCity,
       home_state: parsed.homeState,
+      home_zip: parsed.homeZip,
       license_number: parsed.licenseNumber,
       license_state: parsed.licenseState,
       ...(normalizedJsonb.licenses?.length ? { licenses: normalizedJsonb.licenses } : {}),

@@ -7,6 +7,7 @@ export const completeDocxFixture = {
   home_address: '123 Main St',
   home_city: 'San Diego',
   home_state: 'CA',
+  home_zip: '92101',
   license_state: 'CA',
   licenses: [
     { state: 'CA', number: 'RN-123456', expiry: '2026-06-01' },

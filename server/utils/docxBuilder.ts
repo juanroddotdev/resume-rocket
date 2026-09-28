@@ -36,6 +36,7 @@ export interface DocxCandidate {
   home_address?: string | null
   home_city?: string | null
   home_state?: string | null
+  home_zip?: string | null
   license_number?: string | null
   license_state?: string | null
   emr_system?: string | null
@@ -261,6 +262,7 @@ export function mapCandidateToTemplateData(candidate: DocxCandidate) {
     candidate_home_address: candidate.home_address || '',
     candidate_city: homeCity,
     candidate_state: homeState,
+    candidate_zip: candidate.home_zip?.trim() || '',
     active_licenses_list: activeLicensesList(
       licenses,
       candidate.license_state,

@@ -49,6 +49,7 @@ export function hasParsedFields(parsed: ParsedResume): boolean {
     || parsed.homeAddress
     || parsed.homeCity
     || parsed.homeState
+    || parsed.homeZip
     || parsed.licenseNumber
     || parsed.licenseState
     || parsed.licenses?.length
@@ -91,6 +92,7 @@ export function mergeParsedResume(
     homeAddress: preferPrimary(primary?.homeAddress, fallback.homeAddress),
     homeCity: preferPrimary(primary?.homeCity, fallback.homeCity),
     homeState: preferPrimary(primary?.homeState, fallback.homeState),
+    homeZip: preferPrimary(primary?.homeZip, fallback.homeZip),
     licenseNumber: preferPrimary(primary?.licenseNumber, fallback.licenseNumber),
     licenseState: preferPrimary(primary?.licenseState, fallback.licenseState),
     licenses: preferPrimary(primary?.licenses, fallback.licenses),

@@ -67,6 +67,7 @@ export function defaultCandidateForm() {
     home_address: '',
     home_city: '',
     home_state: '',
+    home_zip: '',
     license_number: '',
     license_state: '',
     licenses: [] as LicenseEntry[],
@@ -133,6 +134,7 @@ export function candidateFormSnapshot(form: ReturnType<typeof defaultCandidateFo
     home_address: form.home_address || undefined,
     home_city: form.home_city || undefined,
     home_state: form.home_state || undefined,
+    home_zip: form.home_zip || undefined,
     license_number: legacyScalars.license_number ?? form.license_number,
     license_state: legacyScalars.license_state ?? form.license_state,
     licenses: licenses.length ? licenses : undefined,
@@ -178,6 +180,7 @@ export type AdminDraftResponse = {
   home_address?: string | null
   home_city?: string | null
   home_state?: string | null
+  home_zip?: string | null
   resume_storage_path?: string | null
   resume_original_filename?: string | null
   parse_error?: string | null
@@ -206,6 +209,7 @@ export function applyAdminDraftToForm(
     home_address: row.home_address ?? '',
     home_city: row.home_city ?? '',
     home_state: row.home_state ?? '',
+    home_zip: row.home_zip ?? '',
     license_number: legacyScalars.license_number ?? row.license_number ?? '',
     license_state: legacyScalars.license_state ?? row.license_state ?? '',
     licenses,
@@ -241,6 +245,7 @@ export function applyParseResultToForm(
     home_address?: string
     home_city?: string
     home_state?: string
+    home_zip?: string
     license_number?: string
     license_state?: string
     licenses?: LicenseEntry[]
@@ -263,6 +268,7 @@ export function applyParseResultToForm(
   if (data.home_address) form.home_address = data.home_address
   if (data.home_city) form.home_city = data.home_city
   if (data.home_state) form.home_state = data.home_state
+  if (data.home_zip) form.home_zip = data.home_zip
   if (data.license_number || data.license_state) {
     form.licenses = backfillLicenseCompact(
       resolveCandidateLicenses({

@@ -13,6 +13,7 @@ describe('mergeParsedResume', () => {
         homeAddress: '123 Main St',
         homeCity: 'Austin',
         homeState: 'TX',
+        homeZip: '78701',
         rawText: 'gemini',
       },
       {
@@ -27,6 +28,7 @@ describe('mergeParsedResume', () => {
     assert.equal(merged.homeAddress, '123 Main St')
     assert.equal(merged.homeCity, 'Austin')
     assert.equal(merged.homeState, 'TX')
+    assert.equal(merged.homeZip, '78701')
   })
 
   it('falls back to heuristic home fields when Gemini omitted them', () => {
@@ -48,6 +50,7 @@ describe('hasParsedFields', () => {
     assert.equal(hasParsedFields({ homeState: 'TX' }), true)
     assert.equal(hasParsedFields({ homeCity: 'Austin' }), true)
     assert.equal(hasParsedFields({ homeAddress: '123 Main St' }), true)
+    assert.equal(hasParsedFields({ homeZip: '78701' }), true)
     assert.equal(hasParsedFields({}), false)
   })
 })

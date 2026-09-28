@@ -31,6 +31,7 @@ export interface CandidateRow {
   home_address: string | null
   home_city: string | null
   home_state: string | null
+  home_zip: string | null
   preferred_hospital_id: string | null
   emr_system: string | null
   access_token: string | null
@@ -150,6 +151,7 @@ export interface CandidateDraftInput {
   home_address?: string
   home_city?: string
   home_state?: string
+  home_zip?: string
   preferred_hospital_id?: string
   emr_system?: string
 }

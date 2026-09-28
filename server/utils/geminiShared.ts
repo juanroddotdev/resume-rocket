@@ -28,9 +28,9 @@ export const PARSE_AUDIT_SNIPPET_MAX_CHARS = 200
 /** Shared field guide for text + vision Gemini parse prompts (Phase C / VMS manifest). */
 export const GEMINI_VMS_FIELD_GUIDE = `Extract all fields you can find. Use empty strings, empty arrays, or omit keys when not present. Do not invent data.
 
-Identity: first_name, last_name, email, phone, home_address, home_city, home_state, license_number, license_state, licenses[]
+Identity: first_name, last_name, email, phone, home_address, home_city, home_state, home_zip, license_number, license_state, licenses[]
 - home_address: full street address from resume header/contact block — not employer city
-- home_city / home_state: candidate residence when stated separately from employers
+- home_city / home_state / home_zip: candidate residence when stated separately from employers
 - licenses[]: all active RN licenses when stated — each with state (2-letter US), number, optional expiry (MM/YYYY), source_snippet
 - license_number / license_state: primary active RN license when multiple appear (first or most prominent)
 
@@ -139,6 +139,7 @@ export type GeminiResumeJson = {
   home_address?: string
   home_city?: string
   home_state?: string
+  home_zip?: string
   license_number?: string
   license_state?: string
   licenses?: GeminiLicenseJson[]
@@ -167,6 +168,7 @@ export function resumeJsonSchema(options?: { includeRawText?: boolean }) {
     home_address: { type: Type.STRING },
     home_city: { type: Type.STRING },
     home_state: { type: Type.STRING },
+    home_zip: { type: Type.STRING },
     license_number: { type: Type.STRING },
     license_state: { type: Type.STRING },
     licenses: {
@@ -446,6 +448,7 @@ export function mapGeminiResumeJson(
       homeAddress: parsed.home_address?.trim() || undefined,
       homeCity: parsed.home_city?.trim() || undefined,
       homeState: parsed.home_state?.trim() || undefined,
+      homeZip: parsed.home_zip?.trim() || undefined,
       licenseNumber: parsed.license_number?.trim() || licenses?.[0]?.number || undefined,
       licenseState: parsed.license_state?.trim() || licenses?.[0]?.state || undefined,
       licenses: licenses?.length ? licenses : undefined,

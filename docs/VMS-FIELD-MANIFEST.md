@@ -7,7 +7,7 @@ Reconciled with July 2026 template (Professional Snapshot) on 2026-07-11. Re-run
 node scripts/inventory-template-tags.mjs
 ```
 
-**Counts:** 34 scalar tags, 4 loop regions (`licenses_list`, `certifications_list`, `education`, `professional_experiences`).  
+**Counts:** 36 scalar tags, 4 loop regions (`licenses_list`, `certifications_list`, `education`, `professional_experiences`).  
 Previous layout archived at [`server/assets/archive/template-pre-july-2026.docx`](../server/assets/archive/template-pre-july-2026.docx).
 
 Mapping code: `server/utils/docxBuilder.ts` → `mapCandidateToTemplateData()`.  
@@ -65,6 +65,7 @@ Verify: `node scripts/test-normalize-candidate.mjs`
 | `candidate_home_address` | `candidates.home_address` | Yes | 1 — Identity | No | Live |
 | `candidate_city` | `candidates.home_city` | Yes | 1 — Identity | Yes | Live |
 | `candidate_state` | `license_state` → else `home_state` | Partial | 1 / 3 | Yes | Live |
+| `candidate_zip` | `candidates.home_zip` | Yes | 1 — Identity | No | Live |
 
 ---
 
@@ -167,7 +168,7 @@ These tags remain in **parse**, **wizard**, and **`docxBuilder`** for now but do
 
 | Check | Result (2026-07-11) |
 |-------|------------------------|
-| All contract scalar tags in docxBuilder | Yes (35/35) |
+| All contract scalar tags in docxBuilder | Yes (36/36) |
 | All contract loop tags in docxBuilder | Yes (3/3) |
 | Builder keys not in contract | 22 (documented above — intentional until supplemental bucket) |
 | DOCX smoke test (`test-docx-mapping.mjs`) | Pass — snapshot stubs in `OPTIONAL_EMPTY` until Phase 2 |

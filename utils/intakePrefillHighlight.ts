@@ -69,6 +69,7 @@ export function collectParsePrefillFieldIds(data: ParsePrefillInput): string[] {
   pushFieldId(ids, 'home_address', (data as Record<string, unknown>).home_address)
   pushFieldId(ids, 'home_city', (data as Record<string, unknown>).home_city)
   pushFieldId(ids, 'home_state', (data as Record<string, unknown>).home_state)
+  pushFieldId(ids, 'home_zip', (data as Record<string, unknown>).home_zip)
   pushFieldId(ids, 'license_number', data.license_number)
   pushFieldId(ids, 'license_state', data.license_state)
   data.licenses?.forEach((row, index) => {

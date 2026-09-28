@@ -679,7 +679,7 @@ async function onReviewPreview() {
             @input="clearParseHighlight('home_address')"
           >
         </label>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <label class="block">
             <span class="field-label-compact">City</span>
             <input
@@ -703,6 +703,20 @@ async function onReviewPreview() {
               class="field"
               :class="fieldClasses('home_state')"
               @input="clearParseHighlight('home_state')"
+            >
+          </label>
+          <label class="block col-span-2 sm:col-span-1">
+            <span class="field-label-compact">ZIP</span>
+            <input
+              id="intake-field-home_zip"
+              v-model="form.home_zip"
+              autocomplete="postal-code"
+              inputmode="numeric"
+              placeholder="12345"
+              maxlength="10"
+              class="field"
+              :class="fieldClasses('home_zip')"
+              @input="clearParseHighlight('home_zip')"
             >
           </label>
         </div>

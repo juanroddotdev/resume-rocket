@@ -443,6 +443,19 @@ describe('mapCandidateToTemplateData', () => {
     assert.equal(data.candidate_city, 'Austin')
     assert.equal(data.candidate_state, 'TX')
   })
+
+  it('maps home ZIP onto candidate_zip', () => {
+    const data = mapCandidateToTemplateData({
+      first_name: 'Jane',
+      last_name: 'Doe',
+      home_address: '123 Main St',
+      home_city: 'Austin',
+      home_state: 'TX',
+      home_zip: '78701',
+    })
+
+    assert.equal(data.candidate_zip, '78701')
+  })
 })
 describe('buildResumeDocx smoke', () => {
   it('renders experience metrics without orphan bullet separators', async () => {

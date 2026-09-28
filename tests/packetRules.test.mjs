@@ -175,6 +175,19 @@ const RULES = [
     },
   },
   {
+    name: 'prints home ZIP on the identity address line',
+    candidate: jane({
+      home_address: '123 Main St',
+      home_city: 'Austin',
+      home_state: 'TX',
+      home_zip: '78701',
+    }),
+    must: ['123 Main St', 'Austin', 'TX', '78701'],
+    check(data) {
+      assert.equal(data.candidate_zip, '78701')
+    },
+  },
+  {
     name: 'never leaves the literal word undefined in packet text',
     candidate: jane({
       specialties: ['ICU'],
